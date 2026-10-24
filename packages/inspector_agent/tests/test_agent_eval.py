@@ -1,4 +1,4 @@
-"""Live evaluation of the agent against the synthetic ground truth (needs the LiteLLM proxy + a model).
+"""Live evaluation of the agent against the synthetic ground truth (needs a model: INSPECTOR_LLM_MODEL_*).
 
     INSPECTOR_LIVE_EVAL=1 [INSPECTOR_EVAL_SCENARIOS=S01,S04,S13] uv run pytest packages/inspector_agent/tests/test_agent_eval.py -s
 
@@ -18,7 +18,7 @@ SELECTED = [s for s in os.environ.get("INSPECTOR_EVAL_SCENARIOS", ",".join(IDS))
 IN_SCOPE = {"CV-01", "CV-02", "LN-01", "AG-01", "AG-02", "AG-03", "FL-01", "FL-02", "FL-03", "FX-01", "FX-02",
             "FX-03", "FX-04", "JN-01", "JN-02", "JN-03", "JN-04", "JN-05", "JN-06", "JN-07"}
 
-pytestmark = pytest.mark.skipif(not LIVE, reason="set INSPECTOR_LIVE_EVAL=1 (needs a model behind LiteLLM)")
+pytestmark = pytest.mark.skipif(not LIVE, reason="set INSPECTOR_LIVE_EVAL=1 (needs a model: INSPECTOR_LLM_MODEL_*)")
 
 
 def accepts(e: dict) -> set[str]:

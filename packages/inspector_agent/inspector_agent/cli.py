@@ -1,6 +1,6 @@
 """inspector-validate: validate a migration package from the command line.
 
-By default the agent runs (needs the LiteLLM proxy and a model behind it). ``--rules-only`` skips the LLM and
+By default the agent runs (needs a model: see INSPECTOR_LLM_MODEL_* in .env.example). ``--rules-only`` skips the LLM and
 reports the rule sweep's leads as they are; ``--with-data`` also runs their data probes through the data agent.
 """
 

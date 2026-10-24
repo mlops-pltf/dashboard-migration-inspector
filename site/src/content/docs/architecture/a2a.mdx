@@ -85,8 +85,8 @@ A small shared package, the only thing the agents have in common:
 	</TabItem>
 	<TabItem label="Local (compose)">
 		```bash
-		docker compose up -d litellm thoughtspot-agent strategy-agent inspector-agent
-		# inspector :9000, thoughtspot :9001, strategy :9002 — same A2A protocol, no auth
+		docker compose up -d
+		# inspector :9000, thoughtspot :9001, strategy :9002, data :9003 — same A2A protocol, no auth
 		```
 		Packages are mounted read-only at `/packages` in every container.
 	</TabItem>

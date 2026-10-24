@@ -1,11 +1,12 @@
-"""Strands model factory. Agents only know two aliases (strong / fast); the LiteLLM proxy maps them to a
-provider (Anthropic API, Ollama, Bedrock later), so switching provider never touches agent code.
+"""Strands model factory. Agents ask for a tier (strong / fast); the environment says which model that is, as a
+LiteLLM model id. The provider is called directly (no proxy), so switching provider never touches agent code.
 
 Environment:
-  INSPECTOR_LLM_BASE_URL      LiteLLM proxy (default http://localhost:4000; http://litellm:4000 in compose)
-  INSPECTOR_LLM_API_KEY       proxy key (LITELLM_MASTER_KEY)
-  INSPECTOR_LLM_MODEL_STRONG  alias for judgment-heavy calls (default inspector-strong)
-  INSPECTOR_LLM_MODEL_FAST    alias for cheap calls (default inspector-fast)
+  INSPECTOR_LLM_MODEL_STRONG  judgment-heavy calls (default ollama_chat/qwen3:14b)
+  INSPECTOR_LLM_MODEL_FAST    cheap calls (default ollama_chat/qwen3:8b)
+  INSPECTOR_LLM_API_BASE      endpoint override, e.g. an Ollama server (unset = the provider's default)
+Examples of model ids: ollama_chat/qwen3:14b, anthropic/claude-sonnet-5-5, bedrock/<model or inference profile id>.
+Credentials come from the provider's usual environment: ANTHROPIC_API_KEY, or the AWS role on AgentCore (Bedrock).
 """
 
 from __future__ import annotations
@@ -14,22 +15,19 @@ import os
 from typing import Any, Literal
 
 Tier = Literal["strong", "fast"]
+_DEFAULTS = {"strong": "ollama_chat/qwen3:14b", "fast": "ollama_chat/qwen3:8b"}
 
 
-def model_alias(tier: Tier) -> str:
-    default = "inspector-strong" if tier == "strong" else "inspector-fast"
-    return os.environ.get(f"INSPECTOR_LLM_MODEL_{tier.upper()}", default)
+def model_id(tier: Tier) -> str:
+    return os.environ.get(f"INSPECTOR_LLM_MODEL_{tier.upper()}", _DEFAULTS[tier])
 
 
 def get_model(tier: Tier = "strong", **params: Any):
-    """A Strands ``LiteLLMModel`` talking to the LiteLLM proxy."""
-    from strands.models.litellm import LiteLLMModel  # optional dependency: inspector-common[llm]
+    """A Strands ``LiteLLMModel`` calling the configured provider directly."""
+    from strands.models.litellm import LiteLLMModel
 
-    return LiteLLMModel(
-        client_args={
-            "api_base": os.environ.get("INSPECTOR_LLM_BASE_URL", "http://localhost:4000"),
-            "api_key": os.environ.get("INSPECTOR_LLM_API_KEY", "sk-inspector-local"),
-        },
-        model_id=f"litellm_proxy/{model_alias(tier)}",
-        params={"temperature": 0, "max_tokens": 2048, **params},
-    )
+    client_args: dict[str, Any] = {"drop_params": True, "num_retries": 2, "timeout": 300}
+    if os.environ.get("INSPECTOR_LLM_API_BASE"):
+        client_args["api_base"] = os.environ["INSPECTOR_LLM_API_BASE"]
+    return LiteLLMModel(client_args=client_args, model_id=model_id(tier),
+                        params={"temperature": 0, "max_tokens": 2048, **params})

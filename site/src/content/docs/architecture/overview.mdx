@@ -20,7 +20,7 @@ import Mermaid from '../../../components/Mermaid.astro';
     I -- probes --> DA
     DA --> RS[(Redshift)]
     I -- report --> Dev
-    Team -.-> L[LiteLLM proxy] -.-> M[Anthropic / Ollama / Bedrock]`}
+    Team -.->|direct| M[Ollama / Anthropic / Bedrock]`}
 	caption="Experts translate each tool into IR and explain it; the Inspector validates; the data agent settles what definitions cannot."
 />
 

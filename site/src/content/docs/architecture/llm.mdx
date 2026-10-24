@@ -1,6 +1,6 @@
 ---
 title: LLM integration
-description: A LiteLLM proxy with two stable aliases. Switching provider never touches agent code.
+description: Each agent calls its model provider directly. Two tiers, chosen by environment, so switching provider never touches agent code.
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
@@ -8,65 +8,61 @@ import Mermaid from '../../../components/Mermaid.astro';
 
 <Mermaid
 	code={`flowchart LR
-    V[each agent] -->|inspector-strong / inspector-fast| L[LiteLLM proxy :4000]
-    L -->|LITELLM_PROFILE=anthropic| A[Anthropic API]
-    L -->|LITELLM_PROFILE=ollama| O[Ollama]
-    L -.->|later| B[Bedrock]`}
+    V["each agent<br/>llm.get_model('strong' | 'fast')"] -->|LiteLLM library| P{INSPECTOR_LLM_MODEL_*}
+    P -->|ollama_chat/...| O[Ollama: Mac, container or RunPod]
+    P -->|anthropic/...| A[Anthropic API]
+    P -->|bedrock/...| B[Bedrock: AgentCore role]`}
+	caption="No proxy: the LiteLLM library inside each agent talks to the provider named by the model id."
 />
 
-| Alias | Used for |
-|---|---|
-| `inspector-strong` | Formula and SQL equivalence, date semantics, mismatch diagnosis, final review |
-| `inspector-fast` | Name-match disambiguation, search-token interpretation |
+| Tier | Environment variable | Used for |
+|---|---|---|
+| `strong` | `INSPECTOR_LLM_MODEL_STRONG` | The Inspector and expert agents: investigation, formula and SQL meaning, review |
+| `fast` | `INSPECTOR_LLM_MODEL_FAST` | The data agent's conversation; cheap interpretation |
+
+The value is a LiteLLM model id. `INSPECTOR_LLM_API_BASE` overrides the endpoint (an Ollama server); credentials
+come from the provider's usual environment.
 
 <Tabs>
+	<TabItem label="Ollama (local default)">
+		```bash title=".env"
+		INSPECTOR_LLM_MODEL_STRONG=ollama_chat/qwen3:14b
+		INSPECTOR_LLM_MODEL_FAST=ollama_chat/qwen3:8b
+		INSPECTOR_LLM_API_BASE=http://host.docker.internal:11434   # Ollama on the Mac, seen from containers
+		```
+		Use `http://ollama:11434` with `--profile local-llm`, or the URL of a RunPod Ollama server.
+	</TabItem>
 	<TabItem label="Anthropic API">
-		```yaml title="infra/litellm/anthropic.yaml"
-		model_list:
-		  - model_name: inspector-strong
-		    litellm_params:
-		      model: anthropic/claude-sonnet-5-5
-		      api_key: os.environ/ANTHROPIC_API_KEY
-		  - model_name: inspector-fast
-		    litellm_params:
-		      model: anthropic/claude-haiku-5-5
-		      api_key: os.environ/ANTHROPIC_API_KEY
+		```bash title=".env"
+		INSPECTOR_LLM_MODEL_STRONG=anthropic/claude-sonnet-5-5
+		INSPECTOR_LLM_MODEL_FAST=anthropic/claude-haiku-5-5
+		ANTHROPIC_API_KEY=...
 		```
 	</TabItem>
-	<TabItem label="Ollama (local)">
-		```yaml title="infra/litellm/ollama.yaml"
-		model_list:
-		  - model_name: inspector-strong
-		    litellm_params:
-		      model: ollama_chat/qwen3:14b
-		      api_base: os.environ/OLLAMA_API_BASE
-		  - model_name: inspector-fast
-		    litellm_params:
-		      model: ollama_chat/qwen3:8b
-		      api_base: os.environ/OLLAMA_API_BASE
+	<TabItem label="Bedrock (client / AgentCore)">
+		```bash title="runtime environment"
+		INSPECTOR_LLM_MODEL_STRONG=bedrock/<model or inference profile id>
+		INSPECTOR_LLM_MODEL_FAST=bedrock/<model or inference profile id>
+		AWS_REGION=...
 		```
-	</TabItem>
-	<TabItem label="Bedrock (later)">
-		A third profile maps the same aliases to `bedrock/…` model IDs, or the agents call Bedrock
-		directly. In both cases the agent code stays the same.
+		Each AgentCore runtime calls Bedrock with its own IAM role: no keys, no proxy to run or secure.
 	</TabItem>
 </Tabs>
 
 ## Switching provider
 
 <Steps>
-1. Set `LITELLM_PROFILE=anthropic` or `ollama` in `.env`.
-2. `docker compose up -d litellm` (add `--profile local-llm` to also start Ollama).
-3. Agents keep calling `inspector-strong` / `inspector-fast` through each agent's `llm.get_model()`.
+1. Set `INSPECTOR_LLM_MODEL_STRONG` / `INSPECTOR_LLM_MODEL_FAST` (and the provider's endpoint or key) in `.env`.
+2. `docker compose up -d` recreates the agents with the new environment.
+3. Agent code keeps calling `llm.get_model("strong")` / `get_model("fast")`.
 </Steps>
 
 ## Repeatable results
 
-- Temperature 0, and every prompt is **versioned**.
-- Judge outputs are **cached** by `sha256(canonical inputs + prompt version + model alias)`. Re-running after an unrelated fix doesn't re-judge, and repeated runs give the same verdict.
-- Judges get **minimal, structured context**: resolved definitions and the relevant knowledge entries, never whole files.
+- Temperature 0, and every prompt is **versioned** (`prompts/system.md` in each agent).
+- What the LLM concludes is checked by the evidence ledger: a pass needs a proof, and the verdict is computed.
 
 <Aside type="caution" title="Claude Pro subscriptions">
-	A Pro subscription doesn't include API access, so local runs use an Anthropic API key or Ollama.
-	Ollama is fine for testing the plumbing but is noticeably weaker at equivalence judgments.
+	A Pro subscription doesn't include API access, so local runs use Ollama or an Anthropic API key. Ollama is
+	fine for testing the plumbing but is noticeably weaker at equivalence judgments.
 </Aside>

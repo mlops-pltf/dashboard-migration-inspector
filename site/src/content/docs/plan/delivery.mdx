@@ -6,8 +6,8 @@ description: Eight phases. Joins and aggregation come first, because that's wher
 import { Steps, Aside, Badge } from '@astrojs/starlight/components';
 
 <Steps>
-1. **P0 · Foundations.** <Badge text="Done" variant="success" /> Repo skeleton, LiteLLM container, compose, LLM factory. *(Every agent runs as an A2A server in Docker.)*
-   *Exit:* both agents answer `/ping`; a judge round-trips through both LiteLLM profiles.
+1. **P0 · Foundations.** <Badge text="Done" variant="success" /> Repo skeleton, compose, LLM factory (LiteLLM library; the proxy container was later dropped for direct provider calls). *(Every agent runs as an A2A server in Docker.)*
+   *Exit:* both agents answer `/ping`; a judge round-trips through both providers (Anthropic, Ollama).
 
 2. **P1 · Synthetic data.** <Badge text="Done" variant="success" /> Generator, warehouse seed, scenarios S01–S18 with ground truth.
    *Exit:* packages + seeded Postgres in compose. *(25/25 witnesses verified against the warehouse.)*

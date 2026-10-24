@@ -25,13 +25,12 @@ serve_a2a(executor, agent_card("thoughtspot_agent", "...", url, SKILL_DOCS, conv
 
 | Service | Port | Purpose |
 |---|---|---|
-| `litellm` | 4000 | LLM proxy (Anthropic or Ollama profile) |
 | `ollama` | 11434 | Optional local models (`--profile local-llm`) |
 | `warehouse` | 5439 | Postgres seeded with the synthetic warehouse, standing in for Redshift |
 | `inspector-agent` | 9000 | A2A: `validate` skill + conversation |
 | `thoughtspot-agent` | 9001 → 9000 | A2A: `export_model`, `analyze_sql` + conversation |
 | `strategy-agent` | 9002 → 9000 | A2A: `export_model`, `analyze_sql` + conversation |
-| `data-agent` | 9003 → 9000 | next |
+| `data-agent` | 9003 → 9000 | A2A: `run_query`, `key_profile`, `orphan_profile`, `compare_queries` ... + conversation |
 | `docs` + `docs-tunnel` | 4321 | This site, plus an optional Cloudflare tunnel |
 
 ## Stack

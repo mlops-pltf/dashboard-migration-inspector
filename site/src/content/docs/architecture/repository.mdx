@@ -29,11 +29,13 @@ import { FileTree, Aside } from '@astrojs/starlight/components';
       - inspector_agent/
         - **inspector_agent.py** Strands agent, evidence hook, A2A server
         - prompts/system.md
-        - tools/ package_inventory, expert_client, model_browser, lineage_tracer, counterpart_finder, definition_comparer, join_analyzer, filter_inspector, rule_sweep, data_probe, findings_ledger
+        - tools/ package_inventory, expert_client, model_browser, lineage_tracer, counterpart_finder, definition_comparer, join_analyzer, filter_inspector, rule_sweep, query_compiler, data_probe, findings_ledger
       - Dockerfile
-    - data_agent/ next
+    - data_agent/
+      - **data_agent.py** skills, Strands agent, A2A server
+      - tools/ sql_guard, warehouse, profiler, reconciler
+      - Dockerfile
   - synthetic/ generator, 18 packages, ground truth, warehouse seed
-  - infra/litellm/ anthropic.yaml, ollama.yaml
   - site/ this documentation
   - docker-compose.yml
 </FileTree>
