@@ -58,7 +58,8 @@ export default defineConfig({
 					label: 'Agents',
 					items: [
 						{ label: 'inspector_agent', slug: 'agents/inspector-agent' },
-						{ label: 'Expert agents', slug: 'agents/experts' },
+						{ label: 'thoughtspot_agent', slug: 'agents/thoughtspot-agent' },
+						{ label: 'strategy_agent', slug: 'agents/strategy-agent' },
 						{ label: 'data_agent', slug: 'agents/data-agent' },
 					],
 				},

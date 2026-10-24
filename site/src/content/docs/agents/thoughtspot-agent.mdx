@@ -1,0 +1,73 @@
+---
+title: thoughtspot_agent
+description: The ThoughtSpot expert. Reads TML, formulas and search queries, exports them as IR, and answers questions about ThoughtSpot.
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+The ThoughtSpot expert is an independent package (`packages/thoughtspot_agent`), A2A server and container. It
+knows **ThoughtSpot only** and never judges the Strategy side of a migration. The Inspector asks it for the
+ThoughtSpot side as IR; people can ask it questions directly.
+
+## What it reads
+
+| Input | Notes |
+|---|---|
+| Table TML | Physical tables, columns, data types |
+| SQL view TML | The SQL is parsed (sqlglot, Redshift dialect) into column lineage, joins, filters |
+| Worksheet and model TML | Table paths, joins (type, keys, cardinality), columns, formulas, worksheet filters, `join_progressive` |
+| Formulas | Formula language → IR expressions: `sum`, `unique count`, `sum_if`, `group_aggregate`, `safe_divide`, `ifnull` ... |
+| Liveboard and answer TML | Visualizations, their search queries, liveboard filters and their scope |
+| Search queries | `[Revenue] [Region] [Order Date].monthly [Status] = 'Completed' top 10` → dimensions, measures, buckets, filters, top N |
+| Generated SQL (optional) | ThoughtSpot SQL per visualization, supplied in the package's `sql/` folder |
+
+## What it makes explicit in the IR
+
+ThoughtSpot behaviour that is implicit in TML becomes explicit, so the Inspector can stay technology-neutral:
+
+- **Progressive joins:** each join carries `applied: when_needed` (joined only when a query uses the other table)
+  or `always` (progressive joins off).
+- **`safe_divide(a, b)`** becomes `CASE WHEN b = 0 THEN 0 ELSE a / b END`. Plain `/` returns NULL on zero.
+- **`group_aggregate`** becomes an aggregate with a level: fixed, added to or removed from the query grain, and
+  whether query filters apply.
+- **Table paths** (`FACT_ORDERS_1`) keep role-playing tables apart.
+
+## A2A interface
+
+<CardGrid>
+	<Card title="Structured skills (code, no LLM)" icon="setting">
+		`export_model {location}` → ModelExport (IR)<br />
+		`analyze_sql {sql, default_schema}` → lineage, joins, filters<br />
+		`list_fields {location, model?}` → columns with definitions and file:line<br />
+		`get_object {location, name}` → one worksheet, table, column or liveboard
+	</Card>
+	<Card title="Conversation (LLM)" icon="comment">
+		Any text message. The agent answers with its tools: `summarize_export`, `list_thoughtspot_fields`,
+		`get_thoughtspot_object`, `analyze_sql`, quoting names, definitions and file:line references.
+	</Card>
+</CardGrid>
+
+*"In package S04, does the worksheet join to dim_date only when a date column is used?"* is the kind of
+question it answers.
+
+## Package layout
+
+```text
+packages/thoughtspot_agent/
+  thoughtspot_agent/
+    thoughtspot_agent.py      # skills, agent, A2A server (port 9000)
+    prompts/system.md
+    llm.py                    # LiteLLM model factory
+    tools/
+      thoughtspot_reader/     # tml.py, formula.py, search.py, tool.py
+      sql_analyzer/           # convert.py, lineage.py, tool.py
+      model_export/           # export.py, tool.py
+      common/                 # yamlio.py (line numbers), pratt.py, locations.py
+  Dockerfile
+```
+
+<Aside type="note" title="Next">
+	MCP / REST API access to the ThoughtSpot instance (fetch dependencies instead of relying on exports), and
+	LLM interpretation of constructs the parser does not know, emitted as `provenance: interpreted` so the
+	Inspector treats it as unproven.
+</Aside>

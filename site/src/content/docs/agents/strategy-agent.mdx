@@ -1,0 +1,80 @@
+---
+title: strategy_agent
+description: The Strategy (Mosaic) expert. Reads every export format, derives joins from attributes, exports IR, and answers questions about Strategy.
+---
+
+import { Aside, Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+
+The Strategy expert is an independent package (`packages/strategy_agent`), A2A server and container. It knows
+**Strategy One / MicroStrategy Mosaic only** and never judges the ThoughtSpot side. The Inspector asks it for the
+Strategy side as IR; people can ask it questions directly.
+
+## What it reads
+
+<Tabs>
+	<TabItem label="Mosaic YAML export">
+		The full model: logical tables (physical or Freeform SQL), attributes with forms and their placements on
+		tables, fact metrics, derived metrics, dimensionality, advanced (VLDB) properties.
+	</TabItem>
+	<TabItem label="REST API JSON">
+		The same model as returned by the Modeling REST API. The baseline format for the project.
+	</TabItem>
+	<TabItem label="Apache Ossie YAML">
+		Lossy. Metric levels, hierarchies, join types, composite join keys, metric conditions, VLDB properties and
+		Apply* expressions are not carried. What is lost is listed in the export (`lossy`), so checks that depend
+		on it ask for data instead of guessing.
+	</TabItem>
+	<TabItem label="Dashboards and SQL">
+		Dashboard JSON (chapters, pages, visualizations, filters) and the model's SQL view.
+	</TabItem>
+</Tabs>
+
+## What it makes explicit in the IR
+
+- **Joins derived from attributes:** lookup models declare no joins. Tables join through an attribute whose key
+  form lives on several tables, and only when a query uses that attribute. The expert derives each join.
+- **Join type from the join-semantics setting:** "Preserve all final pass result elements" with an outer-join
+  option keeps fact rows without a lookup match (LEFT); otherwise they drop out (INNER). For Ossie the type is
+  `UNKNOWN`.
+- **Freeform SQL:** parsed into column lineage; its joins and WHERE clause apply to every query (`applied: always`).
+- **Metrics:** `Sum(x){~+}` (report level), `Sum(x){[A]}` (fixed at A), `Distinct=True`, conditions,
+  `NullToZero` = COALESCE, division by zero = NULL. `ApplySimple` whose SQL won't parse becomes `Opaque`.
+
+## A2A interface
+
+<CardGrid>
+	<Card title="Structured skills (code, no LLM)" icon="setting">
+		`export_model {location}` → ModelExport (IR)<br />
+		`analyze_sql {sql, default_schema}` → lineage, joins, filters<br />
+		`list_fields {location, model?}` → attributes and metrics with definitions and file:line<br />
+		`get_object {location, name}` → the model, a table (with its Freeform SQL), an attribute, metric or dashboard
+	</Card>
+	<Card title="Conversation (LLM)" icon="comment">
+		Any text message. The agent answers with its tools: `summarize_export`, `list_strategy_fields`,
+		`get_strategy_object`, `analyze_sql`, and says clearly when the export format cannot answer.
+	</Card>
+</CardGrid>
+
+*"In package S04, which tables does the Freeform SQL join, and is any of them one-to-many?"* is the kind of
+question it answers.
+
+## Package layout
+
+```text
+packages/strategy_agent/
+  strategy_agent/
+    strategy_agent.py         # skills, agent, A2A server (port 9000)
+    prompts/system.md
+    llm.py                    # LiteLLM model factory
+    tools/
+      strategy_reader/        # mosaic.py, ossie.py, dashboard.py, expression.py, tool.py
+      sql_analyzer/           # convert.py, lineage.py, tool.py
+      model_export/           # export.py, join_semantics.py, tool.py
+      common/                 # yamlio.py (line numbers), pratt.py, locations.py
+  Dockerfile
+```
+
+<Aside type="note" title="Next">
+	REST API / MCP access to the Strategy instance (fetch the model and report SQL directly), which would also let
+	data settle what lossy formats such as Ossie leave open.
+</Aside>
