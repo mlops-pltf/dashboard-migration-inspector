@@ -1,0 +1,35 @@
+[project]
+name = "inspector-agent"
+version = "0.1.0"
+description = "Inspector team: the validator agent (A2A). Works on the IR exported by the expert agents."
+requires-python = ">=3.12"
+dependencies = [
+    "inspector-contract",
+    "pydantic>=2.13.5,<3",
+    "ruamel.yaml>=0.19.1,<0.20",
+    "strands-agents[litellm,a2a]==1.59.0",
+    "litellm==1.104.2",
+    "bedrock-agentcore[a2a]==1.24.0",
+]
+
+[project.scripts]
+inspector-validate = "inspector_agent.cli:main"
+inspector-agent = "inspector_agent.inspector_agent:main"
+
+[tool.uv.sources]
+inspector-contract = { workspace = true }
+thoughtspot-agent = { workspace = true }
+strategy-agent = { workspace = true }
+
+[dependency-groups]
+dev = ["thoughtspot-agent", "strategy-agent", "data-agent"]  # tests run the team in-process over A2A
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["inspector_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

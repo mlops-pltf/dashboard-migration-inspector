@@ -1,0 +1,43 @@
+scenario: S05
+title: LEFT -> INNER join to customers, with orphan customers
+description: The Freeform SQL inner-joins dim_customer; ~3% of orders reference customers missing from the dimension.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: ffsql
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: JN-01
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Orders::FACT_ORDERS_to_DIM_CUSTOMER
+  strategy: Sales Orders SQL
+  note: INNER JOIN dim_customer drops orders with unknown customers
+  root_cause: true
+  symptoms:
+  - Revenue
+  - Discount
+  - Shipping
+  - Items Sold
+  - Order Count
+  - Customer Count
+  - Avg Order Value
+  - Discount Rate
+  - Net Revenue
+  also_acceptable:
+  - JN-06
+  - FL-03
+  decided_by: rule
+must_pass: []
+witnesses:
+- id: W1
+  description: Revenue grand total
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql
+- id: W2
+  description: Revenue by Store Region
+  expect: differ
+  thoughtspot_sql: witnesses/W2.thoughtspot.sql
+  strategy_sql: witnesses/W2.strategy.sql

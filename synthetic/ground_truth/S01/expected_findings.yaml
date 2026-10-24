@@ -1,0 +1,31 @@
+scenario: S01
+title: Clean lift-and-shift of a Worksheet
+description: Sales Orders rebuilt as a lookup-table Mosaic model with identical joins, aggregations and filters.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: lookup
+strategy_format: yaml_export
+expected_verdict: READY
+findings: []
+must_pass:
+- Sales Orders::Revenue
+- Sales Orders::Discount
+- Sales Orders::Shipping
+- Sales Orders::Items Sold
+- Sales Orders::Order Count
+- Sales Orders::Customer Count
+- Sales Orders::Avg Order Value
+- Sales Orders::Discount Rate
+- Sales Orders::Net Revenue
+- Sales Orders::Region Revenue
+witnesses:
+- id: W1
+  description: All order measures by Customer Region (includes orphan customers)
+  expect: equal
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql
+- id: W2
+  description: Region Revenue at Store Region x Store Type
+  expect: equal
+  thoughtspot_sql: witnesses/W2.thoughtspot.sql
+  strategy_sql: witnesses/W2.strategy.sql

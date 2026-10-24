@@ -1,0 +1,10 @@
+package_id: S14
+description: Migration of ThoughtSpot worksheet 'Sales Orders' and its content to Strategy model 'Sales Orders'.
+thoughtspot:
+  tml_dir: thoughtspot/
+  sql_dir: thoughtspot/sql/
+strategy:
+  model: strategy/model.yaml
+  model_format: yaml_export
+  dashboards_dir: strategy/dashboards/
+  sql_dir: strategy/sql/

@@ -1,0 +1,30 @@
+scenario: S09
+title: Ratio of sums vs average of row ratios
+description: Margin % is built as the average of per-line margins instead of total margin / total revenue.
+thoughtspot_model: Order Lines (model)
+strategy_model: Order Lines
+strategy_style: lookup
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: AG-03
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Order Lines::Margin %
+  strategy: Order Lines::Margin %
+  note: avg(row ratio) vs sum/sum
+  root_cause: true
+  decided_by: rule
+must_pass:
+- Order Lines::Units
+- Order Lines::Line Revenue
+- Order Lines::Line Cost
+- Order Lines::Gross Margin
+- Order Lines::Avg Selling Price
+witnesses:
+- id: W1
+  description: Margin % by Category
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

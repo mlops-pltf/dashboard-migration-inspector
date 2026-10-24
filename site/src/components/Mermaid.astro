@@ -1,0 +1,112 @@
+---
+interface Props {
+	code: string;
+	caption?: string;
+}
+const { code, caption } = Astro.props;
+---
+
+<figure class="diagram not-content">
+	<pre class="mermaid" data-src={code}>{code}</pre>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script>
+	import mermaid from 'mermaid';
+
+	// Palette mirrors custom.css (indigo accent) for each Starlight theme.
+	const palettes = {
+		dark: {
+			background: 'transparent',
+			primaryColor: '#1e1b4b',
+			primaryBorderColor: '#6366f1',
+			primaryTextColor: '#e5e7eb',
+			secondaryColor: '#111827',
+			tertiaryColor: '#111827',
+			lineColor: '#94a3b8',
+			textColor: '#e5e7eb',
+			clusterBkg: '#111827',
+			clusterBorder: '#334155',
+			edgeLabelBackground: '#1f2937',
+			noteBkgColor: '#312e81',
+			noteTextColor: '#e5e7eb',
+			noteBorderColor: '#6366f1',
+			actorBkg: '#1e1b4b',
+			actorBorder: '#6366f1',
+			actorTextColor: '#e5e7eb',
+			signalColor: '#cbd5e1',
+			signalTextColor: '#e5e7eb',
+		},
+		light: {
+			background: 'transparent',
+			primaryColor: '#eef2ff',
+			primaryBorderColor: '#4f46e5',
+			primaryTextColor: '#1e1b4b',
+			secondaryColor: '#f8fafc',
+			tertiaryColor: '#f8fafc',
+			lineColor: '#64748b',
+			textColor: '#1e293b',
+			clusterBkg: '#f8fafc',
+			clusterBorder: '#cbd5e1',
+			edgeLabelBackground: '#ffffff',
+			noteBkgColor: '#e0e7ff',
+			noteTextColor: '#1e1b4b',
+			noteBorderColor: '#4f46e5',
+			actorBkg: '#eef2ff',
+			actorBorder: '#4f46e5',
+			actorTextColor: '#1e1b4b',
+			signalColor: '#475569',
+			signalTextColor: '#1e293b',
+		},
+	};
+
+	// Re-render on theme toggle so diagrams follow light/dark mode.
+	const render = async () => {
+		const dark = document.documentElement.dataset.theme === 'dark';
+		const fontFamily = getComputedStyle(document.body).fontFamily;
+		mermaid.initialize({
+			startOnLoad: false,
+			securityLevel: 'strict',
+			theme: 'base',
+			themeVariables: { ...(dark ? palettes.dark : palettes.light), fontFamily, fontSize: '15px' },
+			flowchart: { curve: 'basis', padding: 14 },
+			sequence: { actorFontFamily: fontFamily, messageFontFamily: fontFamily, noteFontFamily: fontFamily },
+		});
+		const nodes = Array.from(document.querySelectorAll<HTMLElement>('pre.mermaid'));
+		for (const node of nodes) {
+			node.removeAttribute('data-processed');
+			node.textContent = node.dataset.src ?? '';
+		}
+		await mermaid.run({ nodes });
+	};
+
+	render();
+	new MutationObserver(render).observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ['data-theme'],
+	});
+</script>
+
+<style>
+	.diagram {
+		margin: 1.5rem 0;
+		padding: 1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.75rem;
+		background: var(--sl-color-gray-7, var(--sl-color-black));
+		overflow-x: auto;
+	}
+	.diagram pre.mermaid {
+		margin: 0;
+		background: transparent;
+		display: flex;
+		justify-content: center;
+		font-size: 0.85rem;
+	}
+	.diagram figcaption {
+		margin-top: 0.75rem;
+		text-align: center;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+</style>

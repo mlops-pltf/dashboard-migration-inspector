@@ -1,0 +1,22 @@
+[project]
+name = "inspector-workspace"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["inspector-synth", "inspector-contract", "thoughtspot-agent", "strategy-agent", "inspector-agent", "data-agent"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+inspector-synth = { workspace = true }
+inspector-contract = { workspace = true }
+thoughtspot-agent = { workspace = true }
+strategy-agent = { workspace = true }
+inspector-agent = { workspace = true }
+data-agent = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*", "synthetic"]
+
+[dependency-groups]
+dev = ["pytest>=8.3.3"]

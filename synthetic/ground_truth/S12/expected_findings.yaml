@@ -1,0 +1,42 @@
+scenario: S12
+title: Progressive INNER join vs always-applied INNER join
+description: ThoughtSpot inner-joins customers only when a customer column is used; the Freeform SQL always does.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: ffsql
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: JN-06
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Orders::FACT_ORDERS_to_DIM_CUSTOMER
+  strategy: Sales Orders SQL
+  note: orphan-customer orders vanish even without customer columns
+  root_cause: true
+  symptoms:
+  - Revenue
+  - Discount
+  - Shipping
+  - Items Sold
+  - Order Count
+  - Customer Count
+  - Avg Order Value
+  - Discount Rate
+  - Net Revenue
+  also_acceptable:
+  - FL-03
+  decided_by: rule
+must_pass: []
+witnesses:
+- id: W1
+  description: Revenue by Store Region (no customer column)
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql
+- id: W2
+  description: Revenue by Customer Region (both sides inner-join)
+  expect: equal
+  thoughtspot_sql: witnesses/W2.thoughtspot.sql
+  strategy_sql: witnesses/W2.strategy.sql

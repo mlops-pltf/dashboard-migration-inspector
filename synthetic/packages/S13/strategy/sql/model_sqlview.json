@@ -1,0 +1,3 @@
+{
+  "sqlStatement": "[DB Instance: Redshift Retail]\n\nSELECT\n    p.product_id,\n    p.category,\n    p.subcategory,\n    p.brand,\n    l.line_amount,\n    l.quantity,\n    r.refund_amount,\n    r.return_qty\nFROM analytics.retail.fact_order_lines l\nLEFT JOIN analytics.retail.dim_product p ON p.product_id = l.product_id\nLEFT JOIN analytics.retail.fact_returns r ON p.product_id = r.product_id\n"
+}

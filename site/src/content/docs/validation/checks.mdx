@@ -1,0 +1,83 @@
+---
+title: Check catalogue
+description: Every check, its severity, and what decides it.
+---
+
+import { Tabs, TabItem, Badge, Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Severity rule">
+	**Anything that can change a number is a blocker.** Uncertainty is a **warning**. Cosmetic
+	differences are **low**.
+</Aside>
+
+| Severity | Meaning |
+|---|---|
+| <Badge text="Blocker" variant="danger" /> | Can change a number. The package is not READY while one is failing or unverified. |
+| <Badge text="Warning" variant="caution" /> | Might change results, or couldn't be confirmed yet. |
+| <Badge text="Low" variant="note" /> | Visual only. Fix any time. |
+| <Badge text="Info" variant="default" /> | Shown for context, e.g. extra Strategy fields. |
+
+<Tabs>
+	<TabItem label="Joins">
+		| ID | Check | Severity | Decided by |
+		|---|---|---|---|
+		| JN-01 | Same join type on every join path a measure × dimension pair uses | <Badge text="Blocker" variant="danger" /> | rule (+ data impact) |
+		| JN-02 | Same join keys (incl. composite) and extra join predicates | <Badge text="Blocker" variant="danger" /> | rule |
+		| JN-03 | Cardinality agrees; unknown cardinality is profiled with data | <Badge text="Blocker" variant="danger" /> / <Badge text="Warning" variant="caution" /> | rule + data |
+		| JN-04 | Fan-out: measure aggregated below its home grain | <Badge text="Blocker" variant="danger" /> | rule (+ data confirm) |
+		| JN-05 | Chasm trap: facts at different grains flattened together | <Badge text="Blocker" variant="danger" /> | rule (+ data confirm) |
+		| JN-06 | Join applicability: progressive vs always-applied (Freeform SQL INNER) | <Badge text="Blocker" variant="danger" /> | rule |
+		| JN-07 | A join path exists for every measure × dimension pair the content uses | <Badge text="Blocker" variant="danger" /> | rule |
+	</TabItem>
+	<TabItem label="Aggregation">
+		| ID | Check | Severity | Decided by |
+		|---|---|---|---|
+		| AG-01 | Same aggregate function (SUM / COUNT / COUNT DISTINCT / AVG / MIN / MAX…) | <Badge text="Blocker" variant="danger" /> | rule |
+		| AG-02 | Same level (`group_aggregate` ↔ dimensionality, `{~+}`) | <Badge text="Blocker" variant="danger" /> | rule + judge |
+		| AG-03 | Aggregation order: ratio of sums vs sum of ratios; row-level vs aggregate formulas | <Badge text="Blocker" variant="danger" /> | rule |
+		| AG-04 | Totals/subtotals semantics on displayed totals (`smartTotal`) | <Badge text="Blocker" variant="danger" /> if shown | rule + judge |
+	</TabItem>
+	<TabItem label="Filters">
+		| ID | Check | Severity | Decided by |
+		|---|---|---|---|
+		| FL-01 | Model/worksheet filters ↔ Freeform SQL WHERE / model filters | <Badge text="Blocker" variant="danger" /> | rule |
+		| FL-02 | Metric conditions (`sum_if` ↔ conditional metrics) | <Badge text="Blocker" variant="danger" /> | rule + judge |
+		| FL-03 | Implicit filtering through INNER-join row elimination | <Badge text="Blocker" variant="danger" /> | rule |
+	</TabItem>
+	<TabItem label="Formulas">
+		| ID | Check | Severity | Decided by |
+		|---|---|---|---|
+		| FX-01 | Formula equivalence: canonical match → proven; otherwise judge, then data | <Badge text="Blocker" variant="danger" /> | rule → judge → data |
+		| FX-02 | Null handling (`ifnull`, `NullToZero`, COUNT on nullable columns) | <Badge text="Blocker" variant="danger" /> | rule + judge |
+		| FX-03 | Division: zero handling (`safe_divide` vs ZeroCheck), Redshift integer division | <Badge text="Blocker" variant="danger" /> | rule |
+		| FX-04 | Dates: week start, fiscal year, timezone, date buckets | <Badge text="Blocker" variant="danger" /> | rule + judge |
+		| FX-05 | Rounding / precision / casting | <Badge text="Warning" variant="caution" /> | rule |
+	</TabItem>
+	<TabItem label="Coverage & lineage">
+		| ID | Check | Severity | Decided by |
+		|---|---|---|---|
+		| CV-01 | Every ThoughtSpot field/KPI has a counterpart (or a mapping `ignore`) | <Badge text="Blocker" variant="danger" /> if used, else <Badge text="Warning" variant="caution" /> | rule |
+		| CV-02 | Extra Strategy fields | <Badge text="Info" variant="default" /> | rule |
+		| CV-03 | Every liveboard visualization has a counterpart | <Badge text="Blocker" variant="danger" /> | rule + judge |
+		| LN-01 | Field reads the same physical column(s) | <Badge text="Blocker" variant="danger" /> | rule |
+		| LN-02 | Attribute key/display form ↔ ThoughtSpot attribute column | <Badge text="Blocker" variant="danger" /> | rule |
+		| DT-01 | Data type / precision compatibility | <Badge text="Warning" variant="caution" /> → <Badge text="Blocker" variant="danger" /> if it changes arithmetic | rule |
+	</TabItem>
+	<TabItem label="Dashboards">
+		| ID | Check | Severity | Decided by |
+		|---|---|---|---|
+		| DB-01 | Visualization query: same dimensions (incl. date bucket) and measures | <Badge text="Blocker" variant="danger" /> | rule |
+		| DB-02 | Default filter values and operators | <Badge text="Blocker" variant="danger" /> | rule |
+		| DB-03 | Filter scope: which visualizations each filter applies to | <Badge text="Blocker" variant="danger" /> | rule |
+		| DB-04 | Relative date ranges (`last 30 days`, `this year`) resolve the same | <Badge text="Blocker" variant="danger" /> | rule + judge |
+		| DB-05 | Sort + top-N (incl. ties) changes the shown rows | <Badge text="Blocker" variant="danger" /> | rule |
+		| DB-06 | Aggregation overrides in the search query (`average [Revenue]`) | <Badge text="Blocker" variant="danger" /> | rule |
+		| LF-01 | Chart type mapping | <Badge text="Low" variant="note" /> | rule |
+		| LF-02 | Axes, series, titles, number format, column order, colours | <Badge text="Low" variant="note" /> | rule |
+	</TabItem>
+</Tabs>
+
+<Aside type="tip" title="Root causes, not noise">
+	One wrong join can fail twenty KPIs. The report groups those under the **root cause** finding and
+	lists the symptoms beneath it, so the developer fixes one thing.
+</Aside>

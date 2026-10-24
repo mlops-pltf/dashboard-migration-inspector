@@ -1,0 +1,12 @@
+models:
+- thoughtspot: Order Lines
+  strategy: Product Lines
+fields:
+- thoughtspot: Order Lines::Units
+  strategy: Product Lines::Units Sold
+- thoughtspot: Order Lines::Line Revenue
+  strategy: Product Lines::Gross Sales
+- thoughtspot: Order Lines::Gross Margin
+  strategy: Product Lines::Margin Amount
+- thoughtspot: Order Lines::Category
+  strategy: Product Lines::Product Category

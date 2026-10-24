@@ -1,0 +1,70 @@
+guid: 39593be8-8770-5d57-9e3e-91d6a24b03c9
+model:
+  name: Returns Analysis
+  description: Sales vs returns by product. Two facts at different grains share the product dimension.
+  model_tables:
+  - name: FACT_ORDER_LINES
+    fqn: 60eb3a9e-6032-51d2-bfed-4be5de71ead6
+    joins:
+    - with: DIM_PRODUCT
+      'on': '[FACT_ORDER_LINES::Product ID] = [DIM_PRODUCT::Product ID]'
+      type: LEFT_OUTER
+      cardinality: MANY_TO_ONE
+  - name: FACT_RETURNS
+    fqn: 929f03da-e033-516e-9c71-e143c34f30a6
+    joins:
+    - with: DIM_PRODUCT
+      'on': '[FACT_RETURNS::Product ID] = [DIM_PRODUCT::Product ID]'
+      type: LEFT_OUTER
+      cardinality: MANY_TO_ONE
+  - name: DIM_PRODUCT
+    fqn: 1ffd6410-ca2b-5d8a-bdc9-470e8611afee
+  formulas: []
+  columns:
+  - name: Product ID
+    column_id: DIM_PRODUCT::Product ID
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+  - name: Category
+    column_id: DIM_PRODUCT::Category
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+  - name: Subcategory
+    column_id: DIM_PRODUCT::Subcategory
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+  - name: Brand
+    column_id: DIM_PRODUCT::Brand
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+  - name: Line Revenue
+    column_id: FACT_ORDER_LINES::Line Amount
+    properties:
+      column_type: MEASURE
+      aggregation: SUM
+      index_type: DONT_INDEX
+  - name: Units Sold
+    column_id: FACT_ORDER_LINES::Quantity
+    properties:
+      column_type: MEASURE
+      aggregation: SUM
+      index_type: DONT_INDEX
+  - name: Refund Amount
+    column_id: FACT_RETURNS::Refund Amount
+    properties:
+      column_type: MEASURE
+      aggregation: SUM
+      index_type: DONT_INDEX
+  - name: Units Returned
+    column_id: FACT_RETURNS::Return Quantity
+    properties:
+      column_type: MEASURE
+      aggregation: SUM
+      index_type: DONT_INDEX
+  properties:
+    is_bypass_rls: false
+    join_progressive: true

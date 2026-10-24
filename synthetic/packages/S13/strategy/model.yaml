@@ -1,0 +1,559 @@
+version: '1.0'
+metadataLocale: en-US
+dateNumberLocale: en-US
+model:
+- information:
+    primaryLocale: en-US
+    objectId: 4121A1E7291AA1EAC51FE01E4DC4CEF6
+    subType: report_emma_cube
+    name: Returns Analysis
+    description: Sales vs returns by product. Two facts at different grains share the product dimension.
+  dataServeMode: in_memory
+  enableWrangleRecommendations: true
+  enableAutoHierarchyRelationships: true
+  sampling:
+    type: first
+    rowCount: 1000
+  partition:
+    mode: automatic
+    number: 4
+  autoJoin: true
+  tables:
+  - information:
+      primaryLocale: en-US
+      objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+      subType: logical_table
+      name: Returns Analysis SQL
+    physicalTable:
+      information:
+        primaryLocale: en-US
+        objectId: 32C45BEBB1A5B9A1E762483E235B37F1
+        subType: physical_table
+        name: Returns Analysis SQL
+      type: sql
+      sqlStatement: |-
+        SELECT
+            p.product_id,
+            p.category,
+            p.subcategory,
+            p.brand,
+            l.line_amount,
+            l.quantity,
+            r.refund_amount,
+            r.return_qty
+        FROM analytics.retail.fact_order_lines l
+        LEFT JOIN analytics.retail.dim_product p ON p.product_id = l.product_id
+        LEFT JOIN analytics.retail.fact_returns r ON p.product_id = r.product_id
+      columns:
+      - information:
+          primaryLocale: en-US
+          objectId: E6A0B5275B90C2D5AE53545B44D40AA7
+          subType: column
+          name: product_id
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: product_id
+      - information:
+          primaryLocale: en-US
+          objectId: EFD73E354A538ED0C50FE95C9C96A3FF
+          subType: column
+          name: category
+        dataType:
+          type: utf8_char
+          precision: 32
+          scale: 0
+        columnName: category
+      - information:
+          primaryLocale: en-US
+          objectId: 3E7F69D03DE53BB2CF77826893D2044D
+          subType: column
+          name: subcategory
+        dataType:
+          type: utf8_char
+          precision: 32
+          scale: 0
+        columnName: subcategory
+      - information:
+          primaryLocale: en-US
+          objectId: 3FA0809C6DFD1B66E1E33A5787020990
+          subType: column
+          name: brand
+        dataType:
+          type: utf8_char
+          precision: 32
+          scale: 0
+        columnName: brand
+      - information:
+          primaryLocale: en-US
+          objectId: B55906CB2547A1D365685CEB583C73B3
+          subType: column
+          name: line_amount
+        dataType:
+          type: decimal
+          precision: 12
+          scale: 2
+        columnName: line_amount
+      - information:
+          primaryLocale: en-US
+          objectId: B3CA520D8A4E28AC56D4E62137E60C04
+          subType: column
+          name: quantity
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: quantity
+      - information:
+          primaryLocale: en-US
+          objectId: B6E1E3E9250673BBD86D1B5D700A0A0F
+          subType: column
+          name: refund_amount
+        dataType:
+          type: decimal
+          precision: 12
+          scale: 2
+        columnName: refund_amount
+      - information:
+          primaryLocale: en-US
+          objectId: A5C78AA0C51ECC91E648DA926B119CC7
+          subType: column
+          name: return_qty
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: return_qty
+    primaryDataSource:
+      objectId: 8ABE2B5B212761241C31F68C142F82D7
+      subType: db_role
+      name: Redshift Retail
+    attributes:
+    - information:
+        objectId: 12F229430568F9324809608995B7459F
+        subType: attribute
+        name: Product ID
+    - information:
+        objectId: 0C33A34ED1C74A6D3222ADDCD5F0E558
+        subType: attribute
+        name: Category
+    - information:
+        objectId: 047A4217A17CBFB66129D15FD9D5A79B
+        subType: attribute
+        name: Subcategory
+    - information:
+        objectId: 5752407ED6847F1C199A0EDBFFADBB25
+        subType: attribute
+        name: Brand
+    factMetrics:
+    - information:
+        objectId: D5CF5FC683668C9F0FBF82733811A8A2
+        subType: fact_metric
+        name: Line Revenue
+    - information:
+        objectId: 2AC831D0DE9EDC1DD234A73C25186AAF
+        subType: fact_metric
+        name: Units Sold
+    - information:
+        objectId: 583A767A99897EBDE21FBB684B0F672A
+        subType: fact_metric
+        name: Refund Amount
+    - information:
+        objectId: 2385F94645C659FADC8B365386EB689C
+        subType: fact_metric
+        name: Units Returned
+    refreshPolicy: replace
+  attributes:
+  - information:
+      primaryLocale: en-US
+      objectId: 12F229430568F9324809608995B7459F
+      subType: attribute
+      name: Product ID
+    forms:
+    - id: 2C23BEF7C8A226DF931C641BF978DFD8
+      name: ID
+      category: ID
+      type: system
+      displayFormat: number
+      dataType:
+        type: integer
+        precision: 4
+        scale: 0
+      expressions:
+      - expression:
+          text: product_id
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+      alias: product_id
+      lookupTable:
+        objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+        subType: logical_table
+        name: Returns Analysis SQL
+    attributeLookupTable:
+      objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+      subType: logical_table
+      name: Returns Analysis SQL
+    keyForm:
+      id: 2C23BEF7C8A226DF931C641BF978DFD8
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 2C23BEF7C8A226DF931C641BF978DFD8
+        name: ID
+      browseDisplays:
+      - id: 2C23BEF7C8A226DF931C641BF978DFD8
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 0C33A34ED1C74A6D3222ADDCD5F0E558
+      subType: attribute
+      name: Category
+    forms:
+    - id: 83A9FA1C2107B7941C1D14D7D8D8CA0B
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 32
+        scale: 0
+      expressions:
+      - expression:
+          text: category
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+      alias: category
+      lookupTable:
+        objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+        subType: logical_table
+        name: Returns Analysis SQL
+    attributeLookupTable:
+      objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+      subType: logical_table
+      name: Returns Analysis SQL
+    keyForm:
+      id: 83A9FA1C2107B7941C1D14D7D8D8CA0B
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 83A9FA1C2107B7941C1D14D7D8D8CA0B
+        name: ID
+      browseDisplays:
+      - id: 83A9FA1C2107B7941C1D14D7D8D8CA0B
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 047A4217A17CBFB66129D15FD9D5A79B
+      subType: attribute
+      name: Subcategory
+    forms:
+    - id: 0A1A1D2BA83EED737DBF51B004D99BB5
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 32
+        scale: 0
+      expressions:
+      - expression:
+          text: subcategory
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+      alias: subcategory
+      lookupTable:
+        objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+        subType: logical_table
+        name: Returns Analysis SQL
+    attributeLookupTable:
+      objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+      subType: logical_table
+      name: Returns Analysis SQL
+    keyForm:
+      id: 0A1A1D2BA83EED737DBF51B004D99BB5
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 0A1A1D2BA83EED737DBF51B004D99BB5
+        name: ID
+      browseDisplays:
+      - id: 0A1A1D2BA83EED737DBF51B004D99BB5
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 5752407ED6847F1C199A0EDBFFADBB25
+      subType: attribute
+      name: Brand
+    forms:
+    - id: 13C83B393E8BF66EF80C6F799FA4B099
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 32
+        scale: 0
+      expressions:
+      - expression:
+          text: brand
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+      alias: brand
+      lookupTable:
+        objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+        subType: logical_table
+        name: Returns Analysis SQL
+    attributeLookupTable:
+      objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+      subType: logical_table
+      name: Returns Analysis SQL
+    keyForm:
+      id: 13C83B393E8BF66EF80C6F799FA4B099
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 13C83B393E8BF66EF80C6F799FA4B099
+        name: ID
+      browseDisplays:
+      - id: 13C83B393E8BF66EF80C6F799FA4B099
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  factMetrics:
+  - information:
+      primaryLocale: en-US
+      objectId: D5CF5FC683668C9F0FBF82733811A8A2
+      subType: fact_metric
+      name: Line Revenue
+    fact:
+      dataType:
+        type: decimal
+        precision: 12
+        scale: 2
+      expressions:
+      - expression:
+          text: line_amount
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+    function: sum
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  - information:
+      primaryLocale: en-US
+      objectId: 2AC831D0DE9EDC1DD234A73C25186AAF
+      subType: fact_metric
+      name: Units Sold
+    fact:
+      dataType:
+        type: integer
+        precision: 4
+        scale: 0
+      expressions:
+      - expression:
+          text: quantity
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+    function: sum
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  - information:
+      primaryLocale: en-US
+      objectId: 583A767A99897EBDE21FBB684B0F672A
+      subType: fact_metric
+      name: Refund Amount
+    fact:
+      dataType:
+        type: decimal
+        precision: 12
+        scale: 2
+      expressions:
+      - expression:
+          text: refund_amount
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+    function: sum
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  - information:
+      primaryLocale: en-US
+      objectId: 2385F94645C659FADC8B365386EB689C
+      subType: fact_metric
+      name: Units Returned
+    fact:
+      dataType:
+        type: integer
+        precision: 4
+        scale: 0
+      expressions:
+      - expression:
+          text: return_qty
+        tables:
+        - objectId: A56A11F1E04ACDB1D32C7A66C022A2A3
+          subType: logical_table
+          name: Returns Analysis SQL
+    function: sum
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  metrics: []
+  hierarchy:
+    relationships: []
+    isolatedAttributes:
+    - objectId: 12F229430568F9324809608995B7459F
+      subType: attribute
+      name: Product ID
+    - objectId: 0C33A34ED1C74A6D3222ADDCD5F0E558
+      subType: attribute
+      name: Category
+    - objectId: 047A4217A17CBFB66129D15FD9D5A79B
+      subType: attribute
+      name: Subcategory
+    - objectId: 5752407ED6847F1C199A0EDBFFADBB25
+      subType: attribute
+      name: Brand
+  securityFilters: []
+  folders:
+  - subType: folder
+    name: Attributes
+    primaryLocale: en-US
+    contents:
+    - objectId: 12F229430568F9324809608995B7459F
+      subType: attribute
+      name: Product ID
+    - objectId: 0C33A34ED1C74A6D3222ADDCD5F0E558
+      subType: attribute
+      name: Category
+    - objectId: 047A4217A17CBFB66129D15FD9D5A79B
+      subType: attribute
+      name: Subcategory
+    - objectId: 5752407ED6847F1C199A0EDBFFADBB25
+      subType: attribute
+      name: Brand
+  - subType: folder
+    name: Metrics
+    primaryLocale: en-US
+    contents:
+    - objectId: D5CF5FC683668C9F0FBF82733811A8A2
+      subType: fact_metric
+      name: Line Revenue
+    - objectId: 2AC831D0DE9EDC1DD234A73C25186AAF
+      subType: fact_metric
+      name: Units Sold
+    - objectId: 583A767A99897EBDE21FBB684B0F672A
+      subType: fact_metric
+      name: Refund Amount
+    - objectId: 2385F94645C659FADC8B365386EB689C
+      subType: fact_metric
+      name: Units Returned
+fingerprint: "aa84ab166a6b20c579c2391a8a0c6970404dbab32ac165a44c9381b33b3829e6"

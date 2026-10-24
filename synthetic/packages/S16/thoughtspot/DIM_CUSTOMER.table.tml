@@ -1,0 +1,45 @@
+guid: 7d21d220-4407-5dfa-8456-b67e4ea0704a
+table:
+  name: DIM_CUSTOMER
+  db: ANALYTICS
+  schema: RETAIL
+  db_table: DIM_CUSTOMER
+  connection:
+    name: Redshift Retail
+    fqn: 83fc6beb-3f0f-5991-a2d0-62ef1d97b006
+  columns:
+  - name: Customer ID
+    db_column_name: CUSTOMER_ID
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+    db_column_properties:
+      data_type: INT32
+  - name: Customer Name
+    db_column_name: CUSTOMER_NAME
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Segment
+    db_column_name: SEGMENT
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Region
+    db_column_name: REGION
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Signup Date
+    db_column_name: SIGNUP_DATE
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: DATE

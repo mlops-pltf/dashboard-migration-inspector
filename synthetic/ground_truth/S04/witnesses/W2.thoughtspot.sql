@@ -1,0 +1,9 @@
+SELECT
+    s.region AS "Store Region",
+    COUNT(DISTINCT o.order_id) AS "Order Count",
+    COUNT(DISTINCT o.customer_id) AS "Customer Count"
+FROM analytics.retail.fact_orders o
+LEFT JOIN analytics.retail.dim_store s ON s.store_id = o.store_id
+WHERE o.order_status NOT IN ('Cancelled')
+GROUP BY 1
+ORDER BY "Store Region"

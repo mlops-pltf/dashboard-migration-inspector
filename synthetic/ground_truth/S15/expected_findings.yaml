@@ -1,0 +1,60 @@
+scenario: S15
+title: 'Dashboard drift: default filter, top-N and week start'
+description: Default year filter 2025 -> 2024, Top Customers 10 -> 5, Order Week starts Sunday instead of Monday.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: lookup
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: LN-01
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Orders::Order Week
+  strategy: Sales Orders::Order Week
+  note: week_start_monday vs week_start_sunday
+  root_cause: true
+  symptoms:
+  - Sales Overview::Weekly Net Revenue
+  also_acceptable:
+  - FX-04
+  decided_by: rule
+- id: E2
+  check: DB-02
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Overview::filter Order Year
+  strategy: Sales Overview::filter Order Year
+  note: 2025 vs 2024
+  decided_by: rule
+- id: E3
+  check: DB-05
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Overview::Top Customers
+  strategy: Sales Overview::Top Customers
+  note: top 10 vs top 5
+  decided_by: rule
+must_pass:
+- Sales Orders::Revenue
+- Sales Orders::Discount
+- Sales Orders::Shipping
+- Sales Orders::Items Sold
+- Sales Orders::Order Count
+- Sales Orders::Customer Count
+- Sales Orders::Avg Order Value
+- Sales Orders::Discount Rate
+- Sales Orders::Net Revenue
+- Sales Orders::Region Revenue
+witnesses:
+- id: W1
+  description: Net Revenue by Order Week
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql
+- id: W2
+  description: Top Customers as each dashboard shows it
+  expect: differ
+  thoughtspot_sql: witnesses/W2.thoughtspot.sql
+  strategy_sql: witnesses/W2.strategy.sql

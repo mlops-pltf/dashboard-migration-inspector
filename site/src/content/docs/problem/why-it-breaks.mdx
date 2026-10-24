@@ -1,0 +1,97 @@
+---
+title: Why lift-and-shift breaks
+description: ThoughtSpot and Strategy model the same ideas differently. Each difference is a place where numbers silently change.
+---
+
+import { Aside, Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+
+A developer can rebuild a ThoughtSpot worksheet in Strategy so that it **looks** identical and
+still **computes** something different. The two tools disagree on basic modelling concepts. In the
+Qlik → Strategy migration, **joins and aggregation** caused the most damage, and in the end the
+KPIs produced different values.
+
+<Aside type="caution" title="What the Qlik migration taught us">
+	The worst problems were joins and aggregation, followed by dashboard settings. Every one of them
+	ended up as a KPI with the wrong value. The client accepts look &amp; feel fixes later, but not
+	wrong numbers.
+</Aside>
+
+## The differences that matter
+
+<Tabs>
+	<TabItem label="Joins">
+		| | ThoughtSpot | Strategy / Mosaic |
+		|---|---|---|
+		| Definition | Explicit: type (INNER / LEFT / RIGHT / FULL), `on` condition, cardinality, in Table, Worksheet or Model TML | Mostly implicit: tables join through shared attributes (a form mapped to several tables), with `autoJoin` |
+		| Freeform SQL | n/a | The joins live **inside the SQL** |
+		| When applied | Worksheets can be *progressive*: only the tables a query needs are joined | Only the tables a query needs, **except** Freeform SQL, which always runs all of its joins |
+
+		**What goes wrong:** LEFT becomes INNER and rows disappear. An INNER join to a dimension nobody
+		selected still drops fact rows.
+	</TabItem>
+	<TabItem label="Fan / chasm traps">
+		ThoughtSpot inspects the join graph and computes each fact separately, so measures are not
+		double-counted. Strategy is equally safe **while facts stay in separate tables**.
+
+		**What goes wrong:** a developer flattens `orders` → `order_lines` (one-to-many) into one
+		Freeform SQL. Every `SUM(order_amount)` is now multiplied by the number of lines per order.
+	</TabItem>
+	<TabItem label="Aggregation & level">
+		| | ThoughtSpot | Strategy / Mosaic |
+		|---|---|---|
+		| Aggregation | Column default (SUM, COUNT_DISTINCT, AVERAGE…), aggregate formulas | Fact metric `function`, derived metric expressions |
+		| Level | Query grain; `group_aggregate(…, query_groups() ± {…}, …)` | Dimensionality, e.g. `{~+}` = report level |
+		| Totals | Table totals | `smartTotal`, subtotal settings |
+
+		**What goes wrong:** SUM vs COUNT DISTINCT, ratio of sums vs sum of ratios, totals computed at
+		the wrong level.
+	</TabItem>
+	<TabItem label="Filters">
+		ThoughtSpot has worksheet/model filters, answer filters, and liveboard filters with a scope.
+		Strategy has the WHERE clause inside Freeform SQL, metric conditions, and dashboard filters
+		with their own scope.
+
+		**What goes wrong:** a filter is dropped or added during the rebuild, or it applies to the
+		wrong visualizations.
+	</TabItem>
+	<TabItem label="Formulas & dates">
+		Two formula languages (`safe_divide`, `sum_if`, `diff_days` vs Strategy functions and
+		`ApplySimple` raw SQL) and two date models (`.monthly` / `.weekly` buckets, fiscal calendar,
+		week start, timezone vs date and smart attributes).
+
+		**What goes wrong:** nulls, zero denominators, Redshift integer division, and rows moving
+		between weeks, months or fiscal years.
+	</TabItem>
+	<TabItem label="Dashboards">
+		A liveboard visualization is a search query plus a chart. A Strategy visualization is a
+		template (attributes, metrics) plus filters plus a chart.
+
+		**What goes wrong:** default filter values, relative date ranges ("last 30 days"), top-N and
+		sort change *which* numbers appear, even when every metric is correct.
+	</TabItem>
+</Tabs>
+
+## Why this is hard to automate
+
+<CardGrid>
+	<Card title="No 1:1 structure" icon="puzzle">
+		One worksheet with 5 tables and 4 joins can become one Freeform SQL table. An object-by-object
+		diff produces mostly false alarms.
+	</Card>
+	<Card title="Two languages, two join models" icon="translate">
+		Formulas and joins have to be translated into a common form before they can be compared at
+		all.
+	</Card>
+	<Card title="Equivalence is semantic" icon="information">
+		`safe_divide(sum(a), sum(b))` equals `Sum(a)/Sum(b)`, **unless** `sum(b)` can be zero.
+		Whether that matters depends on the data.
+	</Card>
+	<Card title="Matching data is not proof" icon="warning">
+		INNER vs LEFT gives identical numbers today if no rows are orphaned, and different ones next
+		month.
+	</Card>
+	<Card title="Volume" icon="list-format">
+		Many models and many more dashboards. An LLM over everything would be slow, costly and
+		unrepeatable.
+	</Card>
+</CardGrid>

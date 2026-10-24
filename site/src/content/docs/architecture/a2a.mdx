@@ -1,0 +1,93 @@
+---
+title: Team & A2A
+description: Four independent agents that talk over the Agent2Agent protocol, one AgentCore runtime each.
+---
+
+import { Aside, Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+<Mermaid
+	code={`flowchart LR
+    Dev([Developer / reviewer]) -->|validate · ask| I
+    Dev -.->|ask| TS
+    Dev -.->|ask| ST
+    subgraph AC[AgentCore: one runtime per agent, A2A on :9000]
+      I[inspector_agent]
+      TS[thoughtspot_agent]
+      ST[strategy_agent]
+      DA[data_agent]
+    end
+    I -->|export_model · analyze_sql · ask| TS
+    I -->|export_model · analyze_sql · ask| ST
+    I -->|probes| DA
+    DA --> RS[(Redshift)]
+    TS --- P[(packages: S3)]
+    ST --- P
+    I --- P`}
+	caption="Every agent is an A2A server with an agent card. Structured skills return exact JSON; conversation goes to the agent's LLM."
+/>
+
+## The team
+
+<CardGrid>
+	<Card title="thoughtspot_agent" icon="document">
+		Reads TML, formulas and search queries; exports its side as **IR**; answers questions about ThoughtSpot.
+	</Card>
+	<Card title="strategy_agent" icon="document">
+		Reads Mosaic exports (YAML, REST JSON, Ossie), metrics, Freeform SQL and dashboards; makes Strategy's join
+		semantics explicit; exports IR; answers questions about Strategy.
+	</Card>
+	<Card title="inspector_agent" icon="magnifier">
+		Technology-neutral validation on the experts' IR: matching, proofs, joins, root causes, ledger, report.
+	</Card>
+	<Card title="data_agent" icon="laptop">
+		Next: the only agent with warehouse credentials; probes and reconciliation for anyone on the team.
+	</Card>
+</CardGrid>
+
+## Two kinds of request
+
+| | Structured skill | Conversation |
+|---|---|---|
+| Message | A2A DataPart `{"skill": "export_model", "args": {...}}` | Text |
+| Answered by | **Code**, never the LLM: exact and repeatable | The agent's Strands agent, with its tools |
+| Returns | JSON (e.g. a `ModelExport` in IR) | Text, continued by context id |
+| Used for | IR exports, SQL analysis, validation runs | "What does this formula compute?", reviews, follow-ups |
+
+An expert's conversational answer explains its tool; it is evidence of meaning, never a proof of equality. Only
+exact tool results (or data) can prove a PASS.
+
+## The contract: `inspector_contract`
+
+A small shared package, the only thing the agents have in common:
+
+- **IR** data types: models, tables, joins (type, keys, cardinality, `applied: when_needed | always`), fields
+  (`provenance: parsed | interpreted`), filters, dashboards, expressions.
+- **`ModelExport`**: the versioned envelope an expert returns (`ir_version`, `fingerprint`, models, dashboards, SQL, issues).
+- **A2A conventions**: the skill router (structured to code, text to the agent), agent-card builder, and a client
+  (no auth locally, SigV4 on AgentCore).
+
+<Aside type="tip" title="Adding a BI tool later">
+	A Power BI or Tableau expert implements `export_model` (IR) and `ask`. The Inspector does not change.
+</Aside>
+
+## Deployment
+
+<Tabs>
+	<TabItem label="AgentCore">
+		- One **runtime per agent**, protocol **A2A**, ARM64 image, server on port 9000 at `/`.
+		- Endpoint: `https://bedrock-agentcore.<region>.amazonaws.com/runtimes/<ARN>/invocations/`; agent card under
+		  `.well-known/agent-card.json`.
+		- **SigV4** between agents: the Inspector's role may `InvokeAgentRuntime` on the experts and the data agent
+		  (`INSPECTOR_A2A_AUTH=sigv4`).
+		- Packages in **S3**; each runtime's role reads the bucket. Credentials for ThoughtSpot/Strategy MCP or API
+		  access live only in that expert's runtime; warehouse credentials only in the data agent's.
+	</TabItem>
+	<TabItem label="Local (compose)">
+		```bash
+		docker compose up -d litellm thoughtspot-agent strategy-agent inspector-agent
+		# inspector :9000, thoughtspot :9001, strategy :9002 — same A2A protocol, no auth
+		```
+		Packages are mounted read-only at `/packages` in every container.
+	</TabItem>
+</Tabs>

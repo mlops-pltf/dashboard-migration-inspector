@@ -1,0 +1,60 @@
+---
+title: Report
+description: Machine-readable JSON for pipelines, HTML/Markdown for people. Blockers first, grouped by root cause.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+Every run writes `report.json` (stable schema) and `report.html` / `report.md`.
+
+## A finding
+
+```json title="report.json (one finding)"
+{
+  "id": "F-0031",
+  "check": "JN-04",
+  "severity": "BLOCKER",
+  "status": "FAIL",
+  "title": "Revenue is double-counted: Freeform SQL joins orders to order_lines",
+  "thoughtspot": {
+    "object": "Sales Worksheet", "field": "Revenue",
+    "location": "sales.worksheet.tml:57", "definition": "sum(FACT_ORDERS::AMOUNT)"
+  },
+  "strategy": {
+    "object": "Sales Model", "field": "Revenue",
+    "location": "model.yaml:tables[2].physicalTable.pipeline", "definition": "Sum(Amount){~+}"
+  },
+  "match_basis": "exact",
+  "decided_by": "rule+data",
+  "evidence": {
+    "grain_ts": ["orders.order_id"], "grain_st": ["order_lines.line_id"],
+    "probe": { "id": "P-0012", "status_counts": { "value_diff": 12 }, "relative_diff": 0.314 }
+  },
+  "root_cause_of": ["F-0032", "F-0033"],
+  "suggested_fix": "Aggregate order_lines before joining, or move AMOUNT into its own orders-grain table."
+}
+```
+
+## Report-level fields
+
+| Field | Content |
+|---|---|
+| `verdict` | `READY` / `NOT_READY` / `NEEDS_REVIEW` |
+| `coverage` | Fields and visualizations matched vs total |
+| `intentional_differences` | Mapping `ignore` entries with reasons |
+| `llm` | Calls, cache hits, model per alias, prompt versions |
+
+## Page order in the HTML report
+
+<Steps>
+1. **Blockers**, grouped by root cause, with the symptoms beneath
+2. **Unverified** items and why they couldn't be decided
+3. **Warnings**
+4. **What was proven** (collapsed), so reviewers can see what was checked
+5. **Look & feel** (low)
+</Steps>
+
+<Aside type="tip" title="Batch summary">
+	Across many packages, a CSV/JSON summary shows pass rates and the most common failure types. This
+	feeds back into developer guidance during the migration.
+</Aside>

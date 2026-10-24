@@ -1,0 +1,29 @@
+scenario: S06
+title: LEFT -> INNER join to dates, no orphan dates (latent)
+description: 'Same defect class as S05, but dim_date is complete: today''s numbers match, tomorrow''s may not.'
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: ffsql
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: JN-01
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Orders::FACT_ORDERS_to_DIM_DATE
+  strategy: Sales Orders SQL
+  note: INNER JOIN dim_date; no current impact because dim_date is complete
+  root_cause: true
+  also_acceptable:
+  - JN-06
+  - FL-03
+  latent: true
+  decided_by: rule+data
+must_pass: []
+witnesses:
+- id: W1
+  description: Revenue by Store Region (no impact today)
+  expect: equal
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

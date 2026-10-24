@@ -1,0 +1,301 @@
+guid: ee0a115b-6fa3-5234-94dd-7530584d5e9f
+liveboard:
+  name: Sales Overview
+  visualizations:
+  - id: Viz_1
+    answer:
+      name: Revenue by Store Region
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Store Region] [Revenue] sort by [Revenue] descending'
+      answer_columns:
+      - name: Store Region
+      - name: Total Revenue
+      table:
+        table_columns:
+        - column_id: Store Region
+          show_headline: false
+        - column_id: Total Revenue
+          show_headline: false
+        ordered_column_ids:
+        - Store Region
+        - Total Revenue
+      chart:
+        type: COLUMN
+        chart_columns:
+        - column_id: Store Region
+        - column_id: Total Revenue
+        axis_configs:
+        - x:
+          - Store Region
+          y:
+          - Total Revenue
+      display_mode: CHART_MODE
+    viz_guid: fda5f4d7-786e-5f50-96bc-dd7f942cb9aa
+  - id: Viz_2
+    answer:
+      name: Monthly Revenue Trend
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Order Month] [Revenue] [Order Count] sort by [Order Month]'
+      answer_columns:
+      - name: Order Month
+      - name: Total Revenue
+      - name: Order Count
+      table:
+        table_columns:
+        - column_id: Order Month
+          show_headline: false
+        - column_id: Total Revenue
+          show_headline: false
+        - column_id: Order Count
+          show_headline: false
+        ordered_column_ids:
+        - Order Month
+        - Total Revenue
+        - Order Count
+      chart:
+        type: LINE
+        chart_columns:
+        - column_id: Order Month
+        - column_id: Total Revenue
+        - column_id: Order Count
+        axis_configs:
+        - x:
+          - Order Month
+          y:
+          - Total Revenue
+          - Order Count
+      display_mode: CHART_MODE
+    viz_guid: 7879c8a0-fd71-5085-984f-1e7bc5c17531
+  - id: Viz_3
+    answer:
+      name: Top Customers
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Customer Name] [Revenue] top 10 sort by [Revenue] descending'
+      answer_columns:
+      - name: Customer Name
+      - name: Total Revenue
+      table:
+        table_columns:
+        - column_id: Customer Name
+          show_headline: false
+        - column_id: Total Revenue
+          show_headline: false
+        ordered_column_ids:
+        - Customer Name
+        - Total Revenue
+      display_mode: TABLE_MODE
+    viz_guid: 2507a5cc-a350-52d4-bf1f-4ec50168d965
+  - id: Viz_4
+    answer:
+      name: Average Order Value
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Avg Order Value]'
+      answer_columns:
+      - name: Avg Order Value
+      table:
+        table_columns:
+        - column_id: Avg Order Value
+          show_headline: true
+        ordered_column_ids:
+        - Avg Order Value
+      chart:
+        type: KPI
+        chart_columns:
+        - column_id: Avg Order Value
+        axis_configs:
+        - y:
+          - Avg Order Value
+      display_mode: CHART_MODE
+    viz_guid: a512fd86-10c7-5750-b52a-ecc100f9f5a1
+  - id: Viz_5
+    answer:
+      name: Discount Rate by Status
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Order Status] [Discount Rate] [Revenue] sort by [Order Status]'
+      answer_columns:
+      - name: Order Status
+      - name: Discount Rate
+      - name: Total Revenue
+      table:
+        table_columns:
+        - column_id: Order Status
+          show_headline: false
+        - column_id: Discount Rate
+          show_headline: false
+        - column_id: Total Revenue
+          show_headline: false
+        ordered_column_ids:
+        - Order Status
+        - Discount Rate
+        - Total Revenue
+      display_mode: TABLE_MODE
+    viz_guid: eda1d602-fdc9-54c1-8c84-82001da58e5f
+  - id: Viz_6
+    answer:
+      name: Weekly Net Revenue
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Order Week] [Net Revenue] [Order Count] sort by [Order Week]'
+      answer_columns:
+      - name: Order Week
+      - name: Net Revenue
+      - name: Order Count
+      table:
+        table_columns:
+        - column_id: Order Week
+          show_headline: false
+        - column_id: Net Revenue
+          show_headline: false
+        - column_id: Order Count
+          show_headline: false
+        ordered_column_ids:
+        - Order Week
+        - Net Revenue
+        - Order Count
+      chart:
+        type: LINE
+        chart_columns:
+        - column_id: Order Week
+        - column_id: Net Revenue
+        - column_id: Order Count
+        axis_configs:
+        - x:
+          - Order Week
+          y:
+          - Net Revenue
+          - Order Count
+      display_mode: CHART_MODE
+    viz_guid: 0829ff11-9bd9-5815-b06a-3d54dcc2826f
+  - id: Viz_7
+    answer:
+      name: Region vs Store Type
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Store Region] [Store Type] [Revenue] [Region Revenue] sort by [Store Region]'
+      answer_columns:
+      - name: Store Region
+      - name: Store Type
+      - name: Total Revenue
+      - name: Region Revenue
+      table:
+        table_columns:
+        - column_id: Store Region
+          show_headline: false
+        - column_id: Store Type
+          show_headline: false
+        - column_id: Total Revenue
+          show_headline: false
+        - column_id: Region Revenue
+          show_headline: false
+        ordered_column_ids:
+        - Store Region
+        - Store Type
+        - Total Revenue
+        - Region Revenue
+      display_mode: TABLE_MODE
+    viz_guid: 815d6a6b-a128-5aca-89b4-4c6967df2096
+  - id: Viz_8
+    answer:
+      name: Shipping by Customer Region
+      tables:
+      - id: Sales Orders
+        name: Sales Orders
+        fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+      search_query: '[Customer Region] [Shipping] [Customer Count] sort by [Shipping] descending'
+      answer_columns:
+      - name: Customer Region
+      - name: Total Shipping
+      - name: Customer Count
+      table:
+        table_columns:
+        - column_id: Customer Region
+          show_headline: false
+        - column_id: Total Shipping
+          show_headline: false
+        - column_id: Customer Count
+          show_headline: false
+        ordered_column_ids:
+        - Customer Region
+        - Total Shipping
+        - Customer Count
+      chart:
+        type: COLUMN
+        chart_columns:
+        - column_id: Customer Region
+        - column_id: Total Shipping
+        - column_id: Customer Count
+        axis_configs:
+        - x:
+          - Customer Region
+          y:
+          - Total Shipping
+          - Customer Count
+      display_mode: CHART_MODE
+    viz_guid: 019bcb99-b2e6-5772-af76-02afff498a8c
+  filters:
+  - column:
+    - Order Year
+    oper: in
+    values:
+    - '2025'
+  layout:
+    tiles:
+    - visualization_id: Viz_1
+      x: 0
+      y: 0
+      height: 5
+      width: 6
+    - visualization_id: Viz_2
+      x: 6
+      y: 0
+      height: 5
+      width: 6
+    - visualization_id: Viz_3
+      x: 0
+      y: 5
+      height: 5
+      width: 6
+    - visualization_id: Viz_4
+      x: 6
+      y: 5
+      height: 5
+      width: 6
+    - visualization_id: Viz_5
+      x: 0
+      y: 10
+      height: 5
+      width: 6
+    - visualization_id: Viz_6
+      x: 6
+      y: 10
+      height: 5
+      width: 6
+    - visualization_id: Viz_7
+      x: 0
+      y: 15
+      height: 5
+      width: 6
+    - visualization_id: Viz_8
+      x: 6
+      y: 15
+      height: 5
+      width: 6

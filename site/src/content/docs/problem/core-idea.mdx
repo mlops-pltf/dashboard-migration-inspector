@@ -1,0 +1,52 @@
+---
+title: The core idea
+description: Compile both sides down to the warehouse, and compare there.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+<div class="principle">
+	<strong>Compile both sides down to the warehouse.</strong> Every field and KPI, on both sides,
+	becomes a <em>resolved definition</em>: the Redshift columns it reads, the join path that reaches
+	them, the filters applied before aggregation, the aggregation and its level, and the formula on
+	top. Two resolved definitions can be compared no matter how either tool organised its model.
+</div>
+
+<Mermaid
+	code={`flowchart TB
+    subgraph TS[ThoughtSpot]
+      W[Worksheet / Model] --> T1[Table TML x5]
+      W --> J1[4 declared joins]
+      W --> F1["formula: sum(Amount)"]
+    end
+    subgraph ST[Strategy]
+      M[Mosaic model] --> FS[1 Freeform SQL table]
+      FS --> J2[joins inside SQL]
+      M --> F2["metric: Sum(Amount){~+}"]
+    end
+    TS --> R1[Resolved definition]
+    ST --> R2[Resolved definition]
+    R1 --> C{{Compare}}
+    R2 --> C
+    C --> P[proven equal]
+    C --> X[proven different]
+    C --> U[inconclusive → data]`}
+	caption="Very different structures produce resolved definitions that can be compared field by field."
+/>
+
+## Who decides
+
+<CardGrid>
+	<Card title="Tools: exact answers" icon="setting">
+		Parsing, lineage, canonical proofs, join and fan-out analysis, the rule sweep. Repeatable, and
+		independent of the agent.
+	</Card>
+	<Card title="Agent: judgment" icon="star">
+		Plans the investigation, pairs objects, reasons about meaning, groups root causes, asks for data,
+		explains.
+	</Card>
+	<Card title="Data: the tie-break" icon="random">
+		When definitions can't settle it, both sides run against Redshift and the numbers decide.
+	</Card>
+</CardGrid>

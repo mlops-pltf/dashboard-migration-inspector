@@ -1,0 +1,131 @@
+{
+  "relationships": [
+    {
+      "parent": {
+        "objectId": "A13E7B3F0D5FF2E08A324F699C092C0C",
+        "subType": "attribute",
+        "name": "Order Status"
+      },
+      "child": {
+        "objectId": "5B28C69414223A2B892AFB7635A39321",
+        "subType": "attribute",
+        "name": "Order ID"
+      },
+      "relationshipTable": {
+        "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+        "subType": "logical_table",
+        "name": "fact_orders"
+      },
+      "relationshipType": "one_to_many"
+    },
+    {
+      "parent": {
+        "objectId": "71B5A33FD6BEDA8C11BCBA230DE23A3E",
+        "subType": "attribute",
+        "name": "Product Name"
+      },
+      "child": {
+        "objectId": "04EB63FBCF801D608C5930919FF081E9",
+        "subType": "attribute",
+        "name": "Product ID"
+      },
+      "relationshipTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "relationshipType": "one_to_many"
+    },
+    {
+      "parent": {
+        "objectId": "0769513B9C05C523D65BAE2859AE1154",
+        "subType": "attribute",
+        "name": "Product Category"
+      },
+      "child": {
+        "objectId": "04EB63FBCF801D608C5930919FF081E9",
+        "subType": "attribute",
+        "name": "Product ID"
+      },
+      "relationshipTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "relationshipType": "one_to_many"
+    },
+    {
+      "parent": {
+        "objectId": "37560E93FD55BAE375A85ACCCE8B50AD",
+        "subType": "attribute",
+        "name": "Subcategory"
+      },
+      "child": {
+        "objectId": "04EB63FBCF801D608C5930919FF081E9",
+        "subType": "attribute",
+        "name": "Product ID"
+      },
+      "relationshipTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "relationshipType": "one_to_many"
+    },
+    {
+      "parent": {
+        "objectId": "FDD67A7248A472D0B4A65DAB0A1869A9",
+        "subType": "attribute",
+        "name": "Brand"
+      },
+      "child": {
+        "objectId": "04EB63FBCF801D608C5930919FF081E9",
+        "subType": "attribute",
+        "name": "Product ID"
+      },
+      "relationshipTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "relationshipType": "one_to_many"
+    },
+    {
+      "parent": {
+        "objectId": "0261BC5721A7E76AEEA1E4CFD78ADA1D",
+        "subType": "attribute",
+        "name": "Order Month"
+      },
+      "child": {
+        "objectId": "36AC608D48481AAD173DDB2D31F26F8C",
+        "subType": "attribute",
+        "name": "Order Date"
+      },
+      "relationshipTable": {
+        "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+        "subType": "logical_table",
+        "name": "dim_date"
+      },
+      "relationshipType": "one_to_many"
+    },
+    {
+      "parent": {
+        "objectId": "88112BFF041B5B39BA8941D33B6C5F3A",
+        "subType": "attribute",
+        "name": "Order Year"
+      },
+      "child": {
+        "objectId": "36AC608D48481AAD173DDB2D31F26F8C",
+        "subType": "attribute",
+        "name": "Order Date"
+      },
+      "relationshipTable": {
+        "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+        "subType": "logical_table",
+        "name": "dim_date"
+      },
+      "relationshipType": "one_to_many"
+    }
+  ],
+  "isolatedAttributes": []
+}

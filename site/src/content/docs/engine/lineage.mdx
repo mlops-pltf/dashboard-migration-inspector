@@ -1,0 +1,62 @@
+---
+title: Lineage resolution
+description: Every field and KPI is traced back to Redshift columns, joins, filters and aggregation.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+## Resolved definition
+
+```text
+ResolvedDefinition
+  expr          canonical Expr whose leaves are PhysicalColumns
+  home          relation(s) the measure's facts come from
+  join_paths    for each other relation touched: Joins from home (type + keys + cardinality)
+  row_filters   predicates applied before aggregation (model filters, SQL WHERE, metric conditions)
+                + INNER-join row elimination, recorded separately as join-implied filtering
+  aggregation   Agg tree (function, distinct, condition)
+  level         query grain | fixed | include | exclude
+  grain         key columns of the relation the aggregation actually runs over
+  confidence    exact | derived | interpreted  (+ reasons)
+```
+
+## ThoughtSpot: following references
+
+<Mermaid
+	code={`flowchart LR
+    F["formula: sum([FACT_ORDERS_1::Amount])"] --> TP[table path FACT_ORDERS_1]
+    TP --> T[Table TML FACT_ORDERS]
+    T --> C["sales.fact_orders.amount"]
+    TP --> JP[join path → DIM_CUSTOMER]`}
+/>
+
+`[TABLE_PATH::Column]` → table path → Table TML → `db.schema.table.column`. Joins come from Table
+TML `joins_with`, Worksheet `joins` + `table_paths`, or Model `model_tables[].joins`.
+
+## Strategy: following references
+
+<Mermaid
+	code={`flowchart LR
+    M["metric: Sum([Revenue]){~+}"] --> FM[fact metric Revenue]
+    FM --> FE["fact expr: amount on orders_ffsql"]
+    FE --> LT[logical table orders_ffsql]
+    LT --> DR["DerivedRelation (Freeform SQL)"]
+    DR --> C["sales.fact_orders.amount + internal joins + WHERE"]`}
+/>
+
+Derived metric → fact metric → fact expression → logical table → physical **or** derived relation,
+followed recursively.
+
+<Aside type="note" title="Confidence is always reported">
+	`exact`: everything parsed and resolved. `derived`: depends on inferred joins (Strategy) or
+	inferred keys. `interpreted`: an LLM read part of it (e.g. an unusual search token). Only `exact`
+	definitions can produce a proof.
+</Aside>
+
+<Aside type="tip" title="Join-key attributes have several equivalent columns">
+	A Strategy attribute that is a join key lives on both sides of the join, e.g. *Order Date* on
+	`fact_orders.order_date` **and** `dim_date.date_key`. ThoughtSpot may read either one. The resolver
+	reports all of them as `equivalent_columns`, and comparison accepts any, so a correct model is not
+	flagged.
+</Aside>

@@ -1,0 +1,59 @@
+scenario: S18
+title: Ossie YAML input for the S08 model
+description: Same defect as S08, delivered as Apache Ossie YAML, which drops metric levels and Apply* expressions.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: lookup
+strategy_format: ossie_yaml
+expected_verdict: NEEDS_REVIEW
+expected_verdict_after_data: NOT_READY
+findings:
+- id: E1
+  check: AG-02
+  severity: BLOCKER
+  status: UNVERIFIED
+  thoughtspot: Sales Orders::Region Revenue
+  strategy: Sales Orders::Region Revenue
+  note: level information not present in Ossie YAML
+  status_after_data: FAIL
+  decided_by: data
+- id: E2
+  check: FX-01
+  severity: BLOCKER
+  status: UNVERIFIED
+  thoughtspot: Sales Orders::Net Revenue
+  strategy: Sales Orders::Net Revenue
+  note: ApplySimple metric exported without an expression; with no definition there is nothing to run, so data cannot settle
+    it (needs Strategy's report SQL)
+  status_after_data: UNVERIFIED
+  decided_by: data
+- id: E3
+  check: JN-01
+  severity: BLOCKER
+  status: UNVERIFIED
+  thoughtspot: Sales Orders::FACT_ORDERS_to_DIM_CUSTOMER
+  strategy: Sales Orders::fact_orders_to_dim_customer
+  note: Ossie relationships carry no join type; 749 orders have no customer, so the result depends on the type and data cannot
+    settle it
+  status_after_data: UNVERIFIED
+  decided_by: data
+must_pass:
+- Sales Orders::Revenue
+- Sales Orders::Discount
+- Sales Orders::Shipping
+- Sales Orders::Items Sold
+- Sales Orders::Order Count
+- Sales Orders::Customer Count
+- Sales Orders::Avg Order Value
+- Sales Orders::Discount Rate
+witnesses:
+- id: W1
+  description: Region Revenue at Store Region x Store Type
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql
+- id: W2
+  description: Net Revenue by Customer Segment
+  expect: equal
+  thoughtspot_sql: witnesses/W2.thoughtspot.sql
+  strategy_sql: witnesses/W2.strategy.sql

@@ -1,0 +1,72 @@
+---
+title: LLM integration
+description: A LiteLLM proxy with two stable aliases. Switching provider never touches agent code.
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+<Mermaid
+	code={`flowchart LR
+    V[each agent] -->|inspector-strong / inspector-fast| L[LiteLLM proxy :4000]
+    L -->|LITELLM_PROFILE=anthropic| A[Anthropic API]
+    L -->|LITELLM_PROFILE=ollama| O[Ollama]
+    L -.->|later| B[Bedrock]`}
+/>
+
+| Alias | Used for |
+|---|---|
+| `inspector-strong` | Formula and SQL equivalence, date semantics, mismatch diagnosis, final review |
+| `inspector-fast` | Name-match disambiguation, search-token interpretation |
+
+<Tabs>
+	<TabItem label="Anthropic API">
+		```yaml title="infra/litellm/anthropic.yaml"
+		model_list:
+		  - model_name: inspector-strong
+		    litellm_params:
+		      model: anthropic/claude-sonnet-5-5
+		      api_key: os.environ/ANTHROPIC_API_KEY
+		  - model_name: inspector-fast
+		    litellm_params:
+		      model: anthropic/claude-haiku-5-5
+		      api_key: os.environ/ANTHROPIC_API_KEY
+		```
+	</TabItem>
+	<TabItem label="Ollama (local)">
+		```yaml title="infra/litellm/ollama.yaml"
+		model_list:
+		  - model_name: inspector-strong
+		    litellm_params:
+		      model: ollama_chat/qwen3:14b
+		      api_base: os.environ/OLLAMA_API_BASE
+		  - model_name: inspector-fast
+		    litellm_params:
+		      model: ollama_chat/qwen3:8b
+		      api_base: os.environ/OLLAMA_API_BASE
+		```
+	</TabItem>
+	<TabItem label="Bedrock (later)">
+		A third profile maps the same aliases to `bedrock/…` model IDs, or the agents call Bedrock
+		directly. In both cases the agent code stays the same.
+	</TabItem>
+</Tabs>
+
+## Switching provider
+
+<Steps>
+1. Set `LITELLM_PROFILE=anthropic` or `ollama` in `.env`.
+2. `docker compose up -d litellm` (add `--profile local-llm` to also start Ollama).
+3. Agents keep calling `inspector-strong` / `inspector-fast` through each agent's `llm.get_model()`.
+</Steps>
+
+## Repeatable results
+
+- Temperature 0, and every prompt is **versioned**.
+- Judge outputs are **cached** by `sha256(canonical inputs + prompt version + model alias)`. Re-running after an unrelated fix doesn't re-judge, and repeated runs give the same verdict.
+- Judges get **minimal, structured context**: resolved definitions and the relevant knowledge entries, never whole files.
+
+<Aside type="caution" title="Claude Pro subscriptions">
+	A Pro subscription doesn't include API access, so local runs use an Anthropic API key or Ollama.
+	Ollama is fine for testing the plumbing but is noticeably weaker at equivalence judgments.
+</Aside>

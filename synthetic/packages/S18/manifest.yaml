@@ -1,0 +1,10 @@
+package_id: S18
+description: Migration of ThoughtSpot worksheet 'Sales Orders' and its content to Strategy model 'Sales Orders'.
+thoughtspot:
+  tml_dir: thoughtspot/
+  sql_dir: thoughtspot/sql/
+strategy:
+  model: strategy/model.ossie.yaml
+  model_format: ossie_yaml
+  dashboards_dir: strategy/dashboards/
+  sql_dir: strategy/sql/

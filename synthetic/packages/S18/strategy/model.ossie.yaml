@@ -1,0 +1,195 @@
+version: '1.0'
+semantic_model:
+- name: Sales Orders
+  description: Order-level sales analysis by customer, store and date.
+  datasets:
+  - name: fact_orders
+    source: |-
+      SELECT
+          o.order_id,
+          o.order_ts,
+          o.order_date,
+          o.customer_id,
+          o.store_id,
+          o.order_status,
+          o.order_amount,
+          o.discount_amount,
+          o.shipping_amount,
+          o.item_count
+      FROM analytics.retail.fact_orders o
+      WHERE o.order_status <> 'Cancelled'
+    primary_key:
+    - order_id
+    fields:
+    - name: Order ID
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: order_id
+    - name: Order Date
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: order_date
+    - name: Order Status
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: order_status
+    - name: Customer ID
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: customer_id
+    - name: Store ID
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: store_id
+  - name: dim_customer
+    source: analytics.retail.dim_customer
+    primary_key:
+    - customer_id
+    fields:
+    - name: Customer Name
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: customer_name
+    - name: Customer Segment
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: segment
+    - name: Customer Region
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: region
+  - name: dim_store
+    source: analytics.retail.dim_store
+    primary_key:
+    - store_id
+    fields:
+    - name: Store Name
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: store_name
+    - name: Store City
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: city
+    - name: Store Region
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: region
+    - name: Store Type
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: store_type
+  - name: dim_date
+    source: analytics.retail.dim_date
+    primary_key:
+    - date_key
+    fields:
+    - name: Order Week
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: week_start_monday
+    - name: Order Month
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: month_start
+    - name: Order Quarter
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: quarter
+    - name: Order Year
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: year
+    - name: Fiscal Year
+      expression:
+        dialects:
+        - dialect: ANSI_SQL
+          expression: fiscal_year
+  relationships:
+  - name: fact_orders_to_dim_customer
+    from: fact_orders
+    to: dim_customer
+    from_columns:
+    - customer_id
+    to_columns:
+    - customer_id
+  - name: fact_orders_to_dim_store
+    from: fact_orders
+    to: dim_store
+    from_columns:
+    - store_id
+    to_columns:
+    - store_id
+  - name: fact_orders_to_dim_date
+    from: fact_orders
+    to: dim_date
+    from_columns:
+    - order_date
+    to_columns:
+    - date_key
+  metrics:
+  - name: Revenue
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: SUM(fact_orders.order_amount)
+  - name: Discount
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: SUM(fact_orders.discount_amount)
+  - name: Shipping
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: SUM(fact_orders.shipping_amount)
+  - name: Items Sold
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: SUM(fact_orders.item_count)
+  - name: Order Count
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: COUNT(DISTINCT fact_orders.order_id)
+  - name: Customer Count
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: COUNT(DISTINCT fact_orders.customer_id)
+  - name: Avg Order Value
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: SUM(fact_orders.order_amount) / NULLIF(COUNT(DISTINCT fact_orders.order_id), 0)
+  - name: Discount Rate
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: CASE WHEN SUM(fact_orders.order_amount) = 0 THEN 0 ELSE SUM(fact_orders.discount_amount) / SUM(fact_orders.order_amount)
+          END
+    description: Discount as a share of revenue; 0 when revenue is 0
+  - name: Net Revenue
+  - name: Region Revenue
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: SUM(fact_orders.order_amount)
+    description: Revenue of the whole store region, regardless of other grouping

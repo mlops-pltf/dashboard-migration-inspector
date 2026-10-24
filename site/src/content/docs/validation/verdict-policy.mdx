@@ -1,0 +1,52 @@
+---
+title: Verdict policy
+description: No pass without proof. The data settles disagreements.
+---
+
+import { Badge, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+<Mermaid
+	code={`flowchart TD
+    S{Static analysis} -->|canonical match| P[PASS]
+    S -->|rule: proven different| F1[FAIL]
+    S -->|LLM judgment needed| J{Judge}
+    F1 -.->|data equal| FL["FAIL (latent)"]
+    J --> D{Data probe}
+    D -->|equal| PD["PASS (data-verified)"]
+    D -->|differs| F2["FAIL (+ diagnosis)"]
+    D -->|can't run| U[UNVERIFIED]`}
+	caption="An LLM judgment never decides a blocker on its own. It always goes to the data."
+/>
+
+| Static result | Data result | Final status | Note |
+|---|---|---|---|
+| Proven equal | not needed | <Badge text="PASS" variant="success" /> | Canonical trees identical |
+| Proven different | not run | <Badge text="FAIL" variant="danger" /> | |
+| Proven different | data equal | <Badge text="FAIL (latent)" variant="danger" /> | E.g. INNER vs LEFT with no orphan rows *today*. `latent_policy: fail \| warn` (default `fail`) |
+| LLM: equivalent | data equal | <Badge text="PASS (data-verified)" variant="success" /> | |
+| LLM: equivalent | data differs | <Badge text="FAIL" variant="danger" /> | The data decides |
+| LLM: not equivalent | data equal | <Badge text="PASS (data-verified)" variant="success" /> + advisory | The data decides; the edge case is noted |
+| LLM: not equivalent | data differs | <Badge text="FAIL (confirmed)" variant="danger" /> | |
+| Any | can't run / not allowed | <Badge text="UNVERIFIED" variant="caution" /> | Keeps the package from being READY |
+
+<Aside type="note" title="Why a latent difference still fails by default">
+	Matching data shows the numbers agree **on today's data**. A proven logic difference, like an
+	INNER join where ThoughtSpot used LEFT, will produce different numbers as soon as an orphan row
+	arrives. The client needs the numbers right from day 1, so the default is `fail`. It can be
+	switched to `warn`.
+</Aside>
+
+## Package verdict
+
+<CardGrid>
+	<Card title="READY" icon="approve-check">
+		No blocker is failing or unverified. Goes to human review.
+	</Card>
+	<Card title="NOT_READY" icon="error">
+		At least one blocker fails. Back to the developer with fixes.
+	</Card>
+	<Card title="NEEDS_REVIEW" icon="warning">
+		Only unverified blockers and/or warnings. A reviewer decides.
+	</Card>
+</CardGrid>

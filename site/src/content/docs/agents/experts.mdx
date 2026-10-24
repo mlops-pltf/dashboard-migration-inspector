@@ -1,0 +1,39 @@
+---
+title: Expert agents
+description: One agent per BI technology. Each owns its parsing and semantics, exports IR, and answers questions.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Each expert is an independent package and A2A server with its own tools, prompt and container. It knows
+**one** technology deeply and never judges the other side of a migration.
+
+<Tabs>
+	<TabItem label="thoughtspot_agent">
+		| | |
+		|---|---|
+		| Reads | Table, SQL view, worksheet, model, liveboard and answer TML; formulas; search queries |
+		| Makes explicit in IR | `safe_divide` → `CASE WHEN b = 0 THEN 0 ELSE a / b END`; every join's `applied` from progressive joins |
+		| Structured skills | `export_model`, `analyze_sql`, `list_fields`, `get_object` |
+		| Agent tools | `summarize_export`, `list_thoughtspot_fields`, `get_thoughtspot_object`, `analyze_sql` |
+	</TabItem>
+	<TabItem label="strategy_agent">
+		| | |
+		|---|---|
+		| Reads | Mosaic YAML export, REST JSON, Apache Ossie YAML, dashboard JSON, Strategy expressions, Freeform SQL |
+		| Makes explicit in IR | Joins derived from attributes on several tables, with the type from the join-semantics setting; Freeform SQL lineage; what Ossie loses |
+		| Structured skills | `export_model`, `analyze_sql`, `list_fields`, `get_object` |
+		| Agent tools | `summarize_export`, `list_strategy_fields`, `get_strategy_object`, `analyze_sql` |
+	</TabItem>
+</Tabs>
+
+## Talking to an expert directly
+
+Developers and reviewers can ask an expert about their export, e.g. *"In package S04, which tables does the
+Freeform SQL join, and is any of them one-to-many?"*. Conversations continue by context id.
+
+<Aside type="note" title="Next for the experts">
+	MCP / API access to the ThoughtSpot and Strategy instances (fetch dependencies instead of relying on exports),
+	and LLM interpretation of constructs the parser does not know, emitted as `provenance: interpreted` so the
+	Inspector treats it as unproven.
+</Aside>

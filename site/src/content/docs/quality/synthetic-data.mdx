@@ -1,0 +1,121 @@
+---
+title: Synthetic data & evaluation
+description: Realistic inputs with known injected defects, so we can measure what Inspector catches and what it wrongly flags.
+---
+
+import { Aside, Card, CardGrid, Badge, FileTree, Steps } from '@astrojs/starlight/components';
+
+We need realistic inputs **and ground truth**, so we can measure recall (catches what it should)
+and precision (no false alarms). Developers stop trusting a validator after a few false alarms.
+
+<div class="stats">
+	<div><strong>18</strong><span>migration packages</span></div>
+	<div><strong>25 / 25</strong><span>witness queries behave as designed</span></div>
+	<div><strong>~98k</strong><span>fact rows with traps</span></div>
+	<div><strong>3</strong><span>Strategy input formats</span></div>
+</div>
+
+<Aside type="tip" title="Status: built">
+	The generator lives in `synthetic/` (package `inspector-synth`). Output is deterministic: the same
+	seed always produces byte-identical files, and a test enforces it.
+</Aside>
+
+## Warehouse with traps
+
+A retail domain on `analytics.retail`, seeded so that **every injected defect produces a visible
+numeric difference**:
+
+<CardGrid>
+	<Card title="Tables" icon="list-format">
+		`fact_orders` (24k, order grain) · `fact_order_lines` (72k, line grain) · `fact_returns` (1.6k) ·
+		`dim_customer` · `dim_store` · `dim_product` · `dim_date` (fiscal year from April; Monday and
+		Sunday week starts)
+	</Card>
+	<Card title="Traps" icon="warning">
+		~3% orphan customers · ~2% lines with orphan products · NULL discounts and shipping ·
+		zero-revenue `Replacement` orders · UTC timestamps near midnight with a local `order_date`
+	</Card>
+</CardGrid>
+
+## What a package contains
+
+<FileTree>
+- synthetic/
+  - packages/ **Inspector's input**
+    - S04/
+      - manifest.yaml
+      - thoughtspot/ Table, Worksheet/Model, Liveboard, Answer TML
+        - sql/ ThoughtSpot SQL per visualization
+      - strategy/
+        - model.yaml or model/\*.json or model.ossie.yaml
+        - dashboards/
+        - sql/model_sqlview.json
+  - ground_truth/ **eval only, never read by Inspector**
+    - S04/
+      - expected_findings.yaml verdict, findings, root causes, must_pass
+      - witnesses/ ThoughtSpot vs Strategy query pairs
+  - warehouse/ CSVs, Postgres init scripts, Redshift DDL
+</FileTree>
+
+Ground truth sits **outside** the packages, so nothing Inspector or its LLM reads can give away the
+answer. A test enforces this too.
+
+## How each scenario is built
+
+Every field in the generator carries three views of the same meaning: the **ThoughtSpot formula**,
+the **Strategy definition** a correct developer would build, and its **true SQL semantics**. A
+scenario corrupts the Strategy side (definition and SQL together). The package and the witness
+queries then come from the same source, so they can't disagree.
+
+<Steps>
+1. Pick a ThoughtSpot model: **Sales Orders** (Worksheet TML), **Order Lines** (Model TML) or **Returns Analysis** (Model TML, two facts).
+2. Build the Strategy version: lookup tables (attributes spanning tables define the joins) or one Freeform SQL table (`physicalTable.type: "sql"`).
+3. Inject the defect, and record expected findings and the fields that must still pass.
+4. Emit witness pairs and run them against the warehouse: defects must **differ**, benign changes must **match**.
+</Steps>
+
+## Scenarios
+
+| # | Scenario | Strategy build | Expected |
+|---|---|---|---|
+| S01 | Clean lift-and-shift (Worksheet) | lookup | <Badge text="READY" variant="success" /> |
+| S02 | Clean lift-and-shift (Model TML), renames via mapping, REST JSON input | lookup | <Badge text="READY" variant="success" /> |
+| S03 | **Benign restructure:** worksheet → equivalent Freeform SQL | Freeform SQL | <Badge text="READY" variant="success" /> no false positives |
+| S04 | Freeform SQL joins orders → order lines (fan-out) | Freeform SQL | <Badge text="JN-04" variant="danger" /> COUNT DISTINCT must still pass |
+| S05 | LEFT → INNER with orphan customers | Freeform SQL | <Badge text="JN-01" variant="danger" /> |
+| S06 | LEFT → INNER on dates, no orphans in the data | Freeform SQL | <Badge text="JN-01 latent" variant="danger" /> |
+| S07 | COUNT vs COUNT DISTINCT | lookup | <Badge text="AG-01" variant="danger" /> |
+| S08 | `group_aggregate` level lost | lookup | <Badge text="AG-02" variant="danger" /> |
+| S09 | Average of row ratios vs ratio of sums | lookup | <Badge text="AG-03" variant="danger" /> |
+| S10 | Worksheet filter missing from the SQL | Freeform SQL | <Badge text="FL-01" variant="danger" /> |
+| S11 | `safe_divide` (0) vs plain division (NULL) | lookup | <Badge text="FX-03" variant="danger" /> |
+| S12 | Progressive INNER vs always-applied INNER | Freeform SQL | <Badge text="JN-06" variant="danger" /> |
+| S13 | Chasm trap: lines × returns through product | Freeform SQL | <Badge text="JN-05" variant="danger" /> |
+| S14 | Formula written differently but equivalent | lookup | <Badge text="UNVERIFIED → PASS" variant="caution" /> judge + data |
+| S15 | Dashboard drift: default filter, top-N, week start | lookup | <Badge text="LN-01 DB-02 DB-05" variant="danger" /> |
+| S16 | Cosmetic only (chart types, a title) | lookup | <Badge text="READY + LOW" variant="note" /> |
+| S17 | KPI used by a dashboard is missing; extra KPI added | lookup | <Badge text="CV-01 DB-01" variant="danger" /> <Badge text="CV-02" variant="default" /> |
+| S18 | S08 delivered as Apache Ossie YAML | lookup | <Badge text="UNVERIFIED → data" variant="caution" /> |
+
+## Running it
+
+```bash
+cd synthetic && uv sync
+uv run inspector-synth warehouse      # CSVs + Postgres init scripts
+docker compose up -d warehouse        # from the repo root; seeded on first start (:5439)
+uv run inspector-synth generate       # packages/ + ground_truth/
+uv run inspector-synth verify         # 25/25 witnesses behave as expected
+uv run pytest                         # determinism, parsing, no leakage, traps, witnesses
+```
+
+<Aside type="caution" title="Synthetic assumptions">
+	The dashboard JSON (A1), how lookup-style join semantics are declared (A2) and the Ossie YAML
+	layout (A5) are modelled on our best information. They will be adjusted when a real sanitised
+	export arrives. See [Assumptions & risks](/plan/risks/).
+</Aside>
+
+<Aside type="tip" title="The regression gate">
+	`eval/` will run every scenario through both agents and score detection per check ID (recall,
+	precision, verdict accuracy), LLM calls and runtime. Any change to parsers, prompts, models or the
+	join-semantics profile has to pass it.
+</Aside>

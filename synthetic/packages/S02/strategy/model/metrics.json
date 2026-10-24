@@ -1,0 +1,89 @@
+{
+  "offset": 0,
+  "limit": -1,
+  "total": 3,
+  "metrics": [
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "FA99B947E0C75CD339B0573A73F2406C",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "0F6B081F81AB1AD81C1B18923303A85D",
+        "subType": "metric",
+        "name": "Margin Amount"
+      },
+      "expression": {
+        "text": "[Gross Sales] - [Line Cost]"
+      },
+      "formulaJoinType": "default",
+      "smartTotal": "decomposable_false",
+      "dataType": {
+        "type": "reserved",
+        "precision": 0,
+        "scale": 0
+      },
+      "format": {
+        "header": [],
+        "values": []
+      },
+      "pushDownBehavior": "default"
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "E6E0AFC41A45C1CEB546CC2EF826B642",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "0CA18C33FAD34E40BEA5E9E3BFD04E14",
+        "subType": "metric",
+        "name": "Margin %",
+        "description": "Margin as a share of line revenue (ratio of sums)"
+      },
+      "expression": {
+        "text": "([Gross Sales] - [Line Cost]) / [Gross Sales]"
+      },
+      "formulaJoinType": "default",
+      "smartTotal": "decomposable_false",
+      "dataType": {
+        "type": "reserved",
+        "precision": 0,
+        "scale": 0
+      },
+      "format": {
+        "header": [],
+        "values": []
+      },
+      "pushDownBehavior": "default"
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "DED3EE7E54875A63FA8EC771262C4B43",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "5DCA7EF26281E6B8891B926D10A84253",
+        "subType": "metric",
+        "name": "Avg Selling Price"
+      },
+      "expression": {
+        "text": "[Gross Sales] / [Units Sold]"
+      },
+      "formulaJoinType": "default",
+      "smartTotal": "decomposable_false",
+      "dataType": {
+        "type": "reserved",
+        "precision": 0,
+        "scale": 0
+      },
+      "format": {
+        "header": [],
+        "values": []
+      },
+      "pushDownBehavior": "default"
+    }
+  ]
+}

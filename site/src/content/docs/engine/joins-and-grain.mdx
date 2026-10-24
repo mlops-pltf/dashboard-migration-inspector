@@ -1,0 +1,76 @@
+---
+title: Joins, grain & fan-out
+description: The deepest analysis in Inspector, because joins and aggregation caused most of the Qlik migration problems.
+---
+
+import { Aside, Steps, Card, CardGrid } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+## Join graphs on each side
+
+<CardGrid>
+	<Card title="ThoughtSpot: declared" icon="document">
+		Read from Table TML `joins_with`, Worksheet `joins` + `table_paths`, Model
+		`model_tables[].joins` (type, `on`, cardinality). `join_progressive` is recorded.
+	</Card>
+	<Card title="Strategy: derived" icon="puzzle">
+		Two tables join on attribute *A* when one of *A*'s forms has expressions on both tables
+		(`forms[].expressions[].tables`). The join type comes from a configurable **join-semantics
+		profile**. Freeform SQL adds its internal joins (`origin=sql`).
+	</Card>
+</CardGrid>
+
+<Aside type="caution" title="Assumption to confirm with a real export">
+	Exactly how Mosaic in-memory models (`dataServeMode: in_memory`, `autoJoin: true`) join tables in
+	the analytical engine. The profile makes this configuration rather than code. Data probes also
+	confirm it empirically: if the sides disagree only where orphan rows exist, the join type is the
+	cause.
+</Aside>
+
+## Fan-out: the classic Freeform SQL defect
+
+One order worth 100 has three order lines. Both sides use the same formula on the same column:
+
+<div class="fanout not-content">
+	<div class="fanout-side">
+		<h4>ThoughtSpot: aggregated at order grain</h4>
+		<table>
+			<thead><tr><th>order_id</th><th>amount</th></tr></thead>
+			<tbody><tr><td>1001</td><td>100</td></tr></tbody>
+		</table>
+		<p class="result">SUM(amount) = <strong>100</strong></p>
+		<p class="why">Lines are computed separately; no duplication.</p>
+	</div>
+	<div class="fanout-side bad">
+		<h4>Strategy Freeform SQL: orders ⋈ order_lines</h4>
+		<table>
+			<thead><tr><th>order_id</th><th>line_id</th><th>amount</th></tr></thead>
+			<tbody>
+				<tr><td>1001</td><td>1</td><td>100</td></tr>
+				<tr><td>1001</td><td>2</td><td>100</td></tr>
+				<tr><td>1001</td><td>3</td><td>100</td></tr>
+			</tbody>
+		</table>
+		<p class="result">SUM(amount) = <strong>300</strong></p>
+		<p class="why">The grain became line_id, so amount repeats once per line.</p>
+	</div>
+</div>
+
+## The rules
+
+<Steps>
+1. **Relation grain.** Physical tables: primary key from ThoughtSpot cardinality, Strategy attribute key forms, or a key-uniqueness probe. Derived relations: computed from the SQL. A one-to-many join makes the grain finer.
+
+2. **Measure home grain.** The grain of the table the fact column belongs to (`orders.amount` → `order_id`).
+
+3. **Fan-out (JN-04).** The measure is aggregated over a relation finer than its home grain → `SUM`, `COUNT` and `AVG` are inflated. `MIN`, `MAX` and `COUNT DISTINCT` are safe. **Blocker**, reported with the join that causes it.
+
+4. **Chasm trap (JN-05).** Two facts with different home grains flattened into one relation through a shared dimension. **Blocker.**
+
+5. **Join applicability (JN-06).** A ThoughtSpot measure resolved with progressive joins, while its Strategy counterpart sits in a Freeform SQL with INNER joins. Strategy drops orphan fact rows **even when the dimension isn't in the query**. **Blocker.**
+</Steps>
+
+<Aside type="tip" title="No guessing on unknown cardinality">
+	When there's no cardinality metadata and no key form, Inspector asks the data agent for a key
+	profile (`COUNT(*)` vs `COUNT(DISTINCT key)`, orphan counts) instead of assuming.
+</Aside>

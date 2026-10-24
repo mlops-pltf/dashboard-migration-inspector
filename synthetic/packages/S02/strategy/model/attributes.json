@@ -1,0 +1,749 @@
+{
+  "offset": 0,
+  "limit": -1,
+  "total": 10,
+  "attributes": [
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "1E712E40B048D909F4DC8985731CF178",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "5B28C69414223A2B892AFB7635A39321",
+        "subType": "attribute",
+        "name": "Order ID"
+      },
+      "forms": [
+        {
+          "id": "3A96812EC085E91C90760DE88933145F",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "number",
+          "dataType": {
+            "type": "integer",
+            "precision": 8,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "order_id"
+              },
+              "tables": [
+                {
+                  "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+                  "subType": "logical_table",
+                  "name": "fact_orders"
+                },
+                {
+                  "objectId": "2477391BD344B1C7B5FB70148DB3C294",
+                  "subType": "logical_table",
+                  "name": "fact_order_lines"
+                }
+              ]
+            }
+          ],
+          "alias": "order_id",
+          "lookupTable": {
+            "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+            "subType": "logical_table",
+            "name": "fact_orders"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+        "subType": "logical_table",
+        "name": "fact_orders"
+      },
+      "keyForm": {
+        "id": "3A96812EC085E91C90760DE88933145F",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "3A96812EC085E91C90760DE88933145F",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "3A96812EC085E91C90760DE88933145F",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "B0D4798D589E7AB048CA6434A9143664",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "36AC608D48481AAD173DDB2D31F26F8C",
+        "subType": "attribute",
+        "name": "Order Date"
+      },
+      "forms": [
+        {
+          "id": "DB675AC477BBB977B4BA3573E6E94FE4",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "date",
+          "dataType": {
+            "type": "date",
+            "precision": 10,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "order_date"
+              },
+              "tables": [
+                {
+                  "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+                  "subType": "logical_table",
+                  "name": "fact_orders"
+                }
+              ]
+            },
+            {
+              "expression": {
+                "text": "date_key"
+              },
+              "tables": [
+                {
+                  "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+                  "subType": "logical_table",
+                  "name": "dim_date"
+                }
+              ]
+            }
+          ],
+          "alias": "order_date",
+          "lookupTable": {
+            "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+            "subType": "logical_table",
+            "name": "dim_date"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+        "subType": "logical_table",
+        "name": "dim_date"
+      },
+      "keyForm": {
+        "id": "DB675AC477BBB977B4BA3573E6E94FE4",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "DB675AC477BBB977B4BA3573E6E94FE4",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "DB675AC477BBB977B4BA3573E6E94FE4",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "15DE1667F1DAEC1DE1D9DCF80C24FC32",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "A13E7B3F0D5FF2E08A324F699C092C0C",
+        "subType": "attribute",
+        "name": "Order Status"
+      },
+      "forms": [
+        {
+          "id": "5DFCD64150B0C88B010118F25274FD6F",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "text",
+          "dataType": {
+            "type": "utf8_char",
+            "precision": 16,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "order_status"
+              },
+              "tables": [
+                {
+                  "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+                  "subType": "logical_table",
+                  "name": "fact_orders"
+                }
+              ]
+            }
+          ],
+          "alias": "order_status",
+          "lookupTable": {
+            "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+            "subType": "logical_table",
+            "name": "fact_orders"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+        "subType": "logical_table",
+        "name": "fact_orders"
+      },
+      "keyForm": {
+        "id": "5DFCD64150B0C88B010118F25274FD6F",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "5DFCD64150B0C88B010118F25274FD6F",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "5DFCD64150B0C88B010118F25274FD6F",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "59F506DBC95492C06D708510D1CA0D2A",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "04EB63FBCF801D608C5930919FF081E9",
+        "subType": "attribute",
+        "name": "Product ID"
+      },
+      "forms": [
+        {
+          "id": "B618B3B5E60A8C4314963990F4BBB241",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "number",
+          "dataType": {
+            "type": "integer",
+            "precision": 4,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "product_id"
+              },
+              "tables": [
+                {
+                  "objectId": "2477391BD344B1C7B5FB70148DB3C294",
+                  "subType": "logical_table",
+                  "name": "fact_order_lines"
+                },
+                {
+                  "objectId": "53FD551F874EEB9989F0764105B16596",
+                  "subType": "logical_table",
+                  "name": "dim_product"
+                }
+              ]
+            }
+          ],
+          "alias": "product_id",
+          "lookupTable": {
+            "objectId": "53FD551F874EEB9989F0764105B16596",
+            "subType": "logical_table",
+            "name": "dim_product"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "keyForm": {
+        "id": "B618B3B5E60A8C4314963990F4BBB241",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "B618B3B5E60A8C4314963990F4BBB241",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "B618B3B5E60A8C4314963990F4BBB241",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "4B52E14E3BBA338D5248B2F957358E7F",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "71B5A33FD6BEDA8C11BCBA230DE23A3E",
+        "subType": "attribute",
+        "name": "Product Name"
+      },
+      "forms": [
+        {
+          "id": "EFE68279B25429841FCE97BDD50F2166",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "text",
+          "dataType": {
+            "type": "utf8_char",
+            "precision": 64,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "product_name"
+              },
+              "tables": [
+                {
+                  "objectId": "53FD551F874EEB9989F0764105B16596",
+                  "subType": "logical_table",
+                  "name": "dim_product"
+                }
+              ]
+            }
+          ],
+          "alias": "product_name",
+          "lookupTable": {
+            "objectId": "53FD551F874EEB9989F0764105B16596",
+            "subType": "logical_table",
+            "name": "dim_product"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "keyForm": {
+        "id": "EFE68279B25429841FCE97BDD50F2166",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "EFE68279B25429841FCE97BDD50F2166",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "EFE68279B25429841FCE97BDD50F2166",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "3065EB23060EB3D2A709C2056A35A1AB",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "0769513B9C05C523D65BAE2859AE1154",
+        "subType": "attribute",
+        "name": "Product Category"
+      },
+      "forms": [
+        {
+          "id": "7B1B62D97CA07AE92C3A862DF8391943",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "text",
+          "dataType": {
+            "type": "utf8_char",
+            "precision": 32,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "category"
+              },
+              "tables": [
+                {
+                  "objectId": "53FD551F874EEB9989F0764105B16596",
+                  "subType": "logical_table",
+                  "name": "dim_product"
+                }
+              ]
+            }
+          ],
+          "alias": "category",
+          "lookupTable": {
+            "objectId": "53FD551F874EEB9989F0764105B16596",
+            "subType": "logical_table",
+            "name": "dim_product"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "keyForm": {
+        "id": "7B1B62D97CA07AE92C3A862DF8391943",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "7B1B62D97CA07AE92C3A862DF8391943",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "7B1B62D97CA07AE92C3A862DF8391943",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "3C8B94905465DEC847F547CEA0E24BBB",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "37560E93FD55BAE375A85ACCCE8B50AD",
+        "subType": "attribute",
+        "name": "Subcategory"
+      },
+      "forms": [
+        {
+          "id": "1526F852735D91164EC9664FFA903079",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "text",
+          "dataType": {
+            "type": "utf8_char",
+            "precision": 32,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "subcategory"
+              },
+              "tables": [
+                {
+                  "objectId": "53FD551F874EEB9989F0764105B16596",
+                  "subType": "logical_table",
+                  "name": "dim_product"
+                }
+              ]
+            }
+          ],
+          "alias": "subcategory",
+          "lookupTable": {
+            "objectId": "53FD551F874EEB9989F0764105B16596",
+            "subType": "logical_table",
+            "name": "dim_product"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "keyForm": {
+        "id": "1526F852735D91164EC9664FFA903079",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "1526F852735D91164EC9664FFA903079",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "1526F852735D91164EC9664FFA903079",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "7D883701ED306625769EE17C552E9D44",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "FDD67A7248A472D0B4A65DAB0A1869A9",
+        "subType": "attribute",
+        "name": "Brand"
+      },
+      "forms": [
+        {
+          "id": "27D44BFA28BD5FC83B4DBA862022140B",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "text",
+          "dataType": {
+            "type": "utf8_char",
+            "precision": 32,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "brand"
+              },
+              "tables": [
+                {
+                  "objectId": "53FD551F874EEB9989F0764105B16596",
+                  "subType": "logical_table",
+                  "name": "dim_product"
+                }
+              ]
+            }
+          ],
+          "alias": "brand",
+          "lookupTable": {
+            "objectId": "53FD551F874EEB9989F0764105B16596",
+            "subType": "logical_table",
+            "name": "dim_product"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "keyForm": {
+        "id": "27D44BFA28BD5FC83B4DBA862022140B",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "27D44BFA28BD5FC83B4DBA862022140B",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "27D44BFA28BD5FC83B4DBA862022140B",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "2809239C3FE016590C19882E633B9944",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "0261BC5721A7E76AEEA1E4CFD78ADA1D",
+        "subType": "attribute",
+        "name": "Order Month"
+      },
+      "forms": [
+        {
+          "id": "71C7F18C42D66773DC0E2C184BB99BCB",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "date",
+          "dataType": {
+            "type": "date",
+            "precision": 10,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "month_start"
+              },
+              "tables": [
+                {
+                  "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+                  "subType": "logical_table",
+                  "name": "dim_date"
+                }
+              ]
+            }
+          ],
+          "alias": "month_start",
+          "lookupTable": {
+            "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+            "subType": "logical_table",
+            "name": "dim_date"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+        "subType": "logical_table",
+        "name": "dim_date"
+      },
+      "keyForm": {
+        "id": "71C7F18C42D66773DC0E2C184BB99BCB",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "71C7F18C42D66773DC0E2C184BB99BCB",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "71C7F18C42D66773DC0E2C184BB99BCB",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "D8A0084CA3B4AB769687FD4E78C7BD24",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "88112BFF041B5B39BA8941D33B6C5F3A",
+        "subType": "attribute",
+        "name": "Order Year"
+      },
+      "forms": [
+        {
+          "id": "5A6C54534AF45F9516C5EE47514537D3",
+          "name": "ID",
+          "category": "ID",
+          "type": "system",
+          "displayFormat": "number",
+          "dataType": {
+            "type": "integer",
+            "precision": 4,
+            "scale": 0
+          },
+          "expressions": [
+            {
+              "expression": {
+                "text": "year"
+              },
+              "tables": [
+                {
+                  "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+                  "subType": "logical_table",
+                  "name": "dim_date"
+                }
+              ]
+            }
+          ],
+          "alias": "year",
+          "lookupTable": {
+            "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+            "subType": "logical_table",
+            "name": "dim_date"
+          }
+        }
+      ],
+      "attributeLookupTable": {
+        "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+        "subType": "logical_table",
+        "name": "dim_date"
+      },
+      "keyForm": {
+        "id": "5A6C54534AF45F9516C5EE47514537D3",
+        "name": "ID"
+      },
+      "displays": {
+        "reportDisplays": [
+          {
+            "id": "5A6C54534AF45F9516C5EE47514537D3",
+            "name": "ID"
+          }
+        ],
+        "browseDisplays": [
+          {
+            "id": "5A6C54534AF45F9516C5EE47514537D3",
+            "name": "ID"
+          }
+        ]
+      },
+      "sorts": {},
+      "nonAggregatable": false,
+      "autoDetectLookupTable": true
+    }
+  ]
+}

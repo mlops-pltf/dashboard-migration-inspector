@@ -1,0 +1,148 @@
+guid: 627a24cd-83ef-5e72-8566-7b36674fd58b
+liveboard:
+  name: Product Performance
+  visualizations:
+  - id: Viz_1
+    answer:
+      name: Units by Category
+      tables:
+      - id: Order Lines
+        name: Order Lines
+        fqn: 820bdd8e-30cf-5b45-ae1f-6f6bdbb24793
+      search_query: '[Category] [Units] sort by [Units] descending'
+      answer_columns:
+      - name: Category
+      - name: Total Units
+      table:
+        table_columns:
+        - column_id: Category
+          show_headline: false
+        - column_id: Total Units
+          show_headline: false
+        ordered_column_ids:
+        - Category
+        - Total Units
+      chart:
+        type: COLUMN
+        chart_columns:
+        - column_id: Category
+        - column_id: Total Units
+        axis_configs:
+        - x:
+          - Category
+          y:
+          - Total Units
+      display_mode: CHART_MODE
+    viz_guid: d8038b6a-0d4f-5c04-93f1-885f63353380
+  - id: Viz_2
+    answer:
+      name: Margin by Category
+      tables:
+      - id: Order Lines
+        name: Order Lines
+        fqn: 820bdd8e-30cf-5b45-ae1f-6f6bdbb24793
+      search_query: '[Category] [Line Revenue] [Gross Margin] [Margin %] sort by [Category]'
+      answer_columns:
+      - name: Category
+      - name: Total Line Revenue
+      - name: Gross Margin
+      - name: Margin %
+      table:
+        table_columns:
+        - column_id: Category
+          show_headline: false
+        - column_id: Total Line Revenue
+          show_headline: false
+        - column_id: Gross Margin
+          show_headline: false
+        - column_id: Margin %
+          show_headline: false
+        ordered_column_ids:
+        - Category
+        - Total Line Revenue
+        - Gross Margin
+        - Margin %
+      display_mode: TABLE_MODE
+    viz_guid: e3cfc3fb-a19b-584c-a50a-a5bccac29ca1
+  - id: Viz_3
+    answer:
+      name: Top Products
+      tables:
+      - id: Order Lines
+        name: Order Lines
+        fqn: 820bdd8e-30cf-5b45-ae1f-6f6bdbb24793
+      search_query: '[Product Name] [Line Revenue] top 10 sort by [Line Revenue] descending'
+      answer_columns:
+      - name: Product Name
+      - name: Total Line Revenue
+      table:
+        table_columns:
+        - column_id: Product Name
+          show_headline: false
+        - column_id: Total Line Revenue
+          show_headline: false
+        ordered_column_ids:
+        - Product Name
+        - Total Line Revenue
+      display_mode: TABLE_MODE
+    viz_guid: 2a9e25bd-a867-5f3c-bc18-c2fdac54fdd6
+  - id: Viz_4
+    answer:
+      name: Monthly Units
+      tables:
+      - id: Order Lines
+        name: Order Lines
+        fqn: 820bdd8e-30cf-5b45-ae1f-6f6bdbb24793
+      search_query: '[Order Month] [Units] [Avg Selling Price] sort by [Order Month]'
+      answer_columns:
+      - name: Order Month
+      - name: Total Units
+      - name: Avg Selling Price
+      table:
+        table_columns:
+        - column_id: Order Month
+          show_headline: false
+        - column_id: Total Units
+          show_headline: false
+        - column_id: Avg Selling Price
+          show_headline: false
+        ordered_column_ids:
+        - Order Month
+        - Total Units
+        - Avg Selling Price
+      chart:
+        type: LINE
+        chart_columns:
+        - column_id: Order Month
+        - column_id: Total Units
+        - column_id: Avg Selling Price
+        axis_configs:
+        - x:
+          - Order Month
+          y:
+          - Total Units
+          - Avg Selling Price
+      display_mode: CHART_MODE
+    viz_guid: fa6f8b68-5ab7-526b-b581-811777c8d220
+  layout:
+    tiles:
+    - visualization_id: Viz_1
+      x: 0
+      y: 0
+      height: 5
+      width: 6
+    - visualization_id: Viz_2
+      x: 6
+      y: 0
+      height: 5
+      width: 6
+    - visualization_id: Viz_3
+      x: 0
+      y: 5
+      height: 5
+      width: 6
+    - visualization_id: Viz_4
+      x: 6
+      y: 5
+      height: 5
+      width: 6

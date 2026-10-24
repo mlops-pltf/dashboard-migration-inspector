@@ -1,0 +1,179 @@
+{
+  "id": "393FC11AB47D5E7529012D519DE5B461",
+  "name": "Product Performance",
+  "type": "dashboard",
+  "datasets": [
+    {
+      "id": "F8B9FDB2404F6C3313E9D845A99E98EB",
+      "name": "Product Lines",
+      "type": "data_model"
+    }
+  ],
+  "chapters": [
+    {
+      "key": "C1",
+      "name": "Product Performance",
+      "filters": [],
+      "pages": [
+        {
+          "key": "K1",
+          "name": "Overview",
+          "visualizations": [
+            {
+              "key": "W1",
+              "name": "Units by Category",
+              "visualizationType": "vertical_bar",
+              "datasetId": "F8B9FDB2404F6C3313E9D845A99E98EB",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "0769513B9C05C523D65BAE2859AE1154",
+                      "name": "Product Category",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "DD8BFE017D1889697547C8155195B81A",
+                      "name": "Units Sold",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "DD8BFE017D1889697547C8155195B81A",
+                    "name": "Units Sold",
+                    "type": "metric",
+                    "order": "descending"
+                  }
+                ]
+              }
+            },
+            {
+              "key": "W2",
+              "name": "Margin by Category",
+              "visualizationType": "grid",
+              "datasetId": "F8B9FDB2404F6C3313E9D845A99E98EB",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "0769513B9C05C523D65BAE2859AE1154",
+                      "name": "Product Category",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "4005A2078D57CF21AF1BB78DB71D94E2",
+                      "name": "Gross Sales",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "0F6B081F81AB1AD81C1B18923303A85D",
+                      "name": "Margin Amount",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "0CA18C33FAD34E40BEA5E9E3BFD04E14",
+                      "name": "Margin %",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "0769513B9C05C523D65BAE2859AE1154",
+                    "name": "Product Category",
+                    "type": "attribute",
+                    "order": "ascending"
+                  }
+                ]
+              }
+            },
+            {
+              "key": "W3",
+              "name": "Top Products",
+              "visualizationType": "grid",
+              "datasetId": "F8B9FDB2404F6C3313E9D845A99E98EB",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "71B5A33FD6BEDA8C11BCBA230DE23A3E",
+                      "name": "Product Name",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "4005A2078D57CF21AF1BB78DB71D94E2",
+                      "name": "Gross Sales",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "4005A2078D57CF21AF1BB78DB71D94E2",
+                    "name": "Gross Sales",
+                    "type": "metric",
+                    "order": "descending"
+                  }
+                ],
+                "limit": {
+                  "type": "top",
+                  "count": 10,
+                  "by": {
+                    "id": "4005A2078D57CF21AF1BB78DB71D94E2",
+                    "name": "Gross Sales",
+                    "type": "metric"
+                  }
+                }
+              }
+            },
+            {
+              "key": "W4",
+              "name": "Monthly Units",
+              "visualizationType": "line",
+              "datasetId": "F8B9FDB2404F6C3313E9D845A99E98EB",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "0261BC5721A7E76AEEA1E4CFD78ADA1D",
+                      "name": "Order Month",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "DD8BFE017D1889697547C8155195B81A",
+                      "name": "Units Sold",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "5DCA7EF26281E6B8891B926D10A84253",
+                      "name": "Avg Selling Price",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "0261BC5721A7E76AEEA1E4CFD78ADA1D",
+                    "name": "Order Month",
+                    "type": "attribute",
+                    "order": "ascending"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

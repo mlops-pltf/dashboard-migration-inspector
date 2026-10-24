@@ -1,0 +1,85 @@
+---
+title: Intermediate representation
+description: One model for both tools. Every object keeps a pointer back to its source.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+The expert agents translate each side into one pydantic model, defined in the shared `inspector_contract` package. Every IR object keeps a
+**source reference** (file, YAML path, line number, object id), so every finding points at the
+exact place on each side.
+
+<Tabs>
+	<TabItem label="Physical">
+		```text
+		PhysicalColumn   (schema, table, column)              # normalised, case-folded
+		Relation         = PhysicalTable(schema, table)
+		                 | DerivedRelation(sql, parsed_ast, output_columns → lineage)
+		```
+
+		`DerivedRelation` covers ThoughtSpot **SQL Views** and Strategy **Freeform / custom SQL**
+		tables. The SQL is parsed with **sqlglot (Redshift dialect)** into: output column → expression
+		over physical columns, internal joins (type + keys), WHERE / HAVING, GROUP BY, DISTINCT, and the
+		relation's **grain**.
+	</TabItem>
+	<TabItem label="Logical">
+		```text
+		LogicalTable   id, name, relation, columns{name → Expr}
+		Join           left, right, type{INNER, LEFT, RIGHT, FULL}, keys[(col, col)], extra_predicate?,
+		               cardinality{N:1, 1:N, 1:1, N:M, unknown}, origin{declared, derived, sql}
+		Field          id, name, kind{ATTRIBUTE, MEASURE}, expr, aggregation?, data_type,
+		               synonyms, description, hidden, folder
+		Metric         id, name, expr (with Agg nodes), level?, conditions[], null_policy, totals_policy
+		Filter         predicate, scope{model, metric, dashboard, page, visualization}
+		SemanticModel  tables, joins, fields, metrics, filters, settings{progressive_joins, auto_join}
+		```
+	</TabItem>
+	<TabItem label="Expressions">
+		One small expression tree, shared by the ThoughtSpot formula language, Strategy expressions and SQL:
+
+		```text
+		Expr = Col(ref) | Lit(value, type) | Func(name, args)
+		     | Agg(fn, arg, distinct, condition?, level?)
+		     | Arith | Compare | Bool | Case | Cast
+		     | Window(fn, arg, partition, order, frame)
+		     | Opaque(dialect, text)
+		```
+	</TabItem>
+	<TabItem label="Content">
+		```text
+		QuerySpec      dimensions[FieldRef + date_bucket?], measures[FieldRef + agg_override?],
+		               filters[], sort[], top_n?, totals{grand, sub}
+		Visualization  id, title, query: QuerySpec, chart_type, axes, display options
+		Dashboard      tabs/chapters/pages → visualizations, filters[+ scope], parameters
+		```
+
+		ThoughtSpot `search_query` strings such as
+		`[Revenue] [Region] [Order Date].monthly [Status] = 'Completed' top 10` are parsed by
+		`ts_search.py`. Any token it can't parse goes to the `fast` judge and is marked as
+		interpreted.
+	</TabItem>
+</Tabs>
+
+## Function normalisation
+
+`knowledge/function_equivalence.yaml` maps both languages to the same IR:
+
+| ThoughtSpot | Strategy | IR |
+|---|---|---|
+| `unique count(x)` | `Count<Distinct=True>(x)` | `Agg(COUNT, x, distinct=True)` |
+| `sum_if(c, m)` | conditional metric | `Agg(SUM, m, condition=c)` |
+| `group_aggregate(sum(m), {Region}, …)` | `Sum(m){Region}` | `Agg(SUM, m, level=fixed[Region])` |
+| `sum(m)` at query grain | `Sum(m){~+}` | `Agg(SUM, m, level=REPORT)` |
+| `safe_divide(a, b)`: **0** when b = 0 | `a / b` with ZeroCheck: **NULL** when b = 0 | `Case(b = 0 → 0, a / b)` vs `Case(b = 0 → NULL, a / b)`: **not equal** |
+
+## Proof by canonicalisation
+
+Every column reference is resolved to physical columns, function names are normalised, operands
+of commutative operators are sorted, constants are folded, `IF` / `CASE` are normalised, and null
+and zero handling is made explicit. **If the two canonical trees are identical, the definitions are
+proven equal.** No LLM is involved.
+
+<Aside type="caution" title="Opaque never passes on its own">
+	Anything we can't parse yet (e.g. `ApplySimple` whose SQL won't parse) becomes `Opaque`. It can
+	never be proven equal, so it always goes to an LLM judge and/or data validation.
+</Aside>

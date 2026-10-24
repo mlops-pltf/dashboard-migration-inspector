@@ -1,0 +1,21 @@
+# LiteLLM profile: Anthropic API (needs ANTHROPIC_API_KEY).
+# Agents only ever call the aliases below, so switching provider never touches agent code.
+model_list:
+  - model_name: inspector-strong        # formula/SQL equivalence, mismatch diagnosis, review
+    litellm_params:
+      model: anthropic/claude-sonnet-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      temperature: 0
+  - model_name: inspector-fast          # name matching, search-query interpretation
+    litellm_params:
+      model: anthropic/claude-haiku-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      temperature: 0
+
+litellm_settings:
+  drop_params: true
+  request_timeout: 300
+  num_retries: 2
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

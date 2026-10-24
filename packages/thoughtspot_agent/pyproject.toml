@@ -1,0 +1,29 @@
+[project]
+name = "thoughtspot-agent"
+version = "0.1.0"
+description = "Inspector team: thoughtspot expert agent (A2A)."
+requires-python = ">=3.12"
+dependencies = [
+    "inspector-contract",
+    "ruamel.yaml>=0.19.1,<0.20",
+    "sqlglot==30.21.0",
+    "strands-agents[litellm,a2a]==1.59.0",
+    "litellm==1.104.2",
+    "bedrock-agentcore[a2a]==1.24.0",
+]
+
+[project.scripts]
+thoughtspot-agent = "thoughtspot_agent.thoughtspot_agent:main"
+
+[tool.uv.sources]
+inspector-contract = { workspace = true }
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["thoughtspot_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

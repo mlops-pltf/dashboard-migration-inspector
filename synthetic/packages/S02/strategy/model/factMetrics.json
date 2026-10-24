@@ -1,0 +1,226 @@
+{
+  "offset": 0,
+  "limit": -1,
+  "total": 3,
+  "factMetrics": [
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "5E8EF8ADEDBEC99169EAF2DAD85CF56B",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "DD8BFE017D1889697547C8155195B81A",
+        "subType": "fact_metric",
+        "name": "Units Sold"
+      },
+      "fact": {
+        "dataType": {
+          "type": "integer",
+          "precision": 4,
+          "scale": 0
+        },
+        "expressions": [
+          {
+            "expression": {
+              "text": "quantity"
+            },
+            "tables": [
+              {
+                "objectId": "2477391BD344B1C7B5FB70148DB3C294",
+                "subType": "logical_table",
+                "name": "fact_order_lines"
+              }
+            ]
+          }
+        ]
+      },
+      "function": "sum",
+      "functionProperties": [
+        {
+          "name": "UseLookupForAttributes",
+          "value": {
+            "type": "boolean",
+            "value": "false"
+          }
+        }
+      ],
+      "dimty": {
+        "dimtyUnits": [
+          {
+            "dimtyUnitType": "report_base_level",
+            "aggregation": "normal",
+            "filtering": "apply",
+            "groupBy": true
+          }
+        ],
+        "excludeAttribute": false,
+        "allowAddingUnit": true
+      },
+      "format": {
+        "header": [],
+        "values": [
+          {
+            "type": "number_category",
+            "value": "0"
+          },
+          {
+            "type": "number_format",
+            "value": "#,##0.00"
+          },
+          {
+            "type": "number_thousand_separator",
+            "value": "true"
+          }
+        ]
+      },
+      "semanticRole": "fixed"
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "89BA16D3CAA094AAFE91A59E20421B83",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "4005A2078D57CF21AF1BB78DB71D94E2",
+        "subType": "fact_metric",
+        "name": "Gross Sales"
+      },
+      "fact": {
+        "dataType": {
+          "type": "decimal",
+          "precision": 12,
+          "scale": 2
+        },
+        "expressions": [
+          {
+            "expression": {
+              "text": "line_amount"
+            },
+            "tables": [
+              {
+                "objectId": "2477391BD344B1C7B5FB70148DB3C294",
+                "subType": "logical_table",
+                "name": "fact_order_lines"
+              }
+            ]
+          }
+        ]
+      },
+      "function": "sum",
+      "functionProperties": [
+        {
+          "name": "UseLookupForAttributes",
+          "value": {
+            "type": "boolean",
+            "value": "false"
+          }
+        }
+      ],
+      "dimty": {
+        "dimtyUnits": [
+          {
+            "dimtyUnitType": "report_base_level",
+            "aggregation": "normal",
+            "filtering": "apply",
+            "groupBy": true
+          }
+        ],
+        "excludeAttribute": false,
+        "allowAddingUnit": true
+      },
+      "format": {
+        "header": [],
+        "values": [
+          {
+            "type": "number_category",
+            "value": "0"
+          },
+          {
+            "type": "number_format",
+            "value": "#,##0.00"
+          },
+          {
+            "type": "number_thousand_separator",
+            "value": "true"
+          }
+        ]
+      },
+      "semanticRole": "fixed"
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "5FC1EA7C38165DFA75DC510A1E0B7BD0",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "CF2E40A2BFF03FCCD1B87B73FDC91A2C",
+        "subType": "fact_metric",
+        "name": "Line Cost"
+      },
+      "fact": {
+        "dataType": {
+          "type": "decimal",
+          "precision": 12,
+          "scale": 2
+        },
+        "expressions": [
+          {
+            "expression": {
+              "text": "line_cost"
+            },
+            "tables": [
+              {
+                "objectId": "2477391BD344B1C7B5FB70148DB3C294",
+                "subType": "logical_table",
+                "name": "fact_order_lines"
+              }
+            ]
+          }
+        ]
+      },
+      "function": "sum",
+      "functionProperties": [
+        {
+          "name": "UseLookupForAttributes",
+          "value": {
+            "type": "boolean",
+            "value": "false"
+          }
+        }
+      ],
+      "dimty": {
+        "dimtyUnits": [
+          {
+            "dimtyUnitType": "report_base_level",
+            "aggregation": "normal",
+            "filtering": "apply",
+            "groupBy": true
+          }
+        ],
+        "excludeAttribute": false,
+        "allowAddingUnit": true
+      },
+      "format": {
+        "header": [],
+        "values": [
+          {
+            "type": "number_category",
+            "value": "0"
+          },
+          {
+            "type": "number_format",
+            "value": "#,##0.00"
+          },
+          {
+            "type": "number_thousand_separator",
+            "value": "true"
+          }
+        ]
+      },
+      "semanticRole": "fixed"
+    }
+  ]
+}

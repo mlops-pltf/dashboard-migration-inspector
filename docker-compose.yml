@@ -1,0 +1,149 @@
+# Local stack: the agent team (experts, inspector, data agent), LiteLLM, the Redshift stand-in and the docs.
+#   cp .env.example .env            # fill in values
+#   docker compose up -d litellm    # Anthropic profile (LITELLM_PROFILE=anthropic)
+#   docker compose --profile local-llm up -d   # also start Ollama (LITELLM_PROFILE=ollama)
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:v1.104.2
+    command: ["--config", "/app/config/${LITELLM_PROFILE:-anthropic}.yaml", "--port", "4000"]
+    ports:
+      - "4000:4000"
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-inspector-local}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://ollama:11434}
+    volumes:
+      - ./infra/litellm:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:4000/health/liveliness')\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.34.1
+    profiles: ["local-llm"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
+  # Redshift stand-in seeded with the synthetic retail warehouse.
+  #   cd synthetic && uv run inspector-synth warehouse     # writes CSVs + init scripts first
+  #   docker compose up -d warehouse                      # read-only login: inspector_ro / inspector_ro
+  warehouse:
+    image: postgres:17.8-alpine
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: inspector_admin
+      POSTGRES_PASSWORD: ${WAREHOUSE_ADMIN_PASSWORD:-inspector_admin}
+    ports:
+      - "5439:5432"
+    volumes:
+      - ./synthetic/warehouse/postgres:/docker-entrypoint-initdb.d:ro
+      - ./synthetic/warehouse/data:/seed/data:ro
+      - warehouse-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inspector_admin -d analytics"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # The agent team. Each agent is an independent A2A server (port 9000, agent card at /.well-known/agent-card.json),
+  # one AgentCore runtime each when deployed. Packages are mounted read-only at /packages (S3 on AgentCore).
+  thoughtspot-agent:
+    build:
+      context: .
+      dockerfile: packages/thoughtspot_agent/Dockerfile
+    ports:
+      - "9001:9000"
+    environment: &agent-env
+      AGENTCORE_RUNTIME_URL: http://thoughtspot-agent:9000/
+      INSPECTOR_LLM_BASE_URL: http://litellm:4000
+      INSPECTOR_LLM_API_KEY: ${LITELLM_MASTER_KEY:-sk-inspector-local}
+      PACKAGE_ROOT: /packages
+    volumes: &packages
+      - ./synthetic/packages:/packages:ro
+    restart: unless-stopped
+
+  strategy-agent:
+    build:
+      context: .
+      dockerfile: packages/strategy_agent/Dockerfile
+    ports:
+      - "9002:9000"
+    environment:
+      <<: *agent-env
+      AGENTCORE_RUNTIME_URL: http://strategy-agent:9000/
+    volumes: *packages
+    restart: unless-stopped
+
+  # The only agent with warehouse credentials (read-only role). On AgentCore: Redshift DSN from Secrets Manager,
+  # WAREHOUSE_DIALECT=redshift.
+  data-agent:
+    build:
+      context: .
+      dockerfile: packages/data_agent/Dockerfile
+    ports:
+      - "9003:9000"
+    environment:
+      <<: *agent-env
+      AGENTCORE_RUNTIME_URL: http://data-agent:9000/
+      WAREHOUSE_DSN: postgresql://inspector_ro:inspector_ro@warehouse:5432/analytics
+      WAREHOUSE_DIALECT: postgres        # SQL arrives in Redshift dialect and is transpiled
+      WAREHOUSE_ALLOWED_SCHEMAS: retail
+      WAREHOUSE_TIMEOUT_S: "60"
+    depends_on:
+      warehouse:
+        condition: service_healthy
+    restart: unless-stopped
+
+  inspector-agent:
+    build:
+      context: .
+      dockerfile: packages/inspector_agent/Dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      <<: *agent-env
+      AGENTCORE_RUNTIME_URL: http://inspector-agent:9000/
+      INSPECTOR_THOUGHTSPOT_AGENT_URL: http://thoughtspot-agent:9000/
+      INSPECTOR_STRATEGY_AGENT_URL: http://strategy-agent:9000/
+      INSPECTOR_DATA_AGENT_URL: http://data-agent:9000/
+      INSPECTOR_A2A_AUTH: none           # sigv4 on AgentCore
+    volumes: *packages
+    depends_on:
+      - thoughtspot-agent
+      - strategy-agent
+      - data-agent
+      - litellm
+    restart: unless-stopped
+
+  # Design docs (Astro Starlight) and a Cloudflare quick tunnel to share them.
+  #   docker compose --profile docs up -d --build
+  #   docker compose logs docs-tunnel | grep trycloudflare.com    # public URL
+  docs:
+    build: ./site
+    profiles: ["docs"]
+    ports:
+      - "4321:80"
+    restart: unless-stopped
+
+  docs-tunnel:
+    image: cloudflare/cloudflared:2026.10.0
+    profiles: ["docs"]
+    # http2 (TCP) instead of the default QUIC: QUIC idle timeouts dropped the tunnel, and a quick
+    # tunnel that drops for long enough is deleted server-side and never comes back.
+    command: ["tunnel", "--no-autoupdate", "--protocol", "http2", "--url", "http://docs:80"]
+    depends_on:
+      - docs
+    restart: unless-stopped
+
+volumes:
+  ollama-models:
+  warehouse-data:

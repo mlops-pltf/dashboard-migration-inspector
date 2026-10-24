@@ -1,0 +1,50 @@
+scenario: S04
+title: 'Fan-out: Freeform SQL joins orders to order lines'
+description: The developer added Product Category by joining order lines into the order-grain SQL. Every additive order measure
+  is now repeated once per line.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: ffsql
+strategy_format: yaml_export
+expected_verdict: NEEDS_REVIEW
+expected_verdict_after_data: NOT_READY
+findings:
+- id: E1
+  check: JN-04
+  severity: BLOCKER
+  status: UNVERIFIED
+  thoughtspot: Sales Orders::Revenue
+  strategy: Sales Orders::Revenue
+  note: join to fact_order_lines on order_id; nothing in the package says order_id is unique there, so the fan-out is confirmed
+    by a key profile (data)
+  root_cause: true
+  symptoms:
+  - Discount
+  - Shipping
+  - Items Sold
+  - Avg Order Value
+  - Discount Rate
+  - Net Revenue
+  - Region Revenue
+  status_after_data: FAIL
+  decided_by: rule+data
+- id: E2
+  check: CV-02
+  severity: INFO
+  status: FAIL
+  strategy: Sales Orders::Product Category
+  note: Extra attribute with no ThoughtSpot counterpart
+must_pass:
+- Sales Orders::Order Count
+- Sales Orders::Customer Count
+witnesses:
+- id: W1
+  description: Revenue by Store Region (inflated)
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql
+- id: W2
+  description: Order Count by Store Region (COUNT DISTINCT is fan-out safe)
+  expect: equal
+  thoughtspot_sql: witnesses/W2.thoughtspot.sql
+  strategy_sql: witnesses/W2.strategy.sql

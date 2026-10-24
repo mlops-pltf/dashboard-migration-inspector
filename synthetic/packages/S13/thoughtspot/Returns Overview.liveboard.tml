@@ -1,0 +1,80 @@
+guid: 5aa9b79c-b099-5b60-becf-c73d387b0c26
+liveboard:
+  name: Returns Overview
+  visualizations:
+  - id: Viz_1
+    answer:
+      name: Revenue vs Refunds by Category
+      tables:
+      - id: Returns Analysis
+        name: Returns Analysis
+        fqn: 39593be8-8770-5d57-9e3e-91d6a24b03c9
+      search_query: '[Category] [Line Revenue] [Refund Amount] sort by [Category]'
+      answer_columns:
+      - name: Category
+      - name: Total Line Revenue
+      - name: Total Refund Amount
+      table:
+        table_columns:
+        - column_id: Category
+          show_headline: false
+        - column_id: Total Line Revenue
+          show_headline: false
+        - column_id: Total Refund Amount
+          show_headline: false
+        ordered_column_ids:
+        - Category
+        - Total Line Revenue
+        - Total Refund Amount
+      chart:
+        type: COLUMN
+        chart_columns:
+        - column_id: Category
+        - column_id: Total Line Revenue
+        - column_id: Total Refund Amount
+        axis_configs:
+        - x:
+          - Category
+          y:
+          - Total Line Revenue
+          - Total Refund Amount
+      display_mode: CHART_MODE
+    viz_guid: c66846e9-ee31-5f37-95f8-d5fd38da2e2d
+  - id: Viz_2
+    answer:
+      name: Units Returned by Brand
+      tables:
+      - id: Returns Analysis
+        name: Returns Analysis
+        fqn: 39593be8-8770-5d57-9e3e-91d6a24b03c9
+      search_query: '[Brand] [Units Sold] [Units Returned] sort by [Units Returned] descending'
+      answer_columns:
+      - name: Brand
+      - name: Total Units Sold
+      - name: Total Units Returned
+      table:
+        table_columns:
+        - column_id: Brand
+          show_headline: false
+        - column_id: Total Units Sold
+          show_headline: false
+        - column_id: Total Units Returned
+          show_headline: false
+        ordered_column_ids:
+        - Brand
+        - Total Units Sold
+        - Total Units Returned
+      display_mode: TABLE_MODE
+    viz_guid: 04ed6e1f-72be-5f08-ac68-c1cd26064067
+  layout:
+    tiles:
+    - visualization_id: Viz_1
+      x: 0
+      y: 0
+      height: 5
+      width: 6
+    - visualization_id: Viz_2
+      x: 6
+      y: 0
+      height: 5
+      width: 6

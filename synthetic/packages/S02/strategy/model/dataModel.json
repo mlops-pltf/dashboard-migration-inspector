@@ -1,0 +1,32 @@
+{
+  "information": {
+    "dateCreated": "2026-10-01T09:00:00.000Z",
+    "dateModified": "2026-10-01T09:00:00.000Z",
+    "versionId": "7A9EBFF98DC45CE19690D1386155B824",
+    "acg": 255,
+    "primaryLocale": "en-US",
+    "objectId": "F8B9FDB2404F6C3313E9D845A99E98EB",
+    "subType": "report_emma_cube",
+    "name": "Product Lines",
+    "description": "Line-level product performance."
+  },
+  "dataServeMode": "in_memory",
+  "enableWrangleRecommendations": true,
+  "enableAutoHierarchyRelationships": true,
+  "sampling": {
+    "type": "first",
+    "rowCount": 1000
+  },
+  "partition": {
+    "mode": "automatic",
+    "number": 4
+  },
+  "autoJoin": true,
+  "advancedProperties": [
+    {
+      "name": "[Joins].[Preserve all final pass result elements]",
+      "value": "preserve_all_final_pass_result_elements_outer_join"
+    }
+  ],
+  "readOnly": false
+}

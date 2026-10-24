@@ -1,0 +1,34 @@
+scenario: S08
+title: group_aggregate level lost
+description: Region Revenue is built as an ordinary report-level sum instead of a Store Region level metric.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: lookup
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: AG-02
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Orders::Region Revenue
+  strategy: Sales Orders::Region Revenue
+  note: fixed level {Store Region} vs report level
+  root_cause: true
+  decided_by: rule
+must_pass:
+- Sales Orders::Revenue
+- Sales Orders::Discount
+- Sales Orders::Shipping
+- Sales Orders::Items Sold
+- Sales Orders::Order Count
+- Sales Orders::Customer Count
+- Sales Orders::Avg Order Value
+- Sales Orders::Discount Rate
+- Sales Orders::Net Revenue
+witnesses:
+- id: W1
+  description: Region Revenue at Store Region x Store Type
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

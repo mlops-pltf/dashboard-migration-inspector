@@ -1,0 +1,34 @@
+---
+title: Mapping file
+description: Optional, only for deliberate renames and exclusions. Inspector infers everything else.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Developers mostly keep the original names, so the mapping file is the **exception**. Inspector
+[infers](/engine/matching/) everything it doesn't cover.
+
+```yaml title="mapping.yaml"
+models:
+  - thoughtspot: "Sales Worksheet"
+    strategy: "Sales Model"
+fields:
+  - thoughtspot: "Sales Worksheet::Total Revenue"
+    strategy: "Sales Model::Revenue"
+visualizations:
+  - thoughtspot: "Sales Overview::Revenue by Region"
+    strategy: "Sales Overview::Regional Revenue"
+ignore:
+  - thoughtspot: "Sales Worksheet::Legacy Flag"
+    reason: "Deprecated, agreed with business on 2026-09-30"
+```
+
+| Section | Effect |
+|---|---|
+| `models`, `fields`, `visualizations` | Matches applied first, labelled `basis: mapped` |
+| `ignore` | Excluded from checks and listed in the report under **intentional differences**, so reviewers see every scope decision |
+
+<Aside type="note">
+	A mapping only says which objects correspond. Inspector still checks the mapped fields fully. A
+	wrong mapping shows up as a lineage or formula failure, so it can't hide a defect.
+</Aside>

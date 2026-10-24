@@ -1,0 +1,48 @@
+---
+title: Migration package
+description: What a developer submits for one unit of migration.
+---
+
+import { FileTree, Badge, Aside } from '@astrojs/starlight/components';
+
+A **migration package** is a folder or zip with everything for one unit of migration: usually one
+ThoughtSpot worksheet/model plus the liveboards and answers built on it.
+
+<FileTree>
+- SALES-WS-001/
+  - manifest.yaml optional; files are auto-detected without it
+  - thoughtspot/
+    - \*.table.tml
+    - \*.sql_view.tml
+    - \*.worksheet.tml or \*.model.tml
+    - \*.liveboard.tml
+    - \*.answer.tml
+    - sql/ optional: generated SQL per answer / visualization
+  - strategy/
+    - model.yaml Mosaic YAML export (preferred)
+    - model/ per-object REST JSON (same object shapes)
+    - model.ossie.yaml Apache Ossie YAML (lossy fallback)
+    - dashboards/ dashboard definitions
+    - sql/ optional: model / dashboard SQL views
+  - mapping.yaml optional: deliberate renames and exclusions only
+</FileTree>
+
+## What developers export
+
+| Input | Source | |
+|---|---|---|
+| ThoughtSpot TML **with dependencies** | UI "Export TML (with associated)" or `POST /api/rest/2.0/metadata/tml/export` with `export_associated: true` | <Badge text="Required" variant="danger" /> |
+| Strategy model | `POST /api/model/dataModels/{id}/export` (YAML, Strategy April 2026+), or `GET /api/model/dataModels/{id}/{tables,attributes,factMetrics,metrics,hierarchy}` | <Badge text="Required" variant="danger" /> |
+| Strategy dashboard definitions | Dashboard definition via REST (`/api/v2/dossiers/{id}/definition`: shape to be confirmed) | <Badge text="If content migrated" variant="caution" /> |
+| Strategy SQL | `GET /api/v2/cubes/{dataModelId}/sqlView`; dashboard `…/datasets/sqlView`, `…/queryDetails` | <Badge text="Recommended" variant="tip" /> |
+| ThoughtSpot SQL | Query visualizer / REST SQL endpoint per answer or visualization | <Badge text="Recommended" variant="tip" /> |
+| `mapping.yaml` | The developer, only for renames or intentional exclusions | <Badge text="Optional" variant="note" /> |
+
+## Package sources
+
+Packages are loaded from a local path (mounted volume), a zip, `s3://…`, or inline base64 in the request.
+
+<Aside type="tip" title="Planned: export helper">
+	A small script that pulls all of the above for a given ThoughtSpot ↔ Strategy object pair, so
+	developers don't assemble packages by hand (phase P7).
+</Aside>

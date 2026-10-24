@@ -1,0 +1,60 @@
+---
+title: System overview
+description: "A team of independent agents: one expert per BI tool, a neutral Inspector, and a data agent."
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+<Mermaid
+	code={`flowchart LR
+    Dev([Developer]) -- migration package --> I
+    subgraph Team[Agent team: A2A]
+      TS["thoughtspot_agent<br/>reads TML → IR"]
+      ST["strategy_agent<br/>reads Mosaic → IR"]
+      I["inspector_agent<br/>validates the IR"]
+      DA["data_agent<br/>warehouse probes"]
+    end
+    I -- export_model / ask --> TS
+    I -- export_model / ask --> ST
+    I -- probes --> DA
+    DA --> RS[(Redshift)]
+    I -- report --> Dev
+    Team -.-> L[LiteLLM proxy] -.-> M[Anthropic / Ollama / Bedrock]`}
+	caption="Experts translate each tool into IR and explain it; the Inspector validates; the data agent settles what definitions cannot."
+/>
+
+## Who does what
+
+<CardGrid>
+	<Card title="Expert agents" icon="document">
+		One per BI technology (ThoughtSpot, Strategy, later others). Each reads its tool's metadata, makes its
+		semantics explicit, exports **IR**, and answers questions about its tool.
+	</Card>
+	<Card title="Inspector agent" icon="magnifier">
+		Technology-neutral. Plans the investigation, pairs objects, reasons about meaning, asks experts and the data
+		agent, groups root causes, explains, and writes the report.
+	</Card>
+	<Card title="Tools (code)" icon="setting">
+		Inside each agent: exact reading, lineage, canonical proofs, join and fan-out analysis, rule sweep. Independent
+		of the agent; can move to a tool repository.
+	</Card>
+	<Card title="The ledger" icon="approve-check">
+		Every Inspector tool result is evidence. A blocker PASS needs a proof, a rule FAIL can only be softened with
+		data, and the verdict is computed, never chosen by the model.
+	</Card>
+</CardGrid>
+
+## Why these agents
+
+- **One expert per BI technology:** its knowledge, its parsers and (later) its MCP/API credentials stay in one
+  place. A new tool means one new expert speaking IR; the Inspector does not change.
+- **One Inspector:** validation is the same whatever the tools are.
+- **One data agent:** the only holder of warehouse credentials, serving the whole team.
+
+Everything else is a tool inside one of them, not another agent. See [Team & A2A](/architecture/a2a/).
+
+<Aside type="tip" title="Independent by design">
+	Agents never import each other: they talk over A2A and share only the `inspector_contract` package (IR types,
+	export envelope, A2A conventions). Each runs as its own container and AgentCore runtime.
+</Aside>

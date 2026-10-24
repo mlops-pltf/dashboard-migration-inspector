@@ -1,0 +1,55 @@
+---
+title: Packaging & runtime
+description: One package, one Dockerfile and one AgentCore runtime per agent; the same A2A image runs locally and on AgentCore.
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+<Aside type="tip" title="Same image locally and on AgentCore">
+	Every agent is an A2A server built with `serve_a2a` from the AgentCore SDK: port 9000 at `/`, a health check,
+	and an agent card. The container that runs in compose is the one AgentCore runs (ARM64 build).
+</Aside>
+
+```python title="thoughtspot_agent/thoughtspot_agent.py (shape)"
+from bedrock_agentcore.runtime import serve_a2a
+from strands.multiagent.a2a.executor import StrandsA2AExecutor
+from inspector_contract.a2a import SkillRouterExecutor, agent_card
+
+SKILLS = {"export_model": lambda a: export(a["location"]).model_dump(mode="json"), ...}
+
+executor = SkillRouterExecutor(SKILLS, StrandsA2AExecutor(agent_factory=lambda _ctx: build_agent()))
+serve_a2a(executor, agent_card("thoughtspot_agent", "...", url, SKILL_DOCS, conversation="..."))
+```
+
+## Local stack
+
+| Service | Port | Purpose |
+|---|---|---|
+| `litellm` | 4000 | LLM proxy (Anthropic or Ollama profile) |
+| `ollama` | 11434 | Optional local models (`--profile local-llm`) |
+| `warehouse` | 5439 | Postgres seeded with the synthetic warehouse, standing in for Redshift |
+| `inspector-agent` | 9000 | A2A: `validate` skill + conversation |
+| `thoughtspot-agent` | 9001 → 9000 | A2A: `export_model`, `analyze_sql` + conversation |
+| `strategy-agent` | 9002 → 9000 | A2A: `export_model`, `analyze_sql` + conversation |
+| `data-agent` | 9003 → 9000 | next |
+| `docs` + `docs-tunnel` | 4321 | This site, plus an optional Cloudflare tunnel |
+
+## Stack
+
+<CardGrid>
+	<Card title="Runtime" icon="rocket">
+		Python 3.12 · `uv` · strands-agents · bedrock-agentcore · configuration only through
+		`INSPECTOR_*` environment variables
+	</Card>
+	<Card title="Parsing" icon="document">
+		pydantic v2 · sqlglot (Redshift) · lark (formula grammars) · ruamel.yaml (keeps line numbers
+		for findings)
+	</Card>
+	<Card title="Data" icon="laptop">
+		redshift-connector · psycopg (local Postgres stand-in) · in-warehouse reconciliation
+	</Card>
+	<Card title="Operations" icon="information">
+		Strands OpenTelemetry traces · per-run counters in the report · run store on a local volume
+		now, S3 later
+	</Card>
+</CardGrid>

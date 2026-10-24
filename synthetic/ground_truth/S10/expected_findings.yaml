@@ -1,0 +1,35 @@
+scenario: S10
+title: Worksheet filter dropped
+description: The Freeform SQL has no WHERE clause, so cancelled orders are counted.
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: ffsql
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: FL-01
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Orders::filter Order Status not in (Cancelled)
+  strategy: Sales Orders SQL
+  note: worksheet filter has no equivalent
+  root_cause: true
+  symptoms:
+  - Revenue
+  - Discount
+  - Shipping
+  - Items Sold
+  - Order Count
+  - Customer Count
+  - Avg Order Value
+  - Discount Rate
+  - Net Revenue
+  decided_by: rule
+must_pass: []
+witnesses:
+- id: W1
+  description: Revenue by Store Region
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

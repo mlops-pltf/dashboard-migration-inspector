@@ -1,0 +1,44 @@
+---
+title: Repository layout
+description: One installable package per agent, plus the shared contract; tools inside each agent, independent of it.
+---
+
+import { FileTree, Aside } from '@astrojs/starlight/components';
+
+<FileTree>
+- Inspector/
+  - packages/
+    - inspector_contract/ the team's shared contract
+      - inspector_contract/
+        - ir.py IR data types
+        - export.py ModelExport envelope (versioned)
+        - a2a.py skill router, agent card, A2A client (SigV4)
+    - thoughtspot_agent/
+      - thoughtspot_agent/
+        - **thoughtspot_agent.py** Strands agent + A2A server
+        - prompts/system.md
+        - tools/ model_export, thoughtspot_reader, sql_analyzer, common
+      - Dockerfile
+    - strategy_agent/
+      - strategy_agent/
+        - **strategy_agent.py** Strands agent + A2A server
+        - prompts/system.md
+        - tools/ model_export (+ join_semantics), strategy_reader, sql_analyzer, common
+      - Dockerfile
+    - inspector_agent/
+      - inspector_agent/
+        - **inspector_agent.py** Strands agent, evidence hook, A2A server
+        - prompts/system.md
+        - tools/ package_inventory, expert_client, model_browser, lineage_tracer, counterpart_finder, definition_comparer, join_analyzer, filter_inspector, rule_sweep, data_probe, findings_ledger
+      - Dockerfile
+    - data_agent/ next
+  - synthetic/ generator, 18 packages, ground truth, warehouse seed
+  - infra/litellm/ anthropic.yaml, ollama.yaml
+  - site/ this documentation
+  - docker-compose.yml
+</FileTree>
+
+<Aside>
+	Agents never import each other: they talk over A2A and share only `inspector_contract`. Each tool folder
+	owns its logic and exposes Strands tools in its `tool.py`; nothing under `tools/` imports its agent.
+</Aside>

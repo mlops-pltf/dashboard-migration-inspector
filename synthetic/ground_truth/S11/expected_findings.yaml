@@ -1,0 +1,36 @@
+scenario: S11
+title: safe_divide vs plain division
+description: 'Discount Rate uses plain division: ''Replacement'' orders (revenue 0) give NULL instead of 0.'
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: lookup
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: FX-03
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Sales Orders::Discount Rate
+  strategy: Sales Orders::Discount Rate
+  note: safe_divide returns 0 when revenue is 0; Strategy returns NULL
+  root_cause: true
+  also_acceptable:
+  - FX-01
+  decided_by: rule
+must_pass:
+- Sales Orders::Revenue
+- Sales Orders::Discount
+- Sales Orders::Shipping
+- Sales Orders::Items Sold
+- Sales Orders::Order Count
+- Sales Orders::Customer Count
+- Sales Orders::Avg Order Value
+- Sales Orders::Net Revenue
+- Sales Orders::Region Revenue
+witnesses:
+- id: W1
+  description: Discount Rate by Order Status
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

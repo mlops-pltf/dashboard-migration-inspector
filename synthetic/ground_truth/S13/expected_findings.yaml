@@ -1,0 +1,44 @@
+scenario: S13
+title: 'Chasm trap: two facts flattened through a shared dimension'
+description: Lines and returns are joined through dim_product in one Freeform SQL.
+thoughtspot_model: Returns Analysis (model)
+strategy_model: Returns Analysis
+strategy_style: ffsql
+strategy_format: yaml_export
+expected_verdict: NOT_READY
+findings:
+- id: E1
+  check: JN-05
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Returns Analysis
+  strategy: Returns Analysis SQL
+  note: fact_order_lines x fact_returns via product_id
+  root_cause: true
+  symptoms:
+  - Line Revenue
+  - Units Sold
+  - Refund Amount
+  - Units Returned
+  also_acceptable:
+  - JN-04
+  decided_by: rule
+- id: E2
+  check: JN-01
+  severity: BLOCKER
+  status: FAIL
+  thoughtspot: Returns Analysis::FACT_RETURNS_to_DIM_PRODUCT
+  strategy: Returns Analysis SQL
+  note: 'dim_product LEFT JOIN fact_returns: seen from the returns this is a RIGHT join, so refunds for products missing from
+    dim_product are dropped'
+  symptoms:
+  - Refund Amount
+  - Units Returned
+  decided_by: rule
+must_pass: []
+witnesses:
+- id: W1
+  description: Revenue vs Refunds by Category
+  expect: differ
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

@@ -1,0 +1,37 @@
+guid: ae757875-9810-55db-ad94-18195327f5a4
+answer:
+  name: Revenue by Customer Segment
+  tables:
+  - id: Sales Orders
+    name: Sales Orders
+    fqn: 23feb6f2-ac92-5b53-8fdf-10a5e07c354d
+  search_query: '[Customer Segment] [Revenue] [Customer Count] sort by [Revenue] descending'
+  answer_columns:
+  - name: Customer Segment
+  - name: Total Revenue
+  - name: Customer Count
+  table:
+    table_columns:
+    - column_id: Customer Segment
+      show_headline: false
+    - column_id: Total Revenue
+      show_headline: false
+    - column_id: Customer Count
+      show_headline: false
+    ordered_column_ids:
+    - Customer Segment
+    - Total Revenue
+    - Customer Count
+  chart:
+    type: BAR
+    chart_columns:
+    - column_id: Customer Segment
+    - column_id: Total Revenue
+    - column_id: Customer Count
+    axis_configs:
+    - x:
+      - Customer Segment
+      y:
+      - Total Revenue
+      - Customer Count
+  display_mode: CHART_MODE

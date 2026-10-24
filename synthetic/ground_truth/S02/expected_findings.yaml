@@ -1,0 +1,22 @@
+scenario: S02
+title: Clean lift-and-shift of a Model with deliberate renames
+description: Order Lines rebuilt faithfully; four objects renamed and declared in mapping.yaml. Delivered as REST JSON.
+thoughtspot_model: Order Lines (model)
+strategy_model: Product Lines
+strategy_style: lookup
+strategy_format: rest_json
+expected_verdict: READY
+findings: []
+must_pass:
+- Order Lines::Units
+- Order Lines::Line Revenue
+- Order Lines::Line Cost
+- Order Lines::Gross Margin
+- Order Lines::Margin %
+- Order Lines::Avg Selling Price
+witnesses:
+- id: W1
+  description: Margin by Category
+  expect: equal
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

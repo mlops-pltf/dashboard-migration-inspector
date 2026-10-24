@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.env
+.pytest_cache/
+*.egg-info/
+.DS_Store
+site/node_modules/
+site/dist/
+site/.astro/
+*.log

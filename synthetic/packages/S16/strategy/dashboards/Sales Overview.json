@@ -1,0 +1,332 @@
+{
+  "id": "8E270291C3D3EF8C6674F5D3DC6FA870",
+  "name": "Sales Overview",
+  "type": "dashboard",
+  "datasets": [
+    {
+      "id": "8ED9F42F745402C809EF79F28C9751F8",
+      "name": "Sales Orders",
+      "type": "data_model"
+    }
+  ],
+  "chapters": [
+    {
+      "key": "C1",
+      "name": "Sales Overview",
+      "filters": [
+        {
+          "key": "F1",
+          "name": "Order Year",
+          "source": {
+            "id": "D51D4590F36695029F2D23473A6E52B2",
+            "name": "Order Year",
+            "type": "attribute"
+          },
+          "selector": {
+            "type": "element_list",
+            "multiSelection": true
+          },
+          "currentSelection": {
+            "selectionStatus": "included",
+            "elements": [
+              {
+                "id": "h2025;D51D4590F36695029F2D23473A6E52B2",
+                "name": "2025"
+              }
+            ]
+          },
+          "targets": "all_visualizations"
+        }
+      ],
+      "pages": [
+        {
+          "key": "K1",
+          "name": "Overview",
+          "visualizations": [
+            {
+              "key": "W1",
+              "name": "Revenue by Store Region",
+              "visualizationType": "horizontal_bar",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "6DE6DF494E9EE626B8BE529D1DCD29F5",
+                      "name": "Store Region",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "6A089704BACF486861A77DED4680FF3B",
+                      "name": "Revenue",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "6A089704BACF486861A77DED4680FF3B",
+                    "name": "Revenue",
+                    "type": "metric",
+                    "order": "descending"
+                  }
+                ]
+              }
+            },
+            {
+              "key": "W2",
+              "name": "Revenue Trend by Month",
+              "visualizationType": "line",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "44966218AFD712CEBED9B75C02043690",
+                      "name": "Order Month",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "6A089704BACF486861A77DED4680FF3B",
+                      "name": "Revenue",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "0F221303CEF802873C6C81CB6C4D1CC8",
+                      "name": "Order Count",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "44966218AFD712CEBED9B75C02043690",
+                    "name": "Order Month",
+                    "type": "attribute",
+                    "order": "ascending"
+                  }
+                ]
+              }
+            },
+            {
+              "key": "W3",
+              "name": "Top Customers",
+              "visualizationType": "grid",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "1B8FABB92B8612DB87DA73B5068AC380",
+                      "name": "Customer Name",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "6A089704BACF486861A77DED4680FF3B",
+                      "name": "Revenue",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "6A089704BACF486861A77DED4680FF3B",
+                    "name": "Revenue",
+                    "type": "metric",
+                    "order": "descending"
+                  }
+                ],
+                "limit": {
+                  "type": "top",
+                  "count": 10,
+                  "by": {
+                    "id": "6A089704BACF486861A77DED4680FF3B",
+                    "name": "Revenue",
+                    "type": "metric"
+                  }
+                }
+              }
+            },
+            {
+              "key": "W4",
+              "name": "Average Order Value",
+              "visualizationType": "kpi",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [],
+                  "columns": [
+                    {
+                      "id": "5134CFC30A5291EDF246333D31518AD9",
+                      "name": "Avg Order Value",
+                      "type": "metric"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "key": "W5",
+              "name": "Discount Rate by Status",
+              "visualizationType": "vertical_bar",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "DE9F83D751FEDEC7C088A9548470C0C6",
+                      "name": "Order Status",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "E4DC04C5FF1CF9399E48EF9EF3FA47FE",
+                      "name": "Discount Rate",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "6A089704BACF486861A77DED4680FF3B",
+                      "name": "Revenue",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "DE9F83D751FEDEC7C088A9548470C0C6",
+                    "name": "Order Status",
+                    "type": "attribute",
+                    "order": "ascending"
+                  }
+                ]
+              }
+            },
+            {
+              "key": "W6",
+              "name": "Weekly Net Revenue",
+              "visualizationType": "line",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "B4CCD5A86B5AE85BB2A2ECBFF9D293A7",
+                      "name": "Order Week",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "1B1BB5B457B9907F3D828265BC0190D0",
+                      "name": "Net Revenue",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "0F221303CEF802873C6C81CB6C4D1CC8",
+                      "name": "Order Count",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "B4CCD5A86B5AE85BB2A2ECBFF9D293A7",
+                    "name": "Order Week",
+                    "type": "attribute",
+                    "order": "ascending"
+                  }
+                ]
+              }
+            },
+            {
+              "key": "W7",
+              "name": "Region vs Store Type",
+              "visualizationType": "grid",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "6DE6DF494E9EE626B8BE529D1DCD29F5",
+                      "name": "Store Region",
+                      "type": "attribute"
+                    },
+                    {
+                      "id": "11FD78EC9F991CE46A90F4211A84FFF0",
+                      "name": "Store Type",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "6A089704BACF486861A77DED4680FF3B",
+                      "name": "Revenue",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "1866C49C1943BD943004754902C1355A",
+                      "name": "Region Revenue",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "6DE6DF494E9EE626B8BE529D1DCD29F5",
+                    "name": "Store Region",
+                    "type": "attribute",
+                    "order": "ascending"
+                  }
+                ]
+              }
+            },
+            {
+              "key": "W8",
+              "name": "Shipping by Customer Region",
+              "visualizationType": "vertical_bar",
+              "datasetId": "8ED9F42F745402C809EF79F28C9751F8",
+              "definition": {
+                "grid": {
+                  "rows": [
+                    {
+                      "id": "7937FAEB787EA7EA02FFA38232F6D37E",
+                      "name": "Customer Region",
+                      "type": "attribute"
+                    }
+                  ],
+                  "columns": [
+                    {
+                      "id": "5EACC0473DB6477613A5FE168A073B21",
+                      "name": "Shipping",
+                      "type": "metric"
+                    },
+                    {
+                      "id": "7F61CEEB7CE4993E52B047F7B2292696",
+                      "name": "Customer Count",
+                      "type": "metric"
+                    }
+                  ]
+                },
+                "sorts": [
+                  {
+                    "id": "5EACC0473DB6477613A5FE168A073B21",
+                    "name": "Shipping",
+                    "type": "metric",
+                    "order": "descending"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

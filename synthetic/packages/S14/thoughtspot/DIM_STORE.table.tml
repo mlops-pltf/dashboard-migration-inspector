@@ -1,0 +1,52 @@
+guid: 2255bed9-70c7-5b65-976f-eb7de857a289
+table:
+  name: DIM_STORE
+  db: ANALYTICS
+  schema: RETAIL
+  db_table: DIM_STORE
+  connection:
+    name: Redshift Retail
+    fqn: 83fc6beb-3f0f-5991-a2d0-62ef1d97b006
+  columns:
+  - name: Store ID
+    db_column_name: STORE_ID
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+    db_column_properties:
+      data_type: INT32
+  - name: Store Name
+    db_column_name: STORE_NAME
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: City
+    db_column_name: CITY
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: State
+    db_column_name: STATE
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Region
+    db_column_name: REGION
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Store Type
+    db_column_name: STORE_TYPE
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR

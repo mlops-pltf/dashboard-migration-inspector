@@ -1,0 +1,729 @@
+{
+  "offset": 0,
+  "limit": -1,
+  "total": 4,
+  "tables": [
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "A433763C7974712DEB4D7525D21B8385",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "2477391BD344B1C7B5FB70148DB3C294",
+        "subType": "logical_table",
+        "name": "fact_order_lines"
+      },
+      "physicalTable": {
+        "information": {
+          "primaryLocale": "en-US",
+          "objectId": "86342A3EF8086E648F1E017EB72AA425",
+          "subType": "physical_table",
+          "name": "fact_order_lines"
+        },
+        "type": "normal",
+        "namespace": "retail",
+        "tableName": "fact_order_lines",
+        "columns": [
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "144E5E38D3CECDB02EA0D4DA86A2E1EC",
+              "subType": "column",
+              "name": "line_id"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 8,
+              "scale": 0
+            },
+            "columnName": "line_id"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "55D5EAF727FEF2A293B66E462C6EF943",
+              "subType": "column",
+              "name": "order_id"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 8,
+              "scale": 0
+            },
+            "columnName": "order_id"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "673267839517E425CDC0D61835CC9579",
+              "subType": "column",
+              "name": "line_number"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "line_number"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "C8D17B8DB97A89C19B9B3E0D24FFEFA2",
+              "subType": "column",
+              "name": "product_id"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "product_id"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "CF27D5744ECE4FA045A856C6AA0DC6BE",
+              "subType": "column",
+              "name": "quantity"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "quantity"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "BD9F82E5FFD7308FF65E68A073C844F1",
+              "subType": "column",
+              "name": "unit_price"
+            },
+            "dataType": {
+              "type": "decimal",
+              "precision": 10,
+              "scale": 2
+            },
+            "columnName": "unit_price"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "3F7CE783E20C8BD7DCEACB40AFF9E6D5",
+              "subType": "column",
+              "name": "line_amount"
+            },
+            "dataType": {
+              "type": "decimal",
+              "precision": 12,
+              "scale": 2
+            },
+            "columnName": "line_amount"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "3E12B500F071031F9B51897EDCC7901C",
+              "subType": "column",
+              "name": "line_cost"
+            },
+            "dataType": {
+              "type": "decimal",
+              "precision": 12,
+              "scale": 2
+            },
+            "columnName": "line_cost"
+          }
+        ]
+      },
+      "primaryDataSource": {
+        "objectId": "8ABE2B5B212761241C31F68C142F82D7",
+        "subType": "db_role",
+        "name": "Redshift Retail"
+      },
+      "attributes": [
+        {
+          "information": {
+            "objectId": "5B28C69414223A2B892AFB7635A39321",
+            "subType": "attribute",
+            "name": "Order ID"
+          }
+        },
+        {
+          "information": {
+            "objectId": "04EB63FBCF801D608C5930919FF081E9",
+            "subType": "attribute",
+            "name": "Product ID"
+          }
+        }
+      ],
+      "factMetrics": [
+        {
+          "information": {
+            "objectId": "DD8BFE017D1889697547C8155195B81A",
+            "subType": "fact_metric",
+            "name": "Units Sold"
+          }
+        },
+        {
+          "information": {
+            "objectId": "4005A2078D57CF21AF1BB78DB71D94E2",
+            "subType": "fact_metric",
+            "name": "Gross Sales"
+          }
+        },
+        {
+          "information": {
+            "objectId": "CF2E40A2BFF03FCCD1B87B73FDC91A2C",
+            "subType": "fact_metric",
+            "name": "Line Cost"
+          }
+        }
+      ],
+      "refreshPolicy": "replace"
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "0D3DEA852DCA5F37391CBC25B4FF3E28",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "B763C84A438474646D1410A4DFFAF6AD",
+        "subType": "logical_table",
+        "name": "fact_orders"
+      },
+      "physicalTable": {
+        "information": {
+          "primaryLocale": "en-US",
+          "objectId": "AF7BC601F9053602EA578FBD5E1F8EFE",
+          "subType": "physical_table",
+          "name": "fact_orders"
+        },
+        "type": "normal",
+        "namespace": "retail",
+        "tableName": "fact_orders",
+        "columns": [
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "3840AD6D60808D28C2FE3F0250C344EE",
+              "subType": "column",
+              "name": "order_id"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 8,
+              "scale": 0
+            },
+            "columnName": "order_id"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "B686AA408FD100868E2B1AEB9B0FC661",
+              "subType": "column",
+              "name": "order_ts"
+            },
+            "dataType": {
+              "type": "time_stamp",
+              "precision": 26,
+              "scale": 6
+            },
+            "columnName": "order_ts"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "1E4525D767E825D7B7976BB0D989C124",
+              "subType": "column",
+              "name": "order_date"
+            },
+            "dataType": {
+              "type": "date",
+              "precision": 10,
+              "scale": 0
+            },
+            "columnName": "order_date"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "27E2633EBA98A4B988C04C945D199CEA",
+              "subType": "column",
+              "name": "customer_id"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "customer_id"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "7045ABAB3BB32A20F574DCFFDFEF97E0",
+              "subType": "column",
+              "name": "store_id"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "store_id"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "59B6B95D9A56D519E637CA218174C5FC",
+              "subType": "column",
+              "name": "order_status"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 16,
+              "scale": 0
+            },
+            "columnName": "order_status"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "E71D0D98D368E9BD6300D98DA619F181",
+              "subType": "column",
+              "name": "order_amount"
+            },
+            "dataType": {
+              "type": "decimal",
+              "precision": 12,
+              "scale": 2
+            },
+            "columnName": "order_amount"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "369952D617C0263E7FAC3686C4D2548A",
+              "subType": "column",
+              "name": "discount_amount"
+            },
+            "dataType": {
+              "type": "decimal",
+              "precision": 12,
+              "scale": 2
+            },
+            "columnName": "discount_amount"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "5F483D40014B5F9EF9E2D132B246AA50",
+              "subType": "column",
+              "name": "shipping_amount"
+            },
+            "dataType": {
+              "type": "decimal",
+              "precision": 10,
+              "scale": 2
+            },
+            "columnName": "shipping_amount"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "D276C3A868D397458915C4192B2ED55B",
+              "subType": "column",
+              "name": "item_count"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "item_count"
+          }
+        ]
+      },
+      "primaryDataSource": {
+        "objectId": "8ABE2B5B212761241C31F68C142F82D7",
+        "subType": "db_role",
+        "name": "Redshift Retail"
+      },
+      "attributes": [
+        {
+          "information": {
+            "objectId": "5B28C69414223A2B892AFB7635A39321",
+            "subType": "attribute",
+            "name": "Order ID"
+          }
+        },
+        {
+          "information": {
+            "objectId": "36AC608D48481AAD173DDB2D31F26F8C",
+            "subType": "attribute",
+            "name": "Order Date"
+          }
+        },
+        {
+          "information": {
+            "objectId": "A13E7B3F0D5FF2E08A324F699C092C0C",
+            "subType": "attribute",
+            "name": "Order Status"
+          }
+        }
+      ],
+      "refreshPolicy": "replace"
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "5F6F0F80FEA11BCBC3531B7D40CC8E82",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "53FD551F874EEB9989F0764105B16596",
+        "subType": "logical_table",
+        "name": "dim_product"
+      },
+      "physicalTable": {
+        "information": {
+          "primaryLocale": "en-US",
+          "objectId": "3C0EE53EB888786750539DA3AFCB448A",
+          "subType": "physical_table",
+          "name": "dim_product"
+        },
+        "type": "normal",
+        "namespace": "retail",
+        "tableName": "dim_product",
+        "columns": [
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "5828D3A36489BA2A9339A005591FEB3E",
+              "subType": "column",
+              "name": "product_id"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "product_id"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "D497CD21D80672C34753533F6069E1DB",
+              "subType": "column",
+              "name": "product_name"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 64,
+              "scale": 0
+            },
+            "columnName": "product_name"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "427AD2B54FA207FCC6BFBFE6487AB880",
+              "subType": "column",
+              "name": "category"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 32,
+              "scale": 0
+            },
+            "columnName": "category"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "9B9213ED07189E18F0749C79519F2758",
+              "subType": "column",
+              "name": "subcategory"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 32,
+              "scale": 0
+            },
+            "columnName": "subcategory"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "5700CA3F138A2DFAE9A179A535D5BC79",
+              "subType": "column",
+              "name": "brand"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 32,
+              "scale": 0
+            },
+            "columnName": "brand"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "56B67124503423B9F5CBED8EB237EA9B",
+              "subType": "column",
+              "name": "unit_cost"
+            },
+            "dataType": {
+              "type": "decimal",
+              "precision": 10,
+              "scale": 2
+            },
+            "columnName": "unit_cost"
+          }
+        ]
+      },
+      "primaryDataSource": {
+        "objectId": "8ABE2B5B212761241C31F68C142F82D7",
+        "subType": "db_role",
+        "name": "Redshift Retail"
+      },
+      "attributes": [
+        {
+          "information": {
+            "objectId": "04EB63FBCF801D608C5930919FF081E9",
+            "subType": "attribute",
+            "name": "Product ID"
+          }
+        },
+        {
+          "information": {
+            "objectId": "71B5A33FD6BEDA8C11BCBA230DE23A3E",
+            "subType": "attribute",
+            "name": "Product Name"
+          }
+        },
+        {
+          "information": {
+            "objectId": "0769513B9C05C523D65BAE2859AE1154",
+            "subType": "attribute",
+            "name": "Product Category"
+          }
+        },
+        {
+          "information": {
+            "objectId": "37560E93FD55BAE375A85ACCCE8B50AD",
+            "subType": "attribute",
+            "name": "Subcategory"
+          }
+        },
+        {
+          "information": {
+            "objectId": "FDD67A7248A472D0B4A65DAB0A1869A9",
+            "subType": "attribute",
+            "name": "Brand"
+          }
+        }
+      ],
+      "refreshPolicy": "replace"
+    },
+    {
+      "information": {
+        "dateCreated": "2026-10-01T09:00:00.000Z",
+        "dateModified": "2026-10-01T09:00:00.000Z",
+        "versionId": "70D4B8DBB77E248EDE9632FE865B8BAF",
+        "acg": 255,
+        "primaryLocale": "en-US",
+        "objectId": "00366E513D715DE2609DB5E7F4B6A517",
+        "subType": "logical_table",
+        "name": "dim_date"
+      },
+      "physicalTable": {
+        "information": {
+          "primaryLocale": "en-US",
+          "objectId": "A62273C79593CB285E9F0EB644D4D0D9",
+          "subType": "physical_table",
+          "name": "dim_date"
+        },
+        "type": "normal",
+        "namespace": "retail",
+        "tableName": "dim_date",
+        "columns": [
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "0E3FCE6228EC7F4BE13ED51404AB1487",
+              "subType": "column",
+              "name": "date_key"
+            },
+            "dataType": {
+              "type": "date",
+              "precision": 10,
+              "scale": 0
+            },
+            "columnName": "date_key"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "3E0F3DA7F918197D6A071F2C99DA92E9",
+              "subType": "column",
+              "name": "day_of_week"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 9,
+              "scale": 0
+            },
+            "columnName": "day_of_week"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "A48E1EE35040D6ED4C85AF70570627DD",
+              "subType": "column",
+              "name": "week_start_monday"
+            },
+            "dataType": {
+              "type": "date",
+              "precision": 10,
+              "scale": 0
+            },
+            "columnName": "week_start_monday"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "71F69FCDD1C8C8EA28E301699A9EB0F8",
+              "subType": "column",
+              "name": "week_start_sunday"
+            },
+            "dataType": {
+              "type": "date",
+              "precision": 10,
+              "scale": 0
+            },
+            "columnName": "week_start_sunday"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "50BE2D4FDBD035B684D94B183CE6E96F",
+              "subType": "column",
+              "name": "month_start"
+            },
+            "dataType": {
+              "type": "date",
+              "precision": 10,
+              "scale": 0
+            },
+            "columnName": "month_start"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "308E5E5075D632ED9225AA245F26C0F7",
+              "subType": "column",
+              "name": "month_name"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 9,
+              "scale": 0
+            },
+            "columnName": "month_name"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "4C94914C386F673015A4E46D8AED97BA",
+              "subType": "column",
+              "name": "quarter"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 7,
+              "scale": 0
+            },
+            "columnName": "quarter"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "8AC6B122166B54A6741D5B1DC195BD92",
+              "subType": "column",
+              "name": "year"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "year"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "3457E69E73252883D951C6606B541A19",
+              "subType": "column",
+              "name": "fiscal_year"
+            },
+            "dataType": {
+              "type": "integer",
+              "precision": 4,
+              "scale": 0
+            },
+            "columnName": "fiscal_year"
+          },
+          {
+            "information": {
+              "primaryLocale": "en-US",
+              "objectId": "1D0E225A24D597CDD6BA4970EE93C945",
+              "subType": "column",
+              "name": "fiscal_quarter"
+            },
+            "dataType": {
+              "type": "utf8_char",
+              "precision": 10,
+              "scale": 0
+            },
+            "columnName": "fiscal_quarter"
+          }
+        ]
+      },
+      "primaryDataSource": {
+        "objectId": "8ABE2B5B212761241C31F68C142F82D7",
+        "subType": "db_role",
+        "name": "Redshift Retail"
+      },
+      "attributes": [
+        {
+          "information": {
+            "objectId": "36AC608D48481AAD173DDB2D31F26F8C",
+            "subType": "attribute",
+            "name": "Order Date"
+          }
+        },
+        {
+          "information": {
+            "objectId": "0261BC5721A7E76AEEA1E4CFD78ADA1D",
+            "subType": "attribute",
+            "name": "Order Month"
+          }
+        },
+        {
+          "information": {
+            "objectId": "88112BFF041B5B39BA8941D33B6C5F3A",
+            "subType": "attribute",
+            "name": "Order Year"
+          }
+        }
+      ],
+      "refreshPolicy": "replace"
+    }
+  ]
+}

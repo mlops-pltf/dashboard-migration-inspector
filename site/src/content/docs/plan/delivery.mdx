@@ -1,0 +1,40 @@
+---
+title: Delivery plan
+description: Eight phases. Joins and aggregation come first, because that's where the Qlik migration hurt most.
+---
+
+import { Steps, Aside, Badge } from '@astrojs/starlight/components';
+
+<Steps>
+1. **P0 · Foundations.** <Badge text="Done" variant="success" /> Repo skeleton, LiteLLM container, compose, LLM factory. *(Every agent runs as an A2A server in Docker.)*
+   *Exit:* both agents answer `/ping`; a judge round-trips through both LiteLLM profiles.
+
+2. **P1 · Synthetic data.** <Badge text="Done" variant="success" /> Generator, warehouse seed, scenarios S01–S18 with ground truth.
+   *Exit:* packages + seeded Postgres in compose. *(25/25 witnesses verified against the warehouse.)*
+
+3. **P2 · Parsing.** <Badge text="Done" variant="success" /> IR; TML parsers (both worksheet types); Strategy parsers (YAML / JSON / Ossie); formula and expression parsers; SQL lineage.
+   *Exit:* every synthetic object parses; lineage resolves to physical columns. *(98 tests; all 18 packages load with zero errors and every field resolves, except the one Ossie metric whose expression the format drops.)*
+
+4. **P3 · Data-model checks.** <Badge text="Done" variant="success" /> Join graphs, grain / fan-out analysis, matching, CV / LN / DT / JN / AG / FL / FX checks, report v1.
+   *Exit:* S01–S13 detected statically (data-dependent ones UNVERIFIED). *(Recall, precision, must-pass and verdict all match ground truth on 18 scenarios; it also found a join-direction defect in S13 that wasn't planted.)*
+
+5. **P4 · Agent.** <Badge text="Built" variant="tip" /> The validator becomes a Strands agent: the earlier code is split into 18 independent tools; an evidence ledger enforces "no pass without proof"; the deterministic checks become a rule sweep that produces leads.
+   *Exit:* the live evaluation on the 18 scenarios (recall, precision, must-pass, all leads resolved) passes with the configured model.
+
+6. **P4b · Agent team.** <Badge text="Built" variant="tip" /> Split into independent A2A agents: ThoughtSpot expert, Strategy expert, technology-neutral Inspector, shared `inspector_contract` (IR, export envelope, A2A conventions). One AgentCore runtime per agent, SigV4 between them.
+   *Exit:* Inspector tests run against the real experts over A2A; compose runs the team.
+
+6. **P5 · data_agent.** <Badge text="Done" variant="success" /> Guard, executor, profiles, in-warehouse reconciliation; Inspector query compiler, probes and the rules+data stage.
+   *Exit:* data-dependent scenarios become data-verified. *(After-data ground truth reproduced on all 18 scenarios; compiled SQL matches ThoughtSpot SQL on 128 visualizations. Scripted diagnosis still open.)*
+
+7. **P6 · Content.** Liveboards, answers, dashboards; DB / LF checks.
+   *Exit:* S15–S17.
+
+8. **P7 · Review & scale.** Stage 8 agent review, root-cause grouping, `ask` action, batch summary, export helper.
+   *Exit:* end-to-end runs on real (sanitised) packages.
+</Steps>
+
+<Aside type="note" title="Why content comes after the model">
+	A dashboard check is only meaningful once the metrics underneath it are proven. Every dashboard
+	issue that changes a number is still a blocker in P6.
+</Aside>

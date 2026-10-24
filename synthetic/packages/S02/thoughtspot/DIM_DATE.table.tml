@@ -1,0 +1,80 @@
+guid: cf951e85-d664-571b-8bee-9a000ed8bb90
+table:
+  name: DIM_DATE
+  db: ANALYTICS
+  schema: RETAIL
+  db_table: DIM_DATE
+  connection:
+    name: Redshift Retail
+    fqn: 83fc6beb-3f0f-5991-a2d0-62ef1d97b006
+  columns:
+  - name: Date
+    db_column_name: DATE_KEY
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: DATE
+  - name: Day of Week
+    db_column_name: DAY_OF_WEEK
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Week Start Monday
+    db_column_name: WEEK_START_MONDAY
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: DATE
+  - name: Week Start Sunday
+    db_column_name: WEEK_START_SUNDAY
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: DATE
+  - name: Month Start
+    db_column_name: MONTH_START
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: DATE
+  - name: Month Name
+    db_column_name: MONTH_NAME
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Quarter
+    db_column_name: QUARTER
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR
+  - name: Year
+    db_column_name: YEAR
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: INT32
+  - name: Fiscal Year
+    db_column_name: FISCAL_YEAR
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: INT32
+  - name: Fiscal Quarter
+    db_column_name: FISCAL_QUARTER
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DEFAULT
+    db_column_properties:
+      data_type: VARCHAR

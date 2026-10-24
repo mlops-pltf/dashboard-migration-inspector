@@ -1,0 +1,1315 @@
+version: '1.0'
+metadataLocale: en-US
+dateNumberLocale: en-US
+model:
+- information:
+    primaryLocale: en-US
+    objectId: D7BF93A4697B6329086DF2336D51F6D1
+    subType: report_emma_cube
+    name: Order Lines
+    description: Line-level product performance.
+  dataServeMode: in_memory
+  enableWrangleRecommendations: true
+  enableAutoHierarchyRelationships: true
+  sampling:
+    type: first
+    rowCount: 1000
+  partition:
+    mode: automatic
+    number: 4
+  autoJoin: true
+  advancedProperties:
+  - name: '[Joins].[Preserve all final pass result elements]'
+    value: preserve_all_final_pass_result_elements_outer_join
+  tables:
+  - information:
+      primaryLocale: en-US
+      objectId: B02C2533E59DFA55C1E6C54A60282DC8
+      subType: logical_table
+      name: fact_order_lines
+    physicalTable:
+      information:
+        primaryLocale: en-US
+        objectId: CA28F24B7BE9BD8447BFC74FFB8009EC
+        subType: physical_table
+        name: fact_order_lines
+      type: normal
+      namespace: retail
+      tableName: fact_order_lines
+      columns:
+      - information:
+          primaryLocale: en-US
+          objectId: 18C669B1C3BD686067B74920F75DE205
+          subType: column
+          name: line_id
+        dataType:
+          type: integer
+          precision: 8
+          scale: 0
+        columnName: line_id
+      - information:
+          primaryLocale: en-US
+          objectId: D67D465F49B85C144813497687EEBD03
+          subType: column
+          name: order_id
+        dataType:
+          type: integer
+          precision: 8
+          scale: 0
+        columnName: order_id
+      - information:
+          primaryLocale: en-US
+          objectId: 47BECA98D5E4F6FAECD1645B665AEDBC
+          subType: column
+          name: line_number
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: line_number
+      - information:
+          primaryLocale: en-US
+          objectId: 8EF2B6244AAE92ED475CD1F05CC6060F
+          subType: column
+          name: product_id
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: product_id
+      - information:
+          primaryLocale: en-US
+          objectId: FC5A2335C4A43E1129F7E6FC9D8B9886
+          subType: column
+          name: quantity
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: quantity
+      - information:
+          primaryLocale: en-US
+          objectId: A700DB2E63F20B28919ED149C079D798
+          subType: column
+          name: unit_price
+        dataType:
+          type: decimal
+          precision: 10
+          scale: 2
+        columnName: unit_price
+      - information:
+          primaryLocale: en-US
+          objectId: 94337C93C5302981782C8E5227A90669
+          subType: column
+          name: line_amount
+        dataType:
+          type: decimal
+          precision: 12
+          scale: 2
+        columnName: line_amount
+      - information:
+          primaryLocale: en-US
+          objectId: 1169358DBEF7E64BB9591F5F1F040E42
+          subType: column
+          name: line_cost
+        dataType:
+          type: decimal
+          precision: 12
+          scale: 2
+        columnName: line_cost
+    primaryDataSource: &id001
+      objectId: 8ABE2B5B212761241C31F68C142F82D7
+      subType: db_role
+      name: Redshift Retail
+    attributes:
+    - information:
+        objectId: 2A6E65774D63CD2A43E1176B6D6D2C9C
+        subType: attribute
+        name: Order ID
+    - information:
+        objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+        subType: attribute
+        name: Product ID
+    factMetrics:
+    - information:
+        objectId: 39B221AF1DD42B4B781ACD1BA6CA7844
+        subType: fact_metric
+        name: Units
+    - information:
+        objectId: 9683ED6B2C16D3B6510481D6C463F61E
+        subType: fact_metric
+        name: Line Revenue
+    - information:
+        objectId: 415104309BA372F0B14E0B1E50C21011
+        subType: fact_metric
+        name: Line Cost
+    - information:
+        objectId: 839C70463FA21DFCE6D8196625AAED97
+        subType: fact_metric
+        name: Margin %
+    refreshPolicy: replace
+  - information:
+      primaryLocale: en-US
+      objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+      subType: logical_table
+      name: fact_orders
+    physicalTable:
+      information:
+        primaryLocale: en-US
+        objectId: E5A158CAE167C39C393B11D8B6846005
+        subType: physical_table
+        name: fact_orders
+      type: normal
+      namespace: retail
+      tableName: fact_orders
+      columns:
+      - information:
+          primaryLocale: en-US
+          objectId: 9D5E5E439A14229B9DEB2C696BB54A7C
+          subType: column
+          name: order_id
+        dataType:
+          type: integer
+          precision: 8
+          scale: 0
+        columnName: order_id
+      - information:
+          primaryLocale: en-US
+          objectId: A0185557ABF0D8AEB3EF4128113A69CB
+          subType: column
+          name: order_ts
+        dataType:
+          type: time_stamp
+          precision: 26
+          scale: 6
+        columnName: order_ts
+      - information:
+          primaryLocale: en-US
+          objectId: E4454F5A6E57F1456E6799ACA5962634
+          subType: column
+          name: order_date
+        dataType:
+          type: date
+          precision: 10
+          scale: 0
+        columnName: order_date
+      - information:
+          primaryLocale: en-US
+          objectId: BF3EF3A723921A4386DA0B26E5083DC0
+          subType: column
+          name: customer_id
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: customer_id
+      - information:
+          primaryLocale: en-US
+          objectId: E47455F92CF96E75AC0DA6F327C90633
+          subType: column
+          name: store_id
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: store_id
+      - information:
+          primaryLocale: en-US
+          objectId: EBEED6EF0B8C5E690FCA0095C2F47122
+          subType: column
+          name: order_status
+        dataType:
+          type: utf8_char
+          precision: 16
+          scale: 0
+        columnName: order_status
+      - information:
+          primaryLocale: en-US
+          objectId: 2A59591C7120F34E6B5A96F8FAF13FFF
+          subType: column
+          name: order_amount
+        dataType:
+          type: decimal
+          precision: 12
+          scale: 2
+        columnName: order_amount
+      - information:
+          primaryLocale: en-US
+          objectId: A2BE5CB725C41032DB9D9B63852C7409
+          subType: column
+          name: discount_amount
+        dataType:
+          type: decimal
+          precision: 12
+          scale: 2
+        columnName: discount_amount
+      - information:
+          primaryLocale: en-US
+          objectId: F5E93624C09DE9BEB16020EB3822C9D6
+          subType: column
+          name: shipping_amount
+        dataType:
+          type: decimal
+          precision: 10
+          scale: 2
+        columnName: shipping_amount
+      - information:
+          primaryLocale: en-US
+          objectId: 9FF8FD5BE6006FC57411F760CBDB700D
+          subType: column
+          name: item_count
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: item_count
+    primaryDataSource: *id001
+    attributes:
+    - information:
+        objectId: 2A6E65774D63CD2A43E1176B6D6D2C9C
+        subType: attribute
+        name: Order ID
+    - information:
+        objectId: 3BA7F52F4687AAF044B505FCDBA17D42
+        subType: attribute
+        name: Order Date
+    - information:
+        objectId: 23DBCEC54621B4A632EF726D0E5B7601
+        subType: attribute
+        name: Order Status
+    refreshPolicy: replace
+  - information:
+      primaryLocale: en-US
+      objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+      subType: logical_table
+      name: dim_product
+    physicalTable:
+      information:
+        primaryLocale: en-US
+        objectId: 9E1D57690BDC7546173BC543AA34ED9A
+        subType: physical_table
+        name: dim_product
+      type: normal
+      namespace: retail
+      tableName: dim_product
+      columns:
+      - information:
+          primaryLocale: en-US
+          objectId: 2862ABA32C8A7E8188D7A8C2F8F85B1A
+          subType: column
+          name: product_id
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: product_id
+      - information:
+          primaryLocale: en-US
+          objectId: D5240F14C9831DCCA65D9BDB5E82EF3E
+          subType: column
+          name: product_name
+        dataType:
+          type: utf8_char
+          precision: 64
+          scale: 0
+        columnName: product_name
+      - information:
+          primaryLocale: en-US
+          objectId: 2646596555167F6DB4B3912B6EFBDB7A
+          subType: column
+          name: category
+        dataType:
+          type: utf8_char
+          precision: 32
+          scale: 0
+        columnName: category
+      - information:
+          primaryLocale: en-US
+          objectId: 29BBE83C674A8F09033B8BE05221D073
+          subType: column
+          name: subcategory
+        dataType:
+          type: utf8_char
+          precision: 32
+          scale: 0
+        columnName: subcategory
+      - information:
+          primaryLocale: en-US
+          objectId: A6371A0B809E0AE1510AB52F348D2D70
+          subType: column
+          name: brand
+        dataType:
+          type: utf8_char
+          precision: 32
+          scale: 0
+        columnName: brand
+      - information:
+          primaryLocale: en-US
+          objectId: FE17A87FFCE433ED8B245F6CB14A9835
+          subType: column
+          name: unit_cost
+        dataType:
+          type: decimal
+          precision: 10
+          scale: 2
+        columnName: unit_cost
+    primaryDataSource: *id001
+    attributes:
+    - information:
+        objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+        subType: attribute
+        name: Product ID
+    - information:
+        objectId: 3DAB6C556E97A1904DA3DDCD69E43C44
+        subType: attribute
+        name: Product Name
+    - information:
+        objectId: 3FA2C3A9B6BC0BD727A53D6BF2950377
+        subType: attribute
+        name: Category
+    - information:
+        objectId: C07E24495AB7068279545FFD229C084D
+        subType: attribute
+        name: Subcategory
+    - information:
+        objectId: DE331F14276D840E0B8BB7B047522ED3
+        subType: attribute
+        name: Brand
+    refreshPolicy: replace
+  - information:
+      primaryLocale: en-US
+      objectId: 8232F745464E0499B73A6F9B36562238
+      subType: logical_table
+      name: dim_date
+    physicalTable:
+      information:
+        primaryLocale: en-US
+        objectId: F4E89DCC377418855ABF06C0535844F3
+        subType: physical_table
+        name: dim_date
+      type: normal
+      namespace: retail
+      tableName: dim_date
+      columns:
+      - information:
+          primaryLocale: en-US
+          objectId: 544C5589297BCC9DE2177B88E595CC88
+          subType: column
+          name: date_key
+        dataType:
+          type: date
+          precision: 10
+          scale: 0
+        columnName: date_key
+      - information:
+          primaryLocale: en-US
+          objectId: 6D975232D30D4B0B1E4511216430827C
+          subType: column
+          name: day_of_week
+        dataType:
+          type: utf8_char
+          precision: 9
+          scale: 0
+        columnName: day_of_week
+      - information:
+          primaryLocale: en-US
+          objectId: 373002988EAAE9B813DE21183F206ABD
+          subType: column
+          name: week_start_monday
+        dataType:
+          type: date
+          precision: 10
+          scale: 0
+        columnName: week_start_monday
+      - information:
+          primaryLocale: en-US
+          objectId: E7D20B9185CBDE60453243489F01C60E
+          subType: column
+          name: week_start_sunday
+        dataType:
+          type: date
+          precision: 10
+          scale: 0
+        columnName: week_start_sunday
+      - information:
+          primaryLocale: en-US
+          objectId: D3823240C37226E4F3CB24E70C2DF539
+          subType: column
+          name: month_start
+        dataType:
+          type: date
+          precision: 10
+          scale: 0
+        columnName: month_start
+      - information:
+          primaryLocale: en-US
+          objectId: E0F677531C27E5C353970F1BB7061E12
+          subType: column
+          name: month_name
+        dataType:
+          type: utf8_char
+          precision: 9
+          scale: 0
+        columnName: month_name
+      - information:
+          primaryLocale: en-US
+          objectId: 078C231D1E3C9AFFA884723D35BCD576
+          subType: column
+          name: quarter
+        dataType:
+          type: utf8_char
+          precision: 7
+          scale: 0
+        columnName: quarter
+      - information:
+          primaryLocale: en-US
+          objectId: 3D4E6611C7E99AE012F77C4075EB28D9
+          subType: column
+          name: year
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: year
+      - information:
+          primaryLocale: en-US
+          objectId: E4E895D74187FB769D36033BB1901FD8
+          subType: column
+          name: fiscal_year
+        dataType:
+          type: integer
+          precision: 4
+          scale: 0
+        columnName: fiscal_year
+      - information:
+          primaryLocale: en-US
+          objectId: 64A2BFA06FC6D0FB4A1CBD4E6B9C7AAB
+          subType: column
+          name: fiscal_quarter
+        dataType:
+          type: utf8_char
+          precision: 10
+          scale: 0
+        columnName: fiscal_quarter
+    primaryDataSource: *id001
+    attributes:
+    - information:
+        objectId: 3BA7F52F4687AAF044B505FCDBA17D42
+        subType: attribute
+        name: Order Date
+    - information:
+        objectId: A835A109EA97642D83C04AFEF93F67BC
+        subType: attribute
+        name: Order Month
+    - information:
+        objectId: 0DA517BC7268154162CE922FEDD0B044
+        subType: attribute
+        name: Order Year
+    refreshPolicy: replace
+  attributes:
+  - information:
+      primaryLocale: en-US
+      objectId: 2A6E65774D63CD2A43E1176B6D6D2C9C
+      subType: attribute
+      name: Order ID
+    forms:
+    - id: 7BB2C6D2F053E23A59BD2EC4B6DDA0AD
+      name: ID
+      category: ID
+      type: system
+      displayFormat: number
+      dataType:
+        type: integer
+        precision: 8
+        scale: 0
+      expressions:
+      - expression:
+          text: order_id
+        tables:
+        - objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+          subType: logical_table
+          name: fact_orders
+        - objectId: B02C2533E59DFA55C1E6C54A60282DC8
+          subType: logical_table
+          name: fact_order_lines
+      alias: order_id
+      lookupTable:
+        objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+        subType: logical_table
+        name: fact_orders
+    attributeLookupTable:
+      objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+      subType: logical_table
+      name: fact_orders
+    keyForm:
+      id: 7BB2C6D2F053E23A59BD2EC4B6DDA0AD
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 7BB2C6D2F053E23A59BD2EC4B6DDA0AD
+        name: ID
+      browseDisplays:
+      - id: 7BB2C6D2F053E23A59BD2EC4B6DDA0AD
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 3BA7F52F4687AAF044B505FCDBA17D42
+      subType: attribute
+      name: Order Date
+    forms:
+    - id: 5F7054565205F75CA69B97E0F316C265
+      name: ID
+      category: ID
+      type: system
+      displayFormat: date
+      dataType:
+        type: date
+        precision: 10
+        scale: 0
+      expressions:
+      - expression:
+          text: order_date
+        tables:
+        - objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+          subType: logical_table
+          name: fact_orders
+      - expression:
+          text: date_key
+        tables:
+        - objectId: 8232F745464E0499B73A6F9B36562238
+          subType: logical_table
+          name: dim_date
+      alias: order_date
+      lookupTable:
+        objectId: 8232F745464E0499B73A6F9B36562238
+        subType: logical_table
+        name: dim_date
+    attributeLookupTable:
+      objectId: 8232F745464E0499B73A6F9B36562238
+      subType: logical_table
+      name: dim_date
+    keyForm:
+      id: 5F7054565205F75CA69B97E0F316C265
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 5F7054565205F75CA69B97E0F316C265
+        name: ID
+      browseDisplays:
+      - id: 5F7054565205F75CA69B97E0F316C265
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 23DBCEC54621B4A632EF726D0E5B7601
+      subType: attribute
+      name: Order Status
+    forms:
+    - id: EA36429154204AC70B8CC25AFAAD8BF6
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 16
+        scale: 0
+      expressions:
+      - expression:
+          text: order_status
+        tables:
+        - objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+          subType: logical_table
+          name: fact_orders
+      alias: order_status
+      lookupTable:
+        objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+        subType: logical_table
+        name: fact_orders
+    attributeLookupTable:
+      objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+      subType: logical_table
+      name: fact_orders
+    keyForm:
+      id: EA36429154204AC70B8CC25AFAAD8BF6
+      name: ID
+    displays:
+      reportDisplays:
+      - id: EA36429154204AC70B8CC25AFAAD8BF6
+        name: ID
+      browseDisplays:
+      - id: EA36429154204AC70B8CC25AFAAD8BF6
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+      subType: attribute
+      name: Product ID
+    forms:
+    - id: EFEDB44C98AFC3165A2C664C184C3054
+      name: ID
+      category: ID
+      type: system
+      displayFormat: number
+      dataType:
+        type: integer
+        precision: 4
+        scale: 0
+      expressions:
+      - expression:
+          text: product_id
+        tables:
+        - objectId: B02C2533E59DFA55C1E6C54A60282DC8
+          subType: logical_table
+          name: fact_order_lines
+        - objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+          subType: logical_table
+          name: dim_product
+      alias: product_id
+      lookupTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+    attributeLookupTable:
+      objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+      subType: logical_table
+      name: dim_product
+    keyForm:
+      id: EFEDB44C98AFC3165A2C664C184C3054
+      name: ID
+    displays:
+      reportDisplays:
+      - id: EFEDB44C98AFC3165A2C664C184C3054
+        name: ID
+      browseDisplays:
+      - id: EFEDB44C98AFC3165A2C664C184C3054
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 3DAB6C556E97A1904DA3DDCD69E43C44
+      subType: attribute
+      name: Product Name
+    forms:
+    - id: 2708F1ED8278E770EBFE4E6CE6686312
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 64
+        scale: 0
+      expressions:
+      - expression:
+          text: product_name
+        tables:
+        - objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+          subType: logical_table
+          name: dim_product
+      alias: product_name
+      lookupTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+    attributeLookupTable:
+      objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+      subType: logical_table
+      name: dim_product
+    keyForm:
+      id: 2708F1ED8278E770EBFE4E6CE6686312
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 2708F1ED8278E770EBFE4E6CE6686312
+        name: ID
+      browseDisplays:
+      - id: 2708F1ED8278E770EBFE4E6CE6686312
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 3FA2C3A9B6BC0BD727A53D6BF2950377
+      subType: attribute
+      name: Category
+    forms:
+    - id: 056645433A9BC3C1BE8A124CF05CA5DE
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 32
+        scale: 0
+      expressions:
+      - expression:
+          text: category
+        tables:
+        - objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+          subType: logical_table
+          name: dim_product
+      alias: category
+      lookupTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+    attributeLookupTable:
+      objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+      subType: logical_table
+      name: dim_product
+    keyForm:
+      id: 056645433A9BC3C1BE8A124CF05CA5DE
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 056645433A9BC3C1BE8A124CF05CA5DE
+        name: ID
+      browseDisplays:
+      - id: 056645433A9BC3C1BE8A124CF05CA5DE
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: C07E24495AB7068279545FFD229C084D
+      subType: attribute
+      name: Subcategory
+    forms:
+    - id: 675F585B0BCFCE2AF22D63ADB7D78AE0
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 32
+        scale: 0
+      expressions:
+      - expression:
+          text: subcategory
+        tables:
+        - objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+          subType: logical_table
+          name: dim_product
+      alias: subcategory
+      lookupTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+    attributeLookupTable:
+      objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+      subType: logical_table
+      name: dim_product
+    keyForm:
+      id: 675F585B0BCFCE2AF22D63ADB7D78AE0
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 675F585B0BCFCE2AF22D63ADB7D78AE0
+        name: ID
+      browseDisplays:
+      - id: 675F585B0BCFCE2AF22D63ADB7D78AE0
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: DE331F14276D840E0B8BB7B047522ED3
+      subType: attribute
+      name: Brand
+    forms:
+    - id: 1D18469178A3A6087658601588CD419C
+      name: ID
+      category: ID
+      type: system
+      displayFormat: text
+      dataType:
+        type: utf8_char
+        precision: 32
+        scale: 0
+      expressions:
+      - expression:
+          text: brand
+        tables:
+        - objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+          subType: logical_table
+          name: dim_product
+      alias: brand
+      lookupTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+    attributeLookupTable:
+      objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+      subType: logical_table
+      name: dim_product
+    keyForm:
+      id: 1D18469178A3A6087658601588CD419C
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 1D18469178A3A6087658601588CD419C
+        name: ID
+      browseDisplays:
+      - id: 1D18469178A3A6087658601588CD419C
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: A835A109EA97642D83C04AFEF93F67BC
+      subType: attribute
+      name: Order Month
+    forms:
+    - id: E774C02DC99C274122E03403883CDD6F
+      name: ID
+      category: ID
+      type: system
+      displayFormat: date
+      dataType:
+        type: date
+        precision: 10
+        scale: 0
+      expressions:
+      - expression:
+          text: month_start
+        tables:
+        - objectId: 8232F745464E0499B73A6F9B36562238
+          subType: logical_table
+          name: dim_date
+      alias: month_start
+      lookupTable:
+        objectId: 8232F745464E0499B73A6F9B36562238
+        subType: logical_table
+        name: dim_date
+    attributeLookupTable:
+      objectId: 8232F745464E0499B73A6F9B36562238
+      subType: logical_table
+      name: dim_date
+    keyForm:
+      id: E774C02DC99C274122E03403883CDD6F
+      name: ID
+    displays:
+      reportDisplays:
+      - id: E774C02DC99C274122E03403883CDD6F
+        name: ID
+      browseDisplays:
+      - id: E774C02DC99C274122E03403883CDD6F
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  - information:
+      primaryLocale: en-US
+      objectId: 0DA517BC7268154162CE922FEDD0B044
+      subType: attribute
+      name: Order Year
+    forms:
+    - id: 1309F00D3450D5FFFA41F79E5283FC07
+      name: ID
+      category: ID
+      type: system
+      displayFormat: number
+      dataType:
+        type: integer
+        precision: 4
+        scale: 0
+      expressions:
+      - expression:
+          text: year
+        tables:
+        - objectId: 8232F745464E0499B73A6F9B36562238
+          subType: logical_table
+          name: dim_date
+      alias: year
+      lookupTable:
+        objectId: 8232F745464E0499B73A6F9B36562238
+        subType: logical_table
+        name: dim_date
+    attributeLookupTable:
+      objectId: 8232F745464E0499B73A6F9B36562238
+      subType: logical_table
+      name: dim_date
+    keyForm:
+      id: 1309F00D3450D5FFFA41F79E5283FC07
+      name: ID
+    displays:
+      reportDisplays:
+      - id: 1309F00D3450D5FFFA41F79E5283FC07
+        name: ID
+      browseDisplays:
+      - id: 1309F00D3450D5FFFA41F79E5283FC07
+        name: ID
+    sorts: {}
+    nonAggregatable: false
+    autoDetectLookupTable: true
+  factMetrics:
+  - information:
+      primaryLocale: en-US
+      objectId: 39B221AF1DD42B4B781ACD1BA6CA7844
+      subType: fact_metric
+      name: Units
+    fact:
+      dataType:
+        type: integer
+        precision: 4
+        scale: 0
+      expressions:
+      - expression:
+          text: quantity
+        tables:
+        - objectId: B02C2533E59DFA55C1E6C54A60282DC8
+          subType: logical_table
+          name: fact_order_lines
+    function: sum
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  - information:
+      primaryLocale: en-US
+      objectId: 9683ED6B2C16D3B6510481D6C463F61E
+      subType: fact_metric
+      name: Line Revenue
+    fact:
+      dataType:
+        type: decimal
+        precision: 12
+        scale: 2
+      expressions:
+      - expression:
+          text: line_amount
+        tables:
+        - objectId: B02C2533E59DFA55C1E6C54A60282DC8
+          subType: logical_table
+          name: fact_order_lines
+    function: sum
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  - information:
+      primaryLocale: en-US
+      objectId: 415104309BA372F0B14E0B1E50C21011
+      subType: fact_metric
+      name: Line Cost
+    fact:
+      dataType:
+        type: decimal
+        precision: 12
+        scale: 2
+      expressions:
+      - expression:
+          text: line_cost
+        tables:
+        - objectId: B02C2533E59DFA55C1E6C54A60282DC8
+          subType: logical_table
+          name: fact_order_lines
+    function: sum
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  - information:
+      primaryLocale: en-US
+      objectId: 839C70463FA21DFCE6D8196625AAED97
+      subType: fact_metric
+      name: Margin %
+      description: Margin as a share of line revenue (ratio of sums)
+    fact:
+      dataType:
+        type: decimal
+        precision: 12
+        scale: 2
+      expressions:
+      - expression:
+          text: 'ApplySimple("(#0 - #1) / NULLIF(#0, 0)", line_amount, line_cost)'
+        tables:
+        - objectId: B02C2533E59DFA55C1E6C54A60282DC8
+          subType: logical_table
+          name: fact_order_lines
+    function: avg
+    functionProperties:
+    - name: UseLookupForAttributes
+      value:
+        type: boolean
+        value: 'false'
+    dimty:
+      dimtyUnits:
+      - dimtyUnitType: report_base_level
+        aggregation: normal
+        filtering: apply
+        groupBy: true
+      excludeAttribute: false
+      allowAddingUnit: true
+    format:
+      header: []
+      values:
+      - type: number_category
+        value: '0'
+      - type: number_format
+        value: '#,##0.00'
+      - type: number_thousand_separator
+        value: 'true'
+    semanticRole: fixed
+  metrics:
+  - information:
+      primaryLocale: en-US
+      objectId: 178108C7785ECD3D885C6DAEE832EBF9
+      subType: metric
+      name: Gross Margin
+    expression:
+      text: '[Line Revenue] - [Line Cost]'
+    formulaJoinType: default
+    smartTotal: decomposable_false
+    dataType:
+      type: reserved
+      precision: 0
+      scale: 0
+    format:
+      header: []
+      values: []
+    pushDownBehavior: default
+  - information:
+      primaryLocale: en-US
+      objectId: 3F43EB46E0D377EC3EBB1285CC6953E0
+      subType: metric
+      name: Avg Selling Price
+    expression:
+      text: '[Line Revenue] / [Units]'
+    formulaJoinType: default
+    smartTotal: decomposable_false
+    dataType:
+      type: reserved
+      precision: 0
+      scale: 0
+    format:
+      header: []
+      values: []
+    pushDownBehavior: default
+  hierarchy:
+    relationships:
+    - parent:
+        objectId: 23DBCEC54621B4A632EF726D0E5B7601
+        subType: attribute
+        name: Order Status
+      child:
+        objectId: 2A6E65774D63CD2A43E1176B6D6D2C9C
+        subType: attribute
+        name: Order ID
+      relationshipTable:
+        objectId: E682E1A509B96E21EAAEEDFDFE588D3D
+        subType: logical_table
+        name: fact_orders
+      relationshipType: one_to_many
+    - parent:
+        objectId: 3DAB6C556E97A1904DA3DDCD69E43C44
+        subType: attribute
+        name: Product Name
+      child:
+        objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+        subType: attribute
+        name: Product ID
+      relationshipTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+      relationshipType: one_to_many
+    - parent:
+        objectId: 3FA2C3A9B6BC0BD727A53D6BF2950377
+        subType: attribute
+        name: Category
+      child:
+        objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+        subType: attribute
+        name: Product ID
+      relationshipTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+      relationshipType: one_to_many
+    - parent:
+        objectId: C07E24495AB7068279545FFD229C084D
+        subType: attribute
+        name: Subcategory
+      child:
+        objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+        subType: attribute
+        name: Product ID
+      relationshipTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+      relationshipType: one_to_many
+    - parent:
+        objectId: DE331F14276D840E0B8BB7B047522ED3
+        subType: attribute
+        name: Brand
+      child:
+        objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+        subType: attribute
+        name: Product ID
+      relationshipTable:
+        objectId: 1B5A9F26D3DFA620DFEDAD9D0397F734
+        subType: logical_table
+        name: dim_product
+      relationshipType: one_to_many
+    - parent:
+        objectId: A835A109EA97642D83C04AFEF93F67BC
+        subType: attribute
+        name: Order Month
+      child:
+        objectId: 3BA7F52F4687AAF044B505FCDBA17D42
+        subType: attribute
+        name: Order Date
+      relationshipTable:
+        objectId: 8232F745464E0499B73A6F9B36562238
+        subType: logical_table
+        name: dim_date
+      relationshipType: one_to_many
+    - parent:
+        objectId: 0DA517BC7268154162CE922FEDD0B044
+        subType: attribute
+        name: Order Year
+      child:
+        objectId: 3BA7F52F4687AAF044B505FCDBA17D42
+        subType: attribute
+        name: Order Date
+      relationshipTable:
+        objectId: 8232F745464E0499B73A6F9B36562238
+        subType: logical_table
+        name: dim_date
+      relationshipType: one_to_many
+    isolatedAttributes: []
+  securityFilters: []
+  folders:
+  - subType: folder
+    name: Attributes
+    primaryLocale: en-US
+    contents:
+    - objectId: 2A6E65774D63CD2A43E1176B6D6D2C9C
+      subType: attribute
+      name: Order ID
+    - objectId: 3BA7F52F4687AAF044B505FCDBA17D42
+      subType: attribute
+      name: Order Date
+    - objectId: 23DBCEC54621B4A632EF726D0E5B7601
+      subType: attribute
+      name: Order Status
+    - objectId: DC71EAA3ED1049D5483E7D1F9CBADD90
+      subType: attribute
+      name: Product ID
+    - objectId: 3DAB6C556E97A1904DA3DDCD69E43C44
+      subType: attribute
+      name: Product Name
+    - objectId: 3FA2C3A9B6BC0BD727A53D6BF2950377
+      subType: attribute
+      name: Category
+    - objectId: C07E24495AB7068279545FFD229C084D
+      subType: attribute
+      name: Subcategory
+    - objectId: DE331F14276D840E0B8BB7B047522ED3
+      subType: attribute
+      name: Brand
+    - objectId: A835A109EA97642D83C04AFEF93F67BC
+      subType: attribute
+      name: Order Month
+    - objectId: 0DA517BC7268154162CE922FEDD0B044
+      subType: attribute
+      name: Order Year
+  - subType: folder
+    name: Metrics
+    primaryLocale: en-US
+    contents:
+    - objectId: 39B221AF1DD42B4B781ACD1BA6CA7844
+      subType: fact_metric
+      name: Units
+    - objectId: 9683ED6B2C16D3B6510481D6C463F61E
+      subType: fact_metric
+      name: Line Revenue
+    - objectId: 415104309BA372F0B14E0B1E50C21011
+      subType: fact_metric
+      name: Line Cost
+    - objectId: 839C70463FA21DFCE6D8196625AAED97
+      subType: fact_metric
+      name: Margin %
+    - objectId: 178108C7785ECD3D885C6DAEE832EBF9
+      subType: metric
+      name: Gross Margin
+    - objectId: 3F43EB46E0D377EC3EBB1285CC6953E0
+      subType: metric
+      name: Avg Selling Price
+fingerprint: "bd9ed32be17443a3207fb2612304b5e7d604718401fde1e703eba5846f3cd6ff"

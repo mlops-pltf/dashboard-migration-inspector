@@ -1,0 +1,88 @@
+---
+title: inspector_agent
+description: The technology-neutral validator. Investigates the experts' IR with exact tools, under evidence rules it cannot bypass.
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+The Inspector never reads TML or Strategy files: the expert agents export each side as IR over A2A, and the
+Inspector works on that. It decides what to investigate and concludes; its tools return exact answers; the
+ledger makes sure every conclusion rests on evidence.
+
+<Mermaid
+	code={`sequenceDiagram
+    participant C as Caller
+    participant A as Agent (LLM)
+    participant T as Tools
+    participant L as Ledger
+    C->>A: validate package
+    A->>T: inspect_package (experts export IR over A2A), run_rule_sweep
+    T-->>A: inventory, open leads, items proven by rules (E1, E2)
+    loop investigate
+      A->>T: trace_lineage / compare_fields / compare_joins / analyze_sql ...
+      T-->>A: exact answers (E3 ... En)
+      A->>L: record_finding(check, status, evidence ids, resolves leads)
+      L-->>A: accepted, or refused with the reason
+    end
+    A->>L: finalize_report(summary)
+    L-->>C: report (verdict computed from findings)`}
+/>
+
+## A typical run
+
+<Steps>
+1. `inspect_package`: contents, Strategy input format, what that format cannot carry.
+2. `run_rule_sweep`: every deterministic check as a first pass, giving **open leads** and items **proven** by rules.
+3. `match_fields`: review the pairing, especially inferred or one-sided objects.
+4. Investigate each lead with the tools that answer the real question, and group symptoms under one root cause.
+5. Look beyond the leads: meaning the rules can't see, wrong matches, objects the format lost.
+6. `request_data_probe` where only data can settle it.
+7. `record_finding` for every conclusion, then `finalize_report` with a summary for the developer.
+</Steps>
+
+## Tools (17)
+
+| Tool | Answers |
+|---|---|
+| `inspect_package` | What is in the package; format losses; parse problems |
+| `run_rule_sweep` | All deterministic checks: open leads and proven items |
+| `match_fields`, `find_counterparts` | Which ThoughtSpot field is which Strategy object, and why |
+| `list_fields`, `get_object` | Either side's IR: fields, formulas, joins (with when applied), tables, SQL, dashboards |
+| `ask_expert` | Ask the ThoughtSpot or Strategy expert what something means (opinion, not proof) |
+| `trace_lineage` | A field down to warehouse columns (incl. join-key equivalents) |
+| `compare_fields` | Proof of identical meaning, or what kind of difference |
+| `analyze_sql` | Have an expert analyse a SELECT (lineage, joins, filters) |
+| `get_join_graph`, `compare_joins` | Join types, keys, applicability on each side |
+| `analyze_row_multiplication` | Fan-out and chasm traps inside Freeform SQL |
+| `compare_filters` | Model-level filters on both sides, canonical |
+| `request_data_probe` | Ask the data agent (KPI equivalence, key/orphan profiles, impact) |
+| `record_finding`, `finalize_report` | Write the report under the evidence rules |
+
+## Evidence rules (enforced, not requested)
+
+| Rule | Enforced by |
+|---|---|
+| Every analysis result gets an evidence id | an after-tool hook registers it in the ledger |
+| A finding must cite evidence | `record_finding` refuses otherwise |
+| A **blocker PASS** needs proof: `compare_fields` identical, an item the rules proved, or matching data | `record_finding` |
+| A rule **FAIL** can only be softened with data | `record_finding` |
+| Every open lead must be resolved | `finalize_report` refuses otherwise |
+| The verdict is computed from findings | the ledger, never the model |
+
+If the run ends early (turn budget, model error), the ledger finalizes anyway: unresolved leads keep their
+rule result and are marked *not reviewed by the agent*.
+
+## A2A interface
+
+| Request | Answered by |
+|---|---|
+| Structured skill `validate` `{package, mode: agent \| rules, max_turns}` | Code (the agent runs inside) and returns report JSON + Markdown |
+| Any text message | The Inspector agent, with its tools (ask about a package or a finding) |
+
+Package locations are folders under `PACKAGE_ROOT` locally, or `s3://` prefixes on AgentCore.
+
+<Aside type="note" title="Testing">
+	Tools and ledger have deterministic tests. Inspector tests run against the real expert agents in-process over A2A. The agent is scored on the 18 synthetic scenarios by a
+	live evaluation (recall, precision, must-pass fields, every lead resolved) once a model is configured.
+</Aside>

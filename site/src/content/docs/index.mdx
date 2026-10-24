@@ -1,0 +1,99 @@
+---
+title: Inspector
+description: The first-level validator for the ThoughtSpot → Strategy (Mosaic) migration.
+template: splash
+hero:
+  tagline: An agentic validator that checks every number a migrated Strategy model or dashboard produces matches ThoughtSpot, and explains every difference before human review.
+  image:
+    html: |
+      <svg viewBox="0 0 440 300" style="width: 100%; max-width: 440px; height: auto" role="img" aria-label="Inspector compares a ThoughtSpot KPI with its Strategy counterpart and confirms they match">
+        <g style="font-family: var(--sl-font)">
+          <rect x="8" y="40" width="150" height="220" rx="16" style="fill: var(--sl-color-gray-6); stroke: var(--sl-color-gray-4)" stroke-width="1.5"/>
+          <text x="83" y="74" text-anchor="middle" font-size="16" font-weight="700" style="fill: var(--sl-color-white)">ThoughtSpot</text>
+          <rect x="28" y="94" width="110" height="12" rx="6" style="fill: var(--sl-color-gray-5)"/>
+          <rect x="28" y="116" width="84" height="12" rx="6" style="fill: var(--sl-color-gray-5)"/>
+          <rect x="28" y="138" width="98" height="12" rx="6" style="fill: var(--sl-color-gray-5)"/>
+          <rect x="28" y="160" width="70" height="12" rx="6" style="fill: var(--sl-color-gray-5)"/>
+          <text x="83" y="226" text-anchor="middle" font-size="24" font-weight="700" style="fill: var(--sl-color-accent-high)">1,284</text>
+          <rect x="282" y="40" width="150" height="220" rx="16" style="fill: var(--sl-color-gray-6); stroke: var(--sl-color-gray-4)" stroke-width="1.5"/>
+          <text x="357" y="74" text-anchor="middle" font-size="16" font-weight="700" style="fill: var(--sl-color-white)">Strategy</text>
+          <rect x="302" y="94" width="110" height="34" rx="8" style="fill: var(--sl-color-gray-5)"/>
+          <rect x="302" y="138" width="88" height="12" rx="6" style="fill: var(--sl-color-gray-5)"/>
+          <rect x="302" y="160" width="60" height="12" rx="6" style="fill: var(--sl-color-gray-5)"/>
+          <text x="357" y="226" text-anchor="middle" font-size="24" font-weight="700" style="fill: var(--sl-color-accent-high)">1,284</text>
+          <path d="M158 150 H180 M260 150 H282" stroke-width="2" stroke-dasharray="5 5" style="stroke: var(--sl-color-gray-3)"/>
+          <circle cx="214" cy="140" r="34" fill="none" stroke-width="9" style="stroke: var(--sl-color-accent)"/>
+          <path d="M239 165 L262 188" stroke-width="11" stroke-linecap="round" style="stroke: var(--sl-color-accent)"/>
+          <path d="M199 141 L210 152 L230 128" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" style="stroke: #10b981"/>
+          <text x="220" y="290" text-anchor="middle" font-size="14" style="fill: var(--sl-color-gray-2)">same number · proven</text>
+        </g>
+      </svg>
+  actions:
+    - text: Read the design
+      link: /problem/why-it-breaks/
+      icon: right-arrow
+    - text: See the checks
+      link: /validation/checks/
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Mermaid from '../../components/Mermaid.astro';
+
+<div class="principle">
+	<strong>The numbers must be right from day 1.</strong> Look &amp; feel can be fixed later. A
+	join, aggregation, filter or formula that can change a number cannot.
+</div>
+
+<div class="stats">
+	<div><strong>4</strong><span>agents in the team</span></div>
+	<div><strong>33</strong><span>checks in the catalogue</span></div>
+	<div><strong>18</strong><span>synthetic test scenarios</span></div>
+	<div><strong>0</strong><span>passes without proof</span></div>
+</div>
+
+## How it works
+
+<Mermaid
+	code={`flowchart LR
+    Dev([Developer]) -->|TML + Strategy export| V[inspector_agent]
+    V -->|IR export, questions| E[expert agents]
+    V -->|inconclusive?| D[data_agent]
+    D -->|run both sides| RS[(Redshift)]
+    D -->|numbers agree / differ| V
+    V -->|report| Dev`}
+	caption="Developers submit both sides. Inspector proves equality, finds differences, and lets the data settle anything it can't decide from the definitions."
+/>
+
+## Design principles
+
+<CardGrid>
+	<Card title="Compare what is computed" icon="magnifier">
+		Every field and KPI is traced down to Redshift columns, joins, filters and aggregation. A
+		restructured model, even a single Freeform SQL source, can be compared with the ThoughtSpot
+		original.
+	</Card>
+	<Card title="No pass without proof" icon="approve-check">
+		A check that could change a number only passes when the definitions are proven identical or
+		both sides return the same data. An LLM's opinion alone never passes a check.
+	</Card>
+	<Card title="Agent drives, tools prove" icon="setting">
+		A Strands agent plans and reasons; exact tools read, trace, compare and analyse. Every tool result
+		is evidence, and the ledger decides what a finding may claim.
+	</Card>
+	<Card title="Data breaks the tie" icon="random">
+		When the definitions can't be compared directly, both sides run against the same Redshift
+		warehouse and the numbers decide, with a diagnosis when they differ.
+	</Card>
+</CardGrid>
+
+## Explore
+
+<CardGrid>
+	<LinkCard title="Why lift-and-shift breaks" description="Where ThoughtSpot and Strategy differ, and how each difference changes numbers." href="/problem/why-it-breaks/" />
+	<LinkCard title="System overview" description="Two agents, one shared library, and the reason for the split." href="/architecture/overview/" />
+	<LinkCard title="Joins, grain & fan-out" description="How Inspector catches double counting and dropped rows." href="/engine/joins-and-grain/" />
+	<LinkCard title="Verdict policy" description="When a check passes, fails, or stays unverified." href="/validation/verdict-policy/" />
+	<LinkCard title="data_agent" description="Probes, reconciliation inside Redshift, and mismatch diagnosis." href="/agents/data-agent/" />
+	<LinkCard title="Delivery plan" description="Phases P0–P7, with joins and aggregation first." href="/plan/delivery/" />
+</CardGrid>

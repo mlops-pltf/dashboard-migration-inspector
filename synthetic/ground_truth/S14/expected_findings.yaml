@@ -1,0 +1,35 @@
+scenario: S14
+title: Different formula, same meaning
+description: Net Revenue = Revenue - NullToZero(Discount) instead of sum(amount - ifnull(discount, 0)).
+thoughtspot_model: Sales Orders (worksheet)
+strategy_model: Sales Orders
+strategy_style: lookup
+strategy_format: yaml_export
+expected_verdict: NEEDS_REVIEW
+expected_verdict_after_data: READY
+findings:
+- id: E1
+  check: FX-01
+  severity: BLOCKER
+  status: UNVERIFIED
+  thoughtspot: Sales Orders::Net Revenue
+  strategy: Sales Orders::Net Revenue
+  note: algebraically equal (SUM is linear, NULLs handled)
+  status_after_data: PASS
+  decided_by: llm+data
+must_pass:
+- Sales Orders::Revenue
+- Sales Orders::Discount
+- Sales Orders::Shipping
+- Sales Orders::Items Sold
+- Sales Orders::Order Count
+- Sales Orders::Customer Count
+- Sales Orders::Avg Order Value
+- Sales Orders::Discount Rate
+- Sales Orders::Region Revenue
+witnesses:
+- id: W1
+  description: Net Revenue by Order Week and Customer Segment
+  expect: equal
+  thoughtspot_sql: witnesses/W1.thoughtspot.sql
+  strategy_sql: witnesses/W1.strategy.sql

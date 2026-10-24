@@ -1,0 +1,11 @@
+package_id: S02
+description: Migration of ThoughtSpot model 'Order Lines' and its content to Strategy model 'Product Lines'.
+thoughtspot:
+  tml_dir: thoughtspot/
+  sql_dir: thoughtspot/sql/
+strategy:
+  model: strategy/model/
+  model_format: rest_json
+  dashboards_dir: strategy/dashboards/
+  sql_dir: strategy/sql/
+mapping: mapping.yaml

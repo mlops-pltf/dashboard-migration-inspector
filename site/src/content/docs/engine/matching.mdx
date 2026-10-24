@@ -1,0 +1,26 @@
+---
+title: Object matching
+description: Mapping file first, then exact names, then inference. Every match says how it was made.
+---
+
+import { Steps, Badge, Aside } from '@astrojs/starlight/components';
+
+Matching runs top-down: **models → fields / metrics → dashboards → visualizations**.
+
+<Steps>
+1. **Mapping file.** Entries from `mapping.yaml` apply first. <Badge text="mapped" variant="note" />
+
+2. **Exact name** after normalisation: case, whitespace, punctuation, ThoughtSpot synonyms. <Badge text="exact" variant="success" />
+
+3. **Inference.** A score from name similarity, **physical lineage overlap** (the strongest signal: same Redshift columns), field kind, data type, aggregation and expression similarity. One-to-one assignment (Hungarian algorithm) with thresholds:
+   - a clear winner <Badge text="inferred" variant="tip" />
+   - several close candidates → the `MappingJudge` picks, with reasons <Badge text="llm" variant="caution" />
+   - nothing above threshold → **unmatched**
+
+4. **Unmatched.** A ThoughtSpot field with no counterpart is *missing*: a blocker if any content uses it, otherwise a warning. A Strategy field with no counterpart is *extra*: info.
+</Steps>
+
+<Aside type="note" title="A wrong match can't hide a defect">
+	Every finding shows how its objects were matched. Because the comparison works on lineage, an
+	incorrect match shows up as lineage or formula failures, not as a silent pass.
+</Aside>

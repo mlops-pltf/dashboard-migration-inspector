@@ -1,0 +1,124 @@
+---
+title: data_agent
+description: The team's only access to the warehouse. It measures; the Inspector decides what the numbers mean.
+---
+
+import { Tabs, TabItem, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+The data agent is the only agent that holds warehouse credentials. Every agent (and every person) that needs a
+number asks it over A2A. It answers with measurements from the warehouse, never with guesses.
+
+<Mermaid
+	code={`flowchart LR
+    I[inspector_agent] -- "lead's probes" --> QC["query_compiler<br/>(IR → SQL, both sides)"]
+    QC -- "compare_queries / key_profile / orphan_profile" --> DA[data_agent]
+    DA --> G[SQL guard] --> RS[(Redshift)]
+    RS -- "counts, totals, samples" --> DA
+    DA -- "result" --> I
+    I --> S["settle: PASS / FAIL / latent"]`}
+	caption="The Inspector compiles what each side computes; the data agent runs it safely and reconciles in the warehouse."
+/>
+
+## Skills
+
+Structured skills are answered by code (DataPart in, DataPart out). Any text message goes to the agent's LLM,
+which uses the same tools.
+
+| Skill | Answers |
+|---|---|
+| `run_query {sql, max_rows}` | One read-only SELECT, capped rows, flagged when truncated |
+| `describe_table {table}` | Columns, types, nullability, row count |
+| `key_profile {source, keys}` | Is the key unique? Duplicated keys with samples. A non-unique key multiplies rows |
+| `orphan_profile {left, right, left_keys, right_keys}` | Rows on each side with no partner: what INNER drops and LEFT keeps |
+| `column_profile {source, column}` | Nulls, distinct count, min/max, most frequent values |
+| `compare_queries {left_sql, right_sql, keys, measures, tolerances}` | Reconciliation of two result sets |
+| `check_sql {sql}` | Whether a query is allowed, and its warehouse-dialect form, without running it |
+
+A `source` is a `schema.table` or a SELECT, so a Freeform SQL source can be profiled as it is.
+
+## Reconciliation happens inside the warehouse
+
+Both result sets are full-outer joined on the keys (NULL-safe) and each measure is compared within tolerance.
+Only counts, totals and the largest differences come back, so result size never matters.
+
+```json title="Real probe result, S08: Region Revenue by Store Region × Store Type, Order Year = 2025"
+{
+  "status": "MISMATCH", "rows": 12, "matching_rows": 0,
+  "thoughtspot_only_rows": 0, "strategy_only_rows": 0,
+  "thoughtspot_total": 80497875.96, "strategy_total": 26832625.32, "difference": -53665250.64,
+  "samples": [{ "d0": "South", "d1": "Mall", "left.m0": 8102635.38, "right.m0": 944746.87 },
+              { "d0": "West", "d1": "Flagship", "left.m0": 8112442.34, "right.m0": 1842314.33 }]
+}
+```
+
+ThoughtSpot repeats the whole region's revenue on every store-type row (a fixed level); Strategy computes it per
+store type. The definitions differ, and the data shows where and by how much.
+
+## What the Inspector does with it
+
+<CardGrid>
+	<Card title="query_compiler (Inspector tool)" icon="setting">
+		Compiles any measure × dimensions × filters on **either** side's IR into one SQL statement, following the
+		semantics the experts made explicit: joins from each measure's home table, multi-fact merging, fixed and
+		exclude levels, model filters, BI division (NULL on zero). Verified against ThoughtSpot's own SQL: **128
+		visualizations return identical numbers**.
+	</Card>
+	<Card title="Probes carried by leads" icon="list-format">
+		Rule-sweep leads carry the probes that would settle them: a key profile for a possible fan-out, an orphan
+		profile for a join-type difference, a KPI comparison for a formula or level question.
+	</Card>
+</CardGrid>
+
+<Tabs>
+	<TabItem label="kpi_equivalence">
+		Both sides' definitions compiled and compared at the grand total and at **every grain the measure is shown
+		at in ThoughtSpot content** (with the liveboard's filters). If the Strategy export has joins of unknown type,
+		it is compiled twice (LEFT and INNER); an answer that depends on the guess decides nothing.
+	</TabItem>
+	<TabItem label="key_profile">
+		Is the far side of a join inside a Freeform SQL unique on the join columns? Not unique: the fan-out is
+		confirmed (S04: `fact_order_lines.order_id` repeats up to 5 times).
+	</TabItem>
+	<TabItem label="orphan_profile">
+		How many rows does a join-type difference affect today? Counts only the side whose rows the two types treat
+		differently (S05: 749 orders without a customer; S06: none, so the defect is latent).
+	</TabItem>
+</Tabs>
+
+## Settling rules
+
+| Lead | Data says | Result |
+|---|---|---|
+| UNVERIFIED | no difference at every grain / key unique / no rows affected | **PASS** (`rule+data`) |
+| UNVERIFIED | difference / key not unique | **FAIL** (`rule+data`) |
+| UNVERIFIED | cannot decide (nothing to compile, depends on an unknown join type) | stays **UNVERIFIED**, with what was seen |
+| FAIL | no impact today | stays **FAIL**, marked **latent**: tomorrow's data may differ |
+| FAIL | impact | stays **FAIL**, with its size |
+
+<Aside type="note" title="Honest about what data cannot do">
+	In S18 (Ossie YAML), Net Revenue has no expression in the export and the customer join has no type while 749
+	orders have no customer. Data cannot settle either, so both stay UNVERIFIED and the report asks for
+	Strategy's report SQL. The ground truth was corrected to say so.
+</Aside>
+
+## Results on the synthetic scenarios
+
+`inspector-validate <package> --rules-only --with-data` (or A2A `validate {mode: "rules+data"}`) reproduces the
+ground truth after data on all 18 scenarios: statuses, latent defects and verdicts, for example S04 NEEDS_REVIEW →
+NOT_READY (fan-out confirmed), S14 NEEDS_REVIEW → READY (Net Revenue proven equal by data), S06 latent.
+
+## Guardrails
+
+| Area | Rule |
+|---|---|
+| Access | Read-only role; DSN from env (Secrets Manager on AgentCore); session `default_transaction_read_only` and `statement_timeout` |
+| SQL guard | sqlglot AST: exactly one SELECT/WITH, no DDL/DML/`COPY`/`UNLOAD`/`SELECT INTO`, denied functions (`pg_sleep`, `dblink`, file access), schema-qualified tables in an allow-list |
+| Dialect | SQL arrives in Redshift dialect; transpiled to Postgres locally (`WAREHOUSE_DIALECT=postgres`) |
+| Limits | Row cap (max 1000), samples only, aggregates in SQL |
+| Unreachable | A probe the data agent cannot run returns `match: null`, never a pass |
+
+<Aside type="caution" title="Not built yet">
+	The LLM-driven diagnosis loop ("98% of the difference is explained by …") runs only in conversation today,
+	using these tools. A scripted diagnosis and Strategy report SQL as a second source are next.
+</Aside>
