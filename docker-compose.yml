@@ -51,10 +51,18 @@ services:
       INSPECTOR_LLM_MODEL_STRONG: ${INSPECTOR_LLM_MODEL_STRONG:-ollama_chat/qwen3:14b}
       INSPECTOR_LLM_MODEL_FAST: ${INSPECTOR_LLM_MODEL_FAST:-ollama_chat/qwen3:8b}
       INSPECTOR_LLM_API_BASE: ${INSPECTOR_LLM_API_BASE:-http://host.docker.internal:11434}
+      INSPECTOR_LLM_API_KEY: ${INSPECTOR_LLM_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      PACKAGE_ROOT: /packages
+      # Tracing (OpenTelemetry → Langfuse); unset keys = no export
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL:-https://cloud.langfuse.com}
+      INSPECTOR_TRACE_CONTENT: ${INSPECTOR_TRACE_CONTENT:-true}
+      OTEL_INSTRUMENTATION_A2A_SDK_ENABLED: "false"   # a2a-sdk's internal spans are noise here
+      PACKAGE_ROOT: /packages:/uploads   # synthetic packages, and what developers upload in the portal
     volumes: &packages
       - ./synthetic/packages:/packages:ro
+      - portal-uploads:/uploads:ro
     restart: unless-stopped
 
   strategy-agent:
@@ -102,11 +110,52 @@ services:
       INSPECTOR_STRATEGY_AGENT_URL: http://strategy-agent:9000/
       INSPECTOR_DATA_AGENT_URL: http://data-agent:9000/
       INSPECTOR_A2A_AUTH: none           # sigv4 on AgentCore
-    volumes: *packages
+      INSPECTOR_RUNS_DIR: /runs          # report.md, report.json, run.json per validation
+    volumes:
+      - ./synthetic/packages:/packages:ro
+      - portal-uploads:/uploads:ro
+      - ./runs:/runs
     depends_on:
       - thoughtspot-agent
       - strategy-agent
       - data-agent
+    restart: unless-stopped
+
+  # Developer portal: FastAPI backend (the lasting API) + Streamlit UI on http://localhost:8501.
+  #   share: ngrok http 8501 --basic-auth "user:password"   (the URL is public; never expose it without auth)
+  portal-api:
+    build:
+      context: .
+      dockerfile: packages/inspector_portal/Dockerfile
+    environment:
+      PORTAL_DATA_DIR: /data
+      PORTAL_UPLOADS_DIR: /uploads
+      PORTAL_AGENT_UPLOADS_PATH: /uploads
+      PORTAL_INSPECTOR_URL: http://inspector-agent:9000/
+      PORTAL_THOUGHTSPOT_URL: http://thoughtspot-agent:9000/
+      PORTAL_STRATEGY_URL: http://strategy-agent:9000/
+      PORTAL_MAX_PARALLEL_RUNS: "2"
+    volumes:
+      - portal-data:/data
+      - portal-uploads:/uploads
+    ports:
+      - "8080:8080"
+    depends_on:
+      - inspector-agent
+    restart: unless-stopped
+
+  portal-ui:
+    build:
+      context: .
+      dockerfile: packages/inspector_portal/Dockerfile
+    command: ["streamlit", "run", "/app/packages/inspector_portal/inspector_portal/ui.py",
+              "--server.port", "8501", "--server.address", "0.0.0.0", "--server.maxUploadSize", "200"]
+    environment:
+      PORTAL_API_URL: http://portal-api:8080
+    ports:
+      - "8501:8501"
+    depends_on:
+      - portal-api
     restart: unless-stopped
 
   # Design docs (Astro Starlight) and a Cloudflare quick tunnel to share them.
@@ -130,5 +179,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  portal-data:
+  portal-uploads:
   ollama-models:
   warehouse-data:

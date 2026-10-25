@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -11,12 +12,20 @@ from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
 from inspector_contract.ir import SourceRef
 
-_yaml = YAML(typ="rt")
+# A ruamel YAML instance is not thread-safe: concurrent requests sharing one corrupt each other's parse
+# ("while parsing a block mapping" on valid files). One instance per thread.
+_local = threading.local()
+
+
+def _parser() -> YAML:
+    if not hasattr(_local, "yaml"):
+        _local.yaml = YAML(typ="rt")
+    return _local.yaml
 
 
 def load_yaml(path: Path) -> Any:
     with open(path) as fh:
-        return _yaml.load(fh)
+        return _parser().load(fh)
 
 
 def load_json(path: Path) -> Any:

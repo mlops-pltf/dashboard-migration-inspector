@@ -1,0 +1,121 @@
+---
+title: One run, step by step
+description: Everything that happens between "validate this package" and the report, with S04 as the example.
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+<Mermaid
+	code={`sequenceDiagram
+    participant Dev as Developer / portal
+    participant I as Inspector
+    participant TS as ThoughtSpot expert
+    participant ST as Strategy expert
+    participant DA as Data agent
+    Dev->>I: validate S04
+    I->>TS: export_model
+    I->>ST: export_model
+    TS-->>I: IR (ThoughtSpot side)
+    ST-->>I: IR (Strategy side)
+    Note over I: 1. rules (code)
+    I->>DA: 2. data checks the rules attached
+    DA-->>I: measurements
+    Note over I: 3. AI agent investigates what is open
+    I->>TS: questions, if needed
+    I->>DA: more measurements, if needed
+    Note over I: 4. ledger computes the verdict
+    I-->>Dev: report`}
+/>
+
+## 0. The package
+
+A migration package is a folder (or zip) with both sides:
+
+```text
+S04/
+  manifest.yaml                     # what this package is
+  thoughtspot/                      # TML export: tables, worksheet, liveboard, answers (+ optional generated SQL)
+  strategy/                         # model.yaml (Mosaic YAML, REST JSON or Ossie YAML), dashboards/, sql/
+  mapping.yaml                      # optional: which ThoughtSpot object is which Strategy object
+```
+
+## 1. The experts translate both sides
+
+The Inspector never reads TML or Strategy files itself. It asks each expert for the **IR** of its side. The IR
+makes explicit what each tool leaves implicit:
+
+| Field | ThoughtSpot IR | Strategy IR |
+|---|---|---|
+| Revenue | `SUM(retail.fact_orders.order_amount)` | `SUM(order_amount)` over the Freeform SQL table |
+| Joins | `fact_orders` LEFT JOIN customer, store, date, each **only when needed** | inside the SQL: customer, store, date (LEFT), **`fact_order_lines` (INNER)**, product (LEFT), all **always** |
+| Filter | `order_status != 'Cancelled'` (worksheet) | `order_status <> 'Cancelled'` (SQL WHERE) |
+
+Both sides are now comparable even though one is a worksheet and the other a single SQL query.
+
+## 2. Fields are paired
+
+Names are mostly kept in a migration, so fields are paired by name, with the optional mapping file for
+renames. Inferred or ambiguous pairs are marked so they get a closer look.
+
+## 3. The rules run (code)
+
+Every rule compares one aspect of a pair. For S04:
+
+| Rule | Result |
+|---|---|
+| LN-01, all 17 attributes | **PASS**: same warehouse columns |
+| FX-01, all 10 measures | **PASS**: identical formulas |
+| FL-01 | **PASS**: same filter |
+| JN-01 customer, store, date | **PASS**: same join type and keys |
+| JN-04 | **Lead**: `fact_orders` is joined on columns not known to be unique |
+| CV-02 | **INFO**: Product Category exists only in Strategy |
+
+The formulas are identical; the problem is underneath them, in the joins. That is typical of what broke in the
+Qlik migration.
+
+## 4. The data checks run (code + data agent)
+
+The JN-04 lead carries the measurement that decides it: a **key profile** of `fact_order_lines.order_id`.
+
+```json title="Data agent answer"
+{ "rows": 72019, "distinct_keys": 24000, "max_rows_per_key": 5, "unique": false }
+```
+
+Not unique, so the fan-out is real: the lead becomes **FAIL (confirmed by data)**.
+
+## 5. The AI agent investigates
+
+The agent starts from the result of steps 3 and 4. Decided items are facts it cannot change. Its work:
+
+- record the confirmed fan-out as **one root cause**, listing the measures it inflates as symptoms (Revenue,
+  Discount, Shipping, Items Sold, Net Revenue, Avg Order Value...);
+- look for what the rules cannot see: wrong pairings, meaning hidden in descriptions, things the input
+  format lost;
+- write the explanation and the fix: *"aggregate `fact_order_lines` to one row per order before joining, or
+  move product category to its own table"*;
+- for anything still open, ask the experts or request more data checks.
+
+## 6. The ledger finalizes
+
+The ledger refuses to close the run while a lead is unresolved, then computes the verdict from the findings:
+
+| Verdict | When |
+|---|---|
+| **NOT_READY** | at least one blocker FAILS |
+| **NEEDS_REVIEW** | no blocker fails, but at least one is unverified |
+| **READY** | every blocker is proven |
+
+S04: **NOT_READY**.
+
+## 7. The report and the run folder
+
+The report lists blockers first, grouped by root cause, then unverified items, warnings, and everything proven.
+Each run also leaves a folder with `report.md`, `report.json` and a link to its trace. See
+[Seeing a run](/how-it-works/seeing-a-run/).
+
+<Aside type="note" title="Three ways to run">
+	`mode: rules` (steps 1 to 3 only), `rules+data` (1 to 4, no AI) and `agent` (everything). The first two need
+	no model and are fully deterministic, which makes them a useful baseline: the agent mode must never be
+	weaker than `rules+data`.
+</Aside>

@@ -6,12 +6,15 @@ The agent reasons freely; the ledger makes sure a verdict can be trusted:
   * a BLOCKER PASS needs a proof: an identical compare_fields result for the same pair, an item the rule sweep
     proved, or a data probe that matched for the same subject
   * turning a rule-sweep FAIL into anything softer needs data evidence
+  * a lead the data already settled before the run (``preload``) keeps its status and severity: the agent can
+    explain it, group symptoms under it and suggest a fix, but not overturn it
   * the report can only be finalised once every open lead from the rule sweep is resolved
 The verdict (READY / NOT_READY / NEEDS_REVIEW) is computed here, never chosen by the model.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -72,6 +75,17 @@ class Ledger:
                         return True
         return False
 
+    def preload(self, leads: list[Finding]) -> str:
+        """Start the run from leads the code already swept and settled with data. Registered as evidence (the
+        rule sweep's result), so findings can cite it; returns that evidence id."""
+        from ..rule_sweep.tool import leads_view
+
+        self.leads = {f.id: f for f in leads}
+        self.sweep_ran = True
+        eid = f"E{len(self.evidence) + 1}"
+        self.evidence[eid] = Evidence(eid, "run_rule_sweep", {"package": self.package}, leads_view(leads))
+        return eid
+
     @staticmethod
     def _data_proof(cited: list[Evidence], ts: str | None, st: str | None, leads: list[str]) -> bool:
         """A matching data probe about this finding's subject: the same ThoughtSpot object (field or join), the
@@ -101,6 +115,13 @@ class Ledger:
         bad_leads = [i for i in resolves_leads if i not in self.leads]
         if bad_leads:
             return {"accepted": False, "reason": f"unknown lead ids {bad_leads}"}
+
+        settled = [self.leads[i] for i in resolves_leads if self.leads[i].decided_by == "rule+data"
+                   and (status != self.leads[i].status or severity != self.leads[i].severity)]
+        if settled:
+            return {"accepted": False, "reason": "; ".join(
+                f"{l.id} was settled by data before the run ({l.status} {l.severity}: {l.title})" for l in settled)
+                + ". Keep that status and severity: add the explanation, symptoms and suggested fix."}
 
         cited = self._cited(evidence_ids)
         ts, st = _name(thoughtspot_object), _name(strategy_object)
@@ -158,13 +179,33 @@ class Ledger:
         unreviewed = []
         for i in left:
             f = self.leads[i].model_copy(deep=True)
-            f.evidence["note"] = "not reviewed by the agent (run ended first); rule result kept as is"
+            f.evidence["note"] = ("settled by data before the agent ran; not reviewed further" if f.decided_by == "rule+data"
+                                  else "not reviewed by the agent (run ended first); rule result kept as is")
             unreviewed.append(f)
         for f in proven + unreviewed:
             f.resolves = [f.id]
         findings = finalize([f.model_copy(deep=True) for f in self.findings] + proven + unreviewed)
+        verdict = verdict_of(findings)
+        summary, removed = without_verdict_claims(summary, verdict)
         self.report = Report(
-            run_id=self.run_id, package_id=self.package.rstrip("/").rpartition("/")[2], verdict=verdict_of(findings),
+            run_id=self.run_id, package_id=self.package.rstrip("/").rpartition("/")[2], verdict=verdict,
             counts=counts_of(findings), findings=findings, stage="agent", summary=summary,
-            agent={**(agent_info or {}), "evidence_items": len(self.evidence), "unreviewed_leads": len(unreviewed)})
+            agent={**(agent_info or {}), "evidence_items": len(self.evidence), "unreviewed_leads": len(unreviewed),
+                   **({"summary_lines_removed": removed} if removed else {})})
         return {"accepted": True, "verdict": self.report.verdict, "counts": self.report.counts}
+
+
+_VERDICTS = re.compile(r"\b(NOT[_ ]READY|NEEDS[_ ]REVIEW|READY)\b")
+
+
+def without_verdict_claims(summary: str, verdict: str) -> tuple[str, int]:
+    """The verdict is computed, so the summary may not state one: drop lines that mention a verdict or name one
+    other than the computed verdict. Returns the cleaned summary and how many lines were dropped."""
+    kept, removed = [], 0
+    for line in summary.splitlines():
+        named = {m.replace(" ", "_") for m in _VERDICTS.findall(line)}
+        if re.search(r"\bverdict\b", line, re.IGNORECASE) or named - {verdict}:
+            removed += 1
+            continue
+        kept.append(line)
+    return "\n".join(kept).strip(), removed

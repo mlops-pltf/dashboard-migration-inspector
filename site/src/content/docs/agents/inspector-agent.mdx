@@ -16,9 +16,11 @@ ledger makes sure every conclusion rests on evidence.
     participant A as Agent (LLM)
     participant T as Tools
     participant L as Ledger
+    C->>T: rule sweep + its data probes (code, before the agent)
+    T-->>L: settled leads (E1)
     C->>A: validate package
-    A->>T: inspect_package (experts export IR over A2A), run_rule_sweep
-    T-->>A: inventory, open leads, items proven by rules (E1, E2)
+    A->>T: inspect_package, run_rule_sweep
+    T-->>A: inventory, open leads (some settled by data), proven items
     loop investigate
       A->>T: trace_lineage / compare_fields / compare_joins / analyze_sql ...
       T-->>A: exact answers (E3 ... En)
@@ -32,8 +34,10 @@ ledger makes sure every conclusion rests on evidence.
 ## A typical run
 
 <Steps>
+0. Before the agent starts, code runs the rule sweep and the data probes its leads carry, and loads the result
+   into the ledger. Leads the data settled are facts the agent explains but cannot overturn.
 1. `inspect_package`: contents, Strategy input format, what that format cannot carry.
-2. `run_rule_sweep`: every deterministic check as a first pass, giving **open leads** and items **proven** by rules.
+2. `run_rule_sweep`: returns that result: **open leads** (marked `settled_by_data` where decided) and items **proven**.
 3. `match_fields`: review the pairing, especially inferred or one-sided objects.
 4. Investigate each lead with the tools that answer the real question, and group symptoms under one root cause.
 5. Look beyond the leads: meaning the rules can't see, wrong matches, objects the format lost.
@@ -41,7 +45,7 @@ ledger makes sure every conclusion rests on evidence.
 7. `record_finding` for every conclusion, then `finalize_report` with a summary for the developer.
 </Steps>
 
-## Tools (17)
+## Tools (18)
 
 | Tool | Answers |
 |---|---|
@@ -56,6 +60,7 @@ ledger makes sure every conclusion rests on evidence.
 | `get_join_graph`, `compare_joins` | Join types, keys, applicability on each side |
 | `analyze_row_multiplication` | Fan-out and chasm traps inside Freeform SQL |
 | `compare_filters` | Model-level filters on both sides, canonical |
+| `compile_query` | The SQL either side computes for a measure × dimensions × filters |
 | `request_data_probe` | Ask the data agent (KPI equivalence, key/orphan profiles, impact) |
 | `record_finding`, `finalize_report` | Write the report under the evidence rules |
 
@@ -67,8 +72,10 @@ ledger makes sure every conclusion rests on evidence.
 | A finding must cite evidence | `record_finding` refuses otherwise |
 | A **blocker PASS** needs proof: `compare_fields` identical, an item the rules proved, or matching data | `record_finding` |
 | A rule **FAIL** can only be softened with data | `record_finding` |
+| A lead **settled by data** before the run keeps its status and severity | `record_finding` |
 | Every open lead must be resolved | `finalize_report` refuses otherwise |
 | The verdict is computed from findings | the ledger, never the model |
+| The summary may not state a verdict | the ledger removes lines that do |
 
 If the run ends early (turn budget, model error), the ledger finalizes anyway: unresolved leads keep their
 rule result and are marked *not reviewed by the agent*.
@@ -77,7 +84,7 @@ rule result and are marked *not reviewed by the agent*.
 
 | Request | Answered by |
 |---|---|
-| Structured skill `validate` `{package, mode: agent \| rules, max_turns}` | Code (the agent runs inside) and returns report JSON + Markdown |
+| Structured skill `validate` `{package, mode: agent \| rules \| rules+data, max_turns}` | Code (the agent runs inside) and returns report JSON + Markdown, the trace id and link, and the run folder |
 | Any text message | The Inspector agent, with its tools (ask about a package or a finding) |
 
 Package locations are folders under `PACKAGE_ROOT` locally, or `s3://` prefixes on AgentCore.

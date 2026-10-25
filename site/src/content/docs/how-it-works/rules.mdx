@@ -1,0 +1,66 @@
+---
+title: The rules
+description: What each rule compares, with an example of what it catches, and why the rules work on any client model and warehouse.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The rules are code. They compare the two IRs, the neutral descriptions of both models, point by point.
+A rule ends in one of three ways:
+
+| Result | Meaning |
+|---|---|
+| **PASS** | proven the same from the definitions |
+| **FAIL** | proven different from the definitions |
+| **Lead** (UNVERIFIED) | can't be decided from the definitions; the rule attaches the data check that would decide it |
+
+## The rules, with examples
+
+| Rule | Compares | Catches, for example | Decided by |
+|---|---|---|---|
+| **CV-01** coverage | Every ThoughtSpot field has a Strategy counterpart | *Revenue* is used in a liveboard but missing in Strategy | Definitions + mapping file |
+| **CV-02** extras | Strategy objects with no ThoughtSpot origin | *Product Category* exists only in Strategy (info) | Definitions |
+| **LN-01** lineage | Each field reads the same warehouse column | *Customer Region* reads `dim_customer.region` in ThoughtSpot but `dim_store.region` in Strategy | Definitions |
+| **FX-01** formula | Two measures compute the same thing | `safe_divide(a, b)` gives 0 when b is 0; Strategy `a / b` gives NULL | Definitions; data when two different-looking formulas might still be equal |
+| **AG-02** aggregation level | Same level of detail | ThoughtSpot repeats the region total on every row (`group_aggregate`); Strategy computes it per row | Data at the grains the dashboards use |
+| **FL-01** filters | Same model and worksheet filters | ThoughtSpot excludes cancelled orders; Strategy doesn't | Definitions |
+| **JN-01** join type | Same join type and keys on every path a measure uses | ThoughtSpot LEFT JOIN to customers; Strategy INNER drops orders without a customer | Definitions; data says how many rows it affects |
+| **JN-04** fan-out | A one-to-many join repeating rows before they are summed | S04: Freeform SQL joins order lines, so each order is counted per line | Data: is the joined key unique? |
+| **JN-05** chasm trap | Two fact tables joined through a shared dimension | Orders and returns flattened together, multiplying each other | Definitions |
+| **JN-06** forced join | A join applied to every query where ThoughtSpot joins only when needed | Freeform SQL INNER-joins the date table, so rows without a date always vanish | Data: rows affected |
+| **JN-07** missing path | A join the content needs doesn't exist | A dashboard shows Revenue by Product, but Strategy has no path from orders to products | Definitions |
+
+The [check catalogue](/validation/checks/) lists every check id, including the ones the AI applies
+(dashboards, NULL handling, dates, rounding).
+
+## Why they work on any client model
+
+The rules know **nothing about our synthetic tables**: no table, column or field name appears in them. They
+work on the IR's concepts (column, aggregate, level, join, key, filter), which every model has. A client model
+with different tables, names, joins and formulas goes through the same comparisons.
+
+The data checks are written the same way: the [query compiler](/how-it-works/data-checks/) builds their SQL
+from the IR, so they query whatever tables the client model uses.
+
+## Where they can still fall short
+
+<Aside type="caution" title="Honest limits">
+	1. **The parsers, more than the rules.** Real exports will contain formula functions and Strategy
+	   features our 18 scenarios don't. What a parser doesn't understand becomes *opaque* and ends UNVERIFIED:
+	   never a false pass, but possibly many NEEDS_REVIEW verdicts until parser coverage grows. One real client
+	   package is the fastest way to find these gaps.
+	2. **Rules and scenarios were written by the same team.** Every planted defect is caught, but real packages
+	   are the true test.
+	3. **Field pairing** assumes names are mostly kept. Heavy renaming needs the mapping file.
+	4. **Large tables.** A uniqueness check is a `GROUP BY` over the whole table. On very large Redshift tables
+	   it may need sampling or a cost limit.
+</Aside>
+
+## Severity
+
+| Severity | Means | Effect on the verdict |
+|---|---|---|
+| **BLOCKER** | can change a number | a FAIL makes the package NOT_READY; an unverified one NEEDS_REVIEW |
+| **WARNING** | might change results or couldn't be confirmed | NEEDS_REVIEW |
+| **LOW** | visual only | none |
+| **INFO** | context | none |

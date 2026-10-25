@@ -22,8 +22,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--quiet", action="store_true", help="print only the verdict line")
     args = p.parse_args(argv)
 
+    from inspector_contract import telemetry
+
     from .tools.findings_ledger import markdown
     from .inspector_agent import run_rules_only, run_validation
+
+    telemetry.setup("inspector_agent")  # exported only when Langfuse / OTLP settings are present
 
     report = run_rules_only(str(args.package), with_data=args.with_data) if args.rules_only else \
         run_validation(str(args.package), max_turns=args.max_turns)

@@ -29,8 +29,8 @@ hero:
         </g>
       </svg>
   actions:
-    - text: Read the design
-      link: /problem/why-it-breaks/
+    - text: How it works
+      link: /how-it-works/
       icon: right-arrow
     - text: See the checks
       link: /validation/checks/
@@ -56,14 +56,17 @@ import Mermaid from '../../components/Mermaid.astro';
 
 <Mermaid
 	code={`flowchart LR
-    Dev([Developer]) -->|TML + Strategy export| V[inspector_agent]
-    V -->|IR export, questions| E[expert agents]
-    V -->|inconclusive?| D[data_agent]
-    D -->|run both sides| RS[(Redshift)]
-    D -->|numbers agree / differ| V
-    V -->|report| Dev`}
-	caption="Developers submit both sides. Inspector proves equality, finds differences, and lets the data settle anything it can't decide from the definitions."
+    Dev([Developer]) -->|TML + Strategy export| E[expert agents]
+    E -->|IR, both sides| R["rules (code)"]
+    R -->|open leads| D[data_agent]
+    D <--> RS[(Redshift)]
+    D -->|measurements| A["AI agent"]
+    A -->|findings| L["ledger: verdict"]
+    L -->|report| Dev`}
+	caption="Experts translate both sides; rules compare; the warehouse settles what definitions cannot; the AI investigates and explains; the ledger computes the verdict."
 />
+
+New here? Start with [How it works, in one page](/how-it-works/).
 
 ## Design principles
 
@@ -91,7 +94,8 @@ import Mermaid from '../../components/Mermaid.astro';
 
 <CardGrid>
 	<LinkCard title="Why lift-and-shift breaks" description="Where ThoughtSpot and Strategy differ, and how each difference changes numbers." href="/problem/why-it-breaks/" />
-	<LinkCard title="System overview" description="Two agents, one shared library, and the reason for the split." href="/architecture/overview/" />
+	<LinkCard title="How it works" description="The whole system in plain words, with a worked example." href="/how-it-works/" />
+	<LinkCard title="System overview" description="One expert per BI tool, a neutral Inspector, a data agent, and why." href="/architecture/overview/" />
 	<LinkCard title="Joins, grain & fan-out" description="How Inspector catches double counting and dropped rows." href="/engine/joins-and-grain/" />
 	<LinkCard title="Verdict policy" description="When a check passes, fails, or stays unverified." href="/validation/verdict-policy/" />
 	<LinkCard title="data_agent" description="Probes, reconciliation inside Redshift, and mismatch diagnosis." href="/agents/data-agent/" />

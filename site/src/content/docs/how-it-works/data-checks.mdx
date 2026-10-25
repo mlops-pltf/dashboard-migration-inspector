@@ -1,0 +1,89 @@
+---
+title: Data checks
+description: How the warehouse settles what the definitions cannot, and how that stays safe.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+Some questions have no answer in the definitions. *Is this key unique?* depends on the data. *Do these two
+different-looking formulas return the same numbers?* is easiest to answer by running both. For those, the
+Inspector asks the **data agent**, the only agent with (read-only) access to Redshift.
+
+<Mermaid
+	code={`flowchart LR
+    L["Lead + the check it carries"] --> C["Query compiler<br/>IR → SQL, both sides"]
+    C --> DA[Data agent]
+    DA --> G["SQL guard<br/>one read-only SELECT"] --> W[(Redshift)]
+    W -- "counts, totals, samples" --> DA --> S["Settle: PASS / FAIL / still open"]`}
+/>
+
+## The three measurements
+
+<Tabs>
+	<TabItem label="Key profile">
+		**Question:** is this column unique in this table? If not, joining to it repeats rows.
+
+		**S04:** `fact_order_lines.order_id`: 72,019 rows, 24,000 distinct values, up to 5 rows per order. Not
+		unique, so the fan-out is confirmed and every order-level sum in Strategy is inflated.
+	</TabItem>
+	<TabItem label="Orphan profile">
+		**Question:** how many rows have no partner across this join? Those are what an INNER join drops and a
+		LEFT join keeps.
+
+		**S05:** 749 orders have no customer. Strategy uses INNER where ThoughtSpot uses LEFT, so those orders
+		vanish from every Strategy number.
+
+		**S06:** the same kind of difference, but 0 orphans today. Still a FAIL, marked **latent**: the first
+		orphan row that arrives will make the numbers differ.
+	</TabItem>
+	<TabItem label="KPI comparison">
+		**Question:** do both definitions return the same numbers, at the grand total and at **every grain the
+		measure is shown at in the dashboards**, with the dashboards' filters?
+
+		**S08:** Region Revenue by Store Region × Store Type, 2025: ThoughtSpot 80,497,875.96, Strategy
+		26,832,625.32. ThoughtSpot repeats the whole region's revenue on every store-type row; Strategy computes it
+		per store type.
+
+		**S14:** two Net Revenue formulas that look different return identical numbers everywhere: proven equal
+		by data, so it passes.
+	</TabItem>
+</Tabs>
+
+## How the SQL is written
+
+The **query compiler** turns *"this measure, by these dimensions, with these filters"* into SQL from either
+side's IR, following that tool's semantics: joins taken from the measure's own table, joins applied only when
+needed (or always, for Freeform SQL), aggregation levels, model filters, division by zero as NULL.
+
+To make sure it computes what ThoughtSpot computes, it was checked against ThoughtSpot's own generated SQL:
+**128 visualizations return identical numbers**.
+
+Both sides' results are compared **inside the warehouse** (a full outer join on the dimensions, with a
+tolerance), so only counts, totals and the largest differences come back, whatever the data size.
+
+## How a measurement settles a lead
+
+| Lead was | The data says | Result |
+|---|---|---|
+| UNVERIFIED | no difference / key unique / no rows affected | **PASS**, decided by rule + data |
+| UNVERIFIED | difference / key not unique | **FAIL**, decided by rule + data |
+| UNVERIFIED | can't decide (nothing to compile, depends on an unknown join type) | stays **UNVERIFIED**, with what was seen |
+| FAIL | no impact on today's data | stays **FAIL**, marked **latent** |
+| FAIL | impact | stays **FAIL**, with its size |
+
+A measurement that could not run never counts as a pass.
+
+## Safety
+
+| | |
+|---|---|
+| Access | Read-only database user; the session itself is read-only and has a statement timeout |
+| SQL guard | Exactly one `SELECT`; no DDL, DML, `COPY`, `UNLOAD`; dangerous functions denied; only allowed schemas |
+| Results | At most 1,000 rows, samples only; aggregation happens in SQL |
+| Credentials | Only the data agent has them (Secrets Manager on AgentCore) |
+
+<Aside type="note">
+	Data checks run in code **before** the AI starts. The AI can request more of them during its investigation;
+	they go through the same compiler, guard and rules.
+</Aside>

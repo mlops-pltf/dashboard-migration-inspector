@@ -90,3 +90,17 @@ def test_a2a_structured_skills_and_card():
 
 def test_agent_builds():
     assert {t.tool_name for t in TOOLS} == set(build_agent().tool_names)
+
+
+@needs_synthetic
+def test_exports_are_thread_safe():
+    """Concurrent requests (two validations at once) must not corrupt each other's YAML parsing."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from thoughtspot_agent.tools.model_export.tool import summarize_export_impl
+
+    location = str(PACKAGES / "S04" / "thoughtspot")
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(lambda _: summarize_export_impl(location), range(16)))
+    assert all(r["models"] and not any(i["severity"] == "error" for i in r["issues"]) for r in results)
+    assert len({r["fingerprint"] for r in results}) == 1

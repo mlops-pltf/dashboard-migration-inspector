@@ -1,6 +1,6 @@
 """The evidence rules the agent cannot bypass."""
 
-from conftest import needs_synthetic, pkg
+from conftest import needs_synthetic, needs_warehouse, pkg
 from inspector_agent.tools.definition_comparer.tool import compare_fields_impl
 from inspector_agent.tools.findings_ledger import Ledger
 from inspector_agent.tools.rule_sweep.tool import run_rule_sweep_impl
@@ -89,3 +89,41 @@ def test_data_proof_must_be_about_the_same_subject():
                       evidence_ids=[same], thoughtspot_object="Sales Orders::Net Revenue",
                       strategy_object="Sales Orders::Net Revenue")
     assert r["accepted"]
+
+
+def test_summary_cannot_state_a_verdict():
+    from inspector_agent.tools.findings_ledger.ledger import without_verdict_claims
+
+    text = "**Verdict:** READY\nRevenue is double-counted.\nThe package is READY to ship.\nStill NOT_READY: fix L02."
+    kept, removed = without_verdict_claims(text, "NOT_READY")
+    assert kept == "Revenue is double-counted.\nStill NOT_READY: fix L02." and removed == 2
+
+
+def test_forced_finalize_strips_a_contradicting_verdict():
+    ledger, _, _ = ledger_with_sweep("S07")
+    ledger.finalize("**Verdict: READY**\nAll good.", force=True)
+    assert "READY" not in ledger.report.summary and ledger.report.agent["summary_lines_removed"] == 1
+
+
+@needs_warehouse
+def test_leads_settled_by_data_cannot_be_overturned():
+    from inspector_agent.tools.data_probe.settle import settle
+    from inspector_agent.tools.rule_sweep.tool import sweep
+
+    ledger = Ledger(package=pkg("S04"))
+    eid = ledger.preload(settle(pkg("S04"), sweep(pkg("S04"))))
+    fanout = next(f for f in ledger.leads.values() if f.check == "JN-04")
+    assert fanout.status == "FAIL" and fanout.decided_by == "rule+data"
+    view = ledger.evidence[eid].output
+    assert any(l["lead_id"] == fanout.id and l.get("settled_by_data") for l in view["open_leads"])
+    # even with a (wrong-subject) matching probe, the agent cannot soften it
+    data = ledger.add_evidence("request_data_probe", {}, {"match": True, "subject": {"lead": fanout.id}})
+    r = ledger.record(check="JN-04", severity="BLOCKER", status="PASS", title="no fan-out", explanation="unique keys",
+                      evidence_ids=[eid, data], resolves_leads=[fanout.id])
+    assert not r["accepted"] and "settled by data" in r["reason"]
+    r = ledger.record(check="JN-04", severity="BLOCKER", status="FAIL", title="Revenue repeated per order line",
+                      explanation="key profile", evidence_ids=[eid], resolves_leads=[fanout.id],
+                      suggested_fix="Aggregate order lines before joining")
+    assert r["accepted"]
+    ledger.finalize("Fix the order-lines join first.", force=True)
+    assert ledger.report.verdict == "NOT_READY"

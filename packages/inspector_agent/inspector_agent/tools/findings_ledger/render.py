@@ -47,6 +47,9 @@ def markdown(report: Report) -> str:
            f"|---|---|---|---|---|---|",
            f"| {c.get('blocker_fail', 0)} | {c.get('blocker_unverified', 0)} | {c.get('warning', 0)} | "
            f"{c.get('low', 0)} | {c.get('info', 0)} | {c.get('pass', 0)} |", ""]
+    if report.developer_notes:
+        out.extend(["## Developer notes", "*Given with the run. Context for the review, not proof: nothing below "
+                    "passes because of them.*", "", report.developer_notes, ""])
     if report.summary:
         out.extend(["## Summary", report.summary, ""])
     if report.coverage:

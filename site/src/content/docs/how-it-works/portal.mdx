@@ -1,0 +1,70 @@
+---
+title: Using the portal
+description: How a dashboard developer uploads a migration, runs the Inspector, reads the report and asks follow-up questions.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+The portal is how dashboard developers use the Inspector without any tooling: a web page to upload a
+migration, start a validation, read the report and ask about it.
+
+<Steps>
+1. **Upload.** Give the migration a name and upload both sides:
+   - ThoughtSpot: the TML export zip (as ThoughtSpot downloads it), or the `.tml` files;
+   - Strategy: the export zip (model, `dashboards/`, `sql/`), or just the model file (YAML export, REST JSON or
+     Ossie YAML);
+   - optionally a mapping file, for renamed objects.
+
+   Or upload one zip with `thoughtspot/` and `strategy/` folders.
+
+2. **Check.** The ThoughtSpot and Strategy experts read the upload straight away and show what they found
+   (format, models, dashboards) and anything they could not read. Nothing is validated yet.
+
+3. **Run.** Choose:
+   - **Full validation**: rules, data checks and the AI review, a few minutes;
+   - **Quick check**: rules and data checks only, no AI, seconds.
+
+   Add notes if useful: *"focus on the Sales Overview liveboard"*, *"Product Category was added on purpose"*.
+   Notes are context, not commands: nothing passes because of a note, and the report shows them as yours.
+
+4. **Read the report.** The verdict, counts, the summary, and the findings grouped as blockers, unverified,
+   warnings, low/info and proven. Each finding shows both sides' definitions with file and line, the evidence,
+   and the fix. Download it as Markdown or JSON.
+
+5. **Fix and re-run.** Upload the corrected Strategy export as a new package, or re-run an uploaded one. The
+   report then shows what changed since the previous run: **fixed**, **still open**, **new**.
+
+6. **Ask.** Under the report, ask the Inspector about the run: *"why does Net Revenue fail?"*, *"what exactly
+   should I change in the Freeform SQL?"*. It answers with its tools and remembers the conversation.
+</Steps>
+
+## How it is built
+
+<Mermaid
+	code={`flowchart LR
+    B([Browser]) --> UI["portal-ui<br/>Streamlit :8501"]
+    UI --> API["portal-api<br/>FastAPI :8080"]
+    API -- "uploads (shared volume, read-only for agents)" --> V[(uploads)]
+    API -- "check: export_model" --> E[experts]
+    API -- "validate / questions (A2A)" --> I[inspector_agent]
+    I --> E
+    I --> D[data_agent]`}
+	caption="The portal stores and asks; the agents validate. Any UI can use the same API."
+/>
+
+- **portal-api** (FastAPI) is the lasting part: uploads, the experts' check, background runs (two at a time),
+  results, comparison with the previous run, questions. A React UI could replace Streamlit later on the same
+  API.
+- **portal-ui** (Streamlit) is the page developers use.
+- Uploaded packages go to a shared volume that the agents can read but not change.
+
+<Aside type="caution" title="Sharing the portal">
+	Locally it runs at http://localhost:8501. An ngrok URL is public, so share it only with a password:
+	`ngrok http 8501 --basic-auth "user:password"`. Logins and SSO come later, with the client's hosting.
+</Aside>
+
+## Upload safety
+
+Zips are untrusted: absolute paths, `..` and links are refused, and uploads are limited to 200 MB and 5,000
+files. A package that fails a check is removed, never half-written.

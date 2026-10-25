@@ -1,7 +1,8 @@
 """Where package files live: a local folder (shared mount), a local zip, or an S3 prefix (AgentCore).
 
 ``materialize(location)`` returns a local folder plus a fingerprint that changes when the files change.
-Local paths must sit under PACKAGE_ROOT when that is set.
+Local paths must sit under PACKAGE_ROOT when that is set (several folders separated by ':', e.g. the synthetic
+packages and the portal's uploads; relative paths resolve against the first).
 """
 
 from __future__ import annotations
@@ -13,20 +14,19 @@ import zipfile
 from pathlib import Path
 
 
-def _root() -> Path | None:
-    root = os.environ.get("PACKAGE_ROOT")
-    return Path(root).resolve() if root else None
+def _roots() -> list[Path]:
+    return [Path(r).resolve() for r in os.environ.get("PACKAGE_ROOT", "").split(os.pathsep) if r.strip()]
 
 
 def _local(location: str) -> Path:
-    root = _root()
+    roots = _roots()
     path = Path(location.removeprefix("file://"))
-    if root is not None:
-        path = (root / path) if not path.is_absolute() else path
+    if roots:
+        path = (roots[0] / path) if not path.is_absolute() else path
         path = path.resolve()
         uploads = Path(tempfile.gettempdir()).resolve()
-        if not (path.is_relative_to(root) or path.is_relative_to(uploads)):
-            raise ValueError(f"location must be inside {root}")
+        if not (any(path.is_relative_to(r) for r in roots) or path.is_relative_to(uploads)):
+            raise ValueError(f"location must be inside {' or '.join(str(r) for r in roots)}")
     path = path.resolve()
     if not path.exists():
         raise FileNotFoundError(f"not found: {location}")

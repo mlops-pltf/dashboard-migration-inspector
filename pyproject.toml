@@ -2,7 +2,7 @@
 name = "inspector-workspace"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["inspector-synth", "inspector-contract", "thoughtspot-agent", "strategy-agent", "inspector-agent", "data-agent"]
+dependencies = ["inspector-synth", "inspector-contract", "thoughtspot-agent", "strategy-agent", "inspector-agent", "data-agent", "inspector-portal"]
 
 [tool.uv]
 package = false
@@ -14,6 +14,7 @@ thoughtspot-agent = { workspace = true }
 strategy-agent = { workspace = true }
 inspector-agent = { workspace = true }
 data-agent = { workspace = true }
+inspector-portal = { workspace = true }
 
 [tool.uv.workspace]
 members = ["packages/*", "synthetic"]

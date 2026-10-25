@@ -14,6 +14,19 @@ export default defineConfig({
 			sidebar: [
 				{ label: 'Overview', link: '/' },
 				{
+					label: 'How it works',
+					items: [
+						{ label: 'In one page', slug: 'how-it-works' },
+						{ label: 'One run, step by step', slug: 'how-it-works/one-run' },
+						{ label: 'The rules', slug: 'how-it-works/rules' },
+						{ label: 'Data checks', slug: 'how-it-works/data-checks' },
+						{ label: 'The AI and the ledger', slug: 'how-it-works/agent-and-ledger' },
+						{ label: 'Seeing a run', slug: 'how-it-works/seeing-a-run' },
+						{ label: 'Using the portal', slug: 'how-it-works/portal' },
+						{ label: 'Questions and answers', slug: 'how-it-works/faq' },
+					],
+				},
+				{
 					label: 'The problem',
 					items: [
 						{ label: 'Why lift-and-shift breaks', slug: 'problem/why-it-breaks' },

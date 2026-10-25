@@ -7,6 +7,7 @@ per package location; `refresh` re-asks the experts (every validation run starts
 
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 
 from ruamel.yaml import YAML
@@ -18,7 +19,7 @@ from inspector_contract import (
 from ..expert_client.client import SIDES, expert
 from .locations import join, materialize
 
-_yaml = YAML(typ="safe")
+_local = threading.local()  # ruamel YAML instances are not thread-safe: one per thread
 _cache: dict[str, tuple[MigrationPackage, str]] = {}
 
 
@@ -32,7 +33,9 @@ def location_of(package: str) -> str:
 def _read_yaml(location: str, name: str) -> dict:
     path, _ = materialize(location)
     f = Path(path) / name
-    return (_yaml.load(f.read_text()) or {}) if f.exists() else {}
+    if not hasattr(_local, "yaml"):
+        _local.yaml = YAML(typ="safe")
+    return (_local.yaml.load(f.read_text()) or {}) if f.exists() else {}
 
 
 def _mapping(doc: dict) -> Mapping | None:

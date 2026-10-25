@@ -1,0 +1,107 @@
+---
+title: How it works, in one page
+description: What the Inspector does with a migration package, who does which part, and why you can trust the verdict.
+---
+
+import { Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+A developer has rebuilt a ThoughtSpot worksheet and its liveboards in Strategy. The Inspector answers one
+question: **will every number in the Strategy version match ThoughtSpot?** If not, it says what differs,
+where, why, and how to fix it.
+
+## The idea in five steps
+
+<Steps>
+1. **Translate both sides into one language.** ThoughtSpot and Strategy describe the same things very
+   differently. Two expert agents read their tool's exports and write them down in the same neutral form, the
+   *IR*: which warehouse column every field reads, how every measure aggregates, which tables join how, which
+   filters apply.
+
+2. **Compare the definitions with rules.** Code compares the two descriptions point by point: same column?
+   same aggregation? same join type? same filters? Each rule either proves a point, proves a difference, or
+   raises a *lead* when it cannot decide from the definitions alone.
+
+3. **Let the warehouse settle what definitions cannot.** For an open lead, the rule says which measurement
+   would decide it: is this key unique? how many rows would this join drop? do both definitions return the
+   same numbers? The data agent runs that measurement in Redshift. Code does this before the AI starts.
+
+4. **An AI agent investigates what is still open and explains everything.** It looks for root causes, groups
+   symptoms, catches meaning the rules cannot see, and writes the explanation and the fix for the developer.
+
+5. **A ledger keeps everyone honest, and the verdict is computed.** Every conclusion must cite evidence. A
+   pass needs proof. Nothing the data settled can be overturned. The verdict is computed from the findings;
+   nobody, the AI included, chooses it.
+</Steps>
+
+<Mermaid
+	code={`flowchart LR
+    P([Migration package]) --> TS[ThoughtSpot expert] & ST[Strategy expert]
+    TS -- IR --> R
+    ST -- IR --> R
+    subgraph Inspector
+      R["Rules<br/>(code)"] --> D["Data checks<br/>(code + data agent)"] --> A["AI agent<br/>(investigates, explains)"] --> L["Ledger<br/>(evidence rules, verdict)"]
+    end
+    D <--> W[(Redshift)]
+    L --> Rep([Report: verdict, findings, fixes])`}
+	caption="Code decides what code can decide; data decides what definitions cannot; the AI does the rest, under rules it cannot bypass."
+/>
+
+## A real example: S04
+
+In synthetic scenario S04 the Strategy model is a single Freeform SQL query. Among its joins is one to
+`fact_order_lines`, which has several rows per order.
+
+| Step | What happens |
+|---|---|
+| Translate | The experts' IR shows ThoughtSpot computing Revenue as `SUM(fact_orders.order_amount)` over orders, and Strategy over the Freeform SQL, which also joins `fact_order_lines` on `order_id` |
+| Rules | Fan-out rule **JN-04** raises a lead: *"fact_orders is joined on columns not known to be unique"*. It attaches the check that decides it: is `order_id` unique in `fact_order_lines`? |
+| Data | The data agent measures: 72,019 rows, 24,000 distinct orders, up to 5 rows per order. **Not unique.** The lead becomes a confirmed **FAIL** |
+| AI agent | Explains it for the developer: every order amount is repeated once per order line; Revenue, Discount, Shipping and the other order-level measures are inflated; aggregate the lines before joining |
+| Ledger | A confirmed blocker fails → verdict **NOT_READY** |
+
+How big is the difference? On the synthetic data, ThoughtSpot's Revenue is **53,998,034.47** and the Strategy
+model's is **198,667,008.80**, 3.7 times too high.
+
+<Aside type="tip" title="Why this order matters">
+	In the first live run the AI was asked to do steps 3 and 4 alone. It checked the wrong table, concluded
+	there was no fan-out, and wrote "READY" in its summary. The ledger refused the false pass, but the verdict
+	was weaker than it should be. Since then, code runs the data checks first and the AI starts from the facts.
+	See [The AI and the ledger](/how-it-works/agent-and-ledger/).
+</Aside>
+
+## Who does what
+
+<CardGrid>
+	<Card title="ThoughtSpot expert" icon="document">
+		Reads TML (tables, SQL views, worksheets, models, liveboards, answers) and formulas. Knows ThoughtSpot only.
+	</Card>
+	<Card title="Strategy expert" icon="document">
+		Reads Mosaic YAML, REST API JSON and Ossie YAML, including Freeform SQL. Knows Strategy only.
+	</Card>
+	<Card title="Data agent" icon="seti:db">
+		The only one with warehouse access (read-only). Runs measurements and returns numbers, never opinions.
+	</Card>
+	<Card title="Inspector" icon="magnifier">
+		Neutral between the tools. Rules, data checks, the AI investigation, the ledger and the report.
+	</Card>
+</CardGrid>
+
+Each is a separate agent with its own container (an AgentCore runtime at the client), talking to the others over
+the A2A protocol.
+
+## What you get back
+
+A report with the **verdict** (READY, NOT_READY, NEEDS_REVIEW), the **findings** grouped by root cause with both
+sides' definitions and file:line references, the **evidence**, and a **suggested fix** for each. Everything that
+was proven equal is listed too, so a reviewer can see what was checked.
+
+## Read on
+
+- [One run, step by step](/how-it-works/one-run/): every stage of S04 in detail.
+- [The rules](/how-it-works/rules/): what each rule checks, with examples, and why they work on any warehouse.
+- [Data checks](/how-it-works/data-checks/): how the warehouse settles questions.
+- [The AI and the ledger](/how-it-works/agent-and-ledger/): what the AI does and what it cannot do.
+- [Seeing a run](/how-it-works/seeing-a-run/): traces in Langfuse and the run folder.
+- [Using the portal](/how-it-works/portal/): upload, run, read, ask: the developer's view.
+- [Questions and answers](/how-it-works/faq/).

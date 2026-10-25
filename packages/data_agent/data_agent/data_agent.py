@@ -21,7 +21,7 @@ from strands.multiagent.a2a.executor import StrandsA2AExecutor
 
 from inspector_contract.a2a import SkillRouterExecutor, agent_card
 
-from .llm import get_model
+from .llm import get_model, warm_up
 from .tools.profiler import profile
 from .tools.profiler.tool import column_profile, key_profile, orphan_profile
 from .tools.reconciler.reconcile import compare_queries as compare_queries_impl
@@ -80,6 +80,10 @@ def app(url: str = "http://localhost:9000/", conversation: bool = True):
 def main() -> None:
     from bedrock_agentcore.runtime import serve_a2a
 
+    from inspector_contract import telemetry
+
+    telemetry.setup(NAME)
+    warm_up()
     serve_a2a(executor(), card(os.environ.get("AGENTCORE_RUNTIME_URL", "http://localhost:9000/")))
 
 

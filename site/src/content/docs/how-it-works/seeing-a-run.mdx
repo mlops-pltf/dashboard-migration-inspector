@@ -1,0 +1,83 @@
+---
+title: Seeing a run
+description: Every model call, tool call, agent-to-agent call and data check of a run, in one trace; and a folder with the report.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
+
+Two things are left behind by every validation run: a **trace**, to see how the run reached its answer, and a
+**run folder**, with the report itself.
+
+## The trace (Langfuse)
+
+All four agents send OpenTelemetry traces to Langfuse. A validation is **one trace**: when the Inspector calls
+an expert or the data agent, it passes the trace context along, so their work appears nested under the
+Inspector's.
+
+<Mermaid
+	code={`flowchart TD
+    V["validate S04 (agent)"] --> C1["call thoughtspot-agent: export_model"]
+    V --> C2["call strategy-agent: export_model"]
+    V --> RD["rules + data (code)"]
+    RD --> C3["call data-agent: key_profile"]
+    C3 --> S3["data_agent: key_profile<br/>input: table, keys · output: rows, distinct, max per key"]
+    V --> AG["invoke_agent inspector_agent"]
+    AG --> CY["execute_event_loop_cycle (one per turn)"]
+    CY --> M["chat: the model call<br/>prompt in, reply out, tokens"]
+    CY --> T["execute_tool compare_fields<br/>arguments in, result out"]
+    CY --> T2["execute_tool ask_expert"]
+    T2 --> X["strategy_agent: ask<br/>its own model and tool calls"]
+    CY --> F["execute_tool finalize_report<br/>the ledger closes the run"]`}
+	caption="One validation run as a trace tree."
+/>
+
+What you can see:
+
+| Span | Shows |
+|---|---|
+| `validate <package> (<mode>)` | The request, and the verdict with counts |
+| `rule sweep (code)`, `data probes (code)` | In `rules` / `rules+data` mode: lead counts after each step |
+| `rules + data (code)` | Lead counts before and after the data checks, and exactly what the AI was given |
+| `call <agent>: <skill>` / `<agent>: <skill>` | Every agent-to-agent call: arguments in, result out (SQL, measurements, IR) |
+| `invoke_agent`, `execute_event_loop_cycle` | The AI's run, one cycle per turn |
+| `chat` | One model call: the full prompt, the model's reply (including its reasoning), tokens, latency |
+| `execute_tool <name>` | Each tool the AI used, with arguments and result |
+| `ledger: forced finalize` | Only when the AI did not finish (turn budget, model error): how the ledger closed the run |
+
+<Steps>
+1. Open the Langfuse project (EU cloud) → **Tracing**.
+2. Find the run by name (`validate S04`), by tag (`agent`, `rules+data`), or by its trace id from the run
+   folder's `run.json`, which also holds a direct link.
+</Steps>
+
+<Aside type="caution" title="Content in traces">
+	Traces contain SQL, sample rows and model text. That is fine for the synthetic data. For client data,
+	`INSPECTOR_TRACE_CONTENT=false` keeps inputs and outputs out of the Inspector's own spans, and the trace
+	destination can be switched to the client's own OpenTelemetry endpoint (for example AgentCore
+	observability in CloudWatch) with no code change.
+</Aside>
+
+## The run folder
+
+Every validation writes a folder under `runs/` (gitignored):
+
+```text
+runs/20261025-120412-S04-R-1a2b3c4d/
+  report.md      the report, readable
+  report.json    the same, structured
+  run.json       mode, duration, model, tokens, trace id and Langfuse link
+```
+
+The report is the deliverable for the developer; the trace is for whoever needs to understand or improve how
+the Inspector reached it.
+
+## Settings
+
+| Variable | |
+|---|---|
+| `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | Langfuse project keys. Unset: no traces are sent |
+| `LANGFUSE_BASE_URL` | `https://cloud.langfuse.com` (EU) or `https://us.cloud.langfuse.com` |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Any other OpenTelemetry endpoint instead of Langfuse |
+| `INSPECTOR_TRACE_CONTENT` | `false` keeps inputs and outputs out of the custom spans |
+| `INSPECTOR_RUNS_DIR` | Where run folders go (`/runs` in compose, mounted from `./runs`) |

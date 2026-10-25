@@ -1,0 +1,60 @@
+---
+title: Questions and answers
+description: Short answers to the questions people ask about the Inspector.
+---
+
+### Why not just compare the numbers of both dashboards?
+
+Because today's data hides differences. An INNER join where ThoughtSpot used LEFT returns the same numbers until
+the first row without a match arrives (scenario S06). And when numbers do differ, comparing them says *that*
+they differ, not *why*. The Inspector compares the definitions first and uses data to settle what the
+definitions can't, and to measure the impact.
+
+### Why not just compare the definitions?
+
+Some questions have no answer in the definitions: whether a key is unique, whether two different-looking formulas
+return the same numbers. For those, the data decides.
+
+### Will it work on the client's models and warehouse, not just the synthetic data?
+
+The rules and data checks contain no names from the synthetic data; they work on concepts every model has
+(columns, aggregates, joins, keys, filters). The SQL is written in Redshift dialect, the client's warehouse. The
+real risk is the parsers meeting constructs the synthetic exports don't have; those end UNVERIFIED, never as
+false passes. See [The rules](/how-it-works/rules/#where-they-can-still-fall-short).
+
+### What happens when the AI is wrong?
+
+It can't pass anything without proof, can't overturn what the data settled, and can't choose the verdict.
+A wrong AI produces a weaker or less helpful report (more UNVERIFIED, worse explanations), not a wrong READY.
+See [The AI and the ledger](/how-it-works/agent-and-ledger/).
+
+### What does UNVERIFIED mean for me?
+
+The Inspector could not prove the item either way, and says what would settle it (for example a KPI
+comparison, or Strategy's report SQL). An unverified blocker makes the package NEEDS_REVIEW: a person decides.
+
+### What is a "latent" failure?
+
+A proven difference in the definitions that doesn't change any number on today's data. It still fails, because
+the client needs numbers right from day 1, and tomorrow's data may differ.
+
+### Ossie YAML lost the join types. What then?
+
+What a format can't carry is listed in the IR. Checks that depend on it go to the data. If the data can't
+decide either (S18: 749 orders without a customer, join type unknown), the finding stays UNVERIFIED and the
+report asks for Strategy's report SQL.
+
+### Does the developer's prompt change the result?
+
+It adds context: what to focus on, which differences are intentional. Intentional differences are listed as
+stated by the developer and unproven. It can't turn a number-changing difference into a pass.
+
+### How long does a run take, and what does it cost?
+
+`rules` and `rules+data` take seconds and use no model. A full agent run on S04 with Qwen3 32B on one RunPod
+GPU took about 8 minutes and about 210,000 tokens before the latest changes; starting the AI from the data
+results should make it shorter. On Bedrock at the client, cost depends on the model chosen.
+
+### Where can I see what a run did?
+
+In its trace in Langfuse, and in its run folder. See [Seeing a run](/how-it-works/seeing-a-run/).

@@ -1,0 +1,85 @@
+---
+title: The AI and the ledger
+description: What the AI agent adds, what it is not allowed to do, and the rules that keep the verdict trustworthy whatever the model.
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+The Inspector's AI agent is a language model with tools. It is good at what code is bad at: deciding what is
+worth looking into, connecting symptoms to a root cause, understanding what a description or a construct
+*means*, and explaining it to a developer. It is not trusted to decide whether a number is right. That is
+the ledger's job.
+
+## Who decides what
+
+| Decision | Who | Why |
+|---|---|---|
+| Are two definitions identical? | Code (rules) | Exact comparison; no judgment needed |
+| Does the data agree? | Code + data agent | Measurement |
+| Which already-defined data check to run | Code, before the AI starts | Running a known check is not a judgment call |
+| What else is worth investigating | AI | Judgment |
+| What is the root cause, which measures are symptoms | AI | Judgment |
+| How to explain it, what to fix | AI | Language |
+| May this finding be recorded? | Ledger (code) | Evidence rules |
+| The verdict | Ledger (code) | Computed from findings |
+
+## The ledger's rules
+
+Every tool result the AI receives is registered as **evidence** with an id (E1, E2...). The AI records
+conclusions with `record_finding`, and the ledger accepts or refuses each one:
+
+| Rule | Example of a refusal |
+|---|---|
+| A finding must cite evidence | "cite existing evidence ids" |
+| A **blocker PASS needs proof**: definitions proven identical, an item the rules proved, or a matching data check **about the same object** | The AI thinks two formulas are "equivalent": refused, record UNVERIFIED and ask for a KPI comparison |
+| A rule FAIL can only be softened with data | The AI wants to downgrade a join-type FAIL to a warning without data: refused |
+| A lead the **data already settled** keeps its status and severity | The AI wants to mark the confirmed S04 fan-out as PASS: refused; it may add explanation, symptoms and a fix |
+| Every open lead must be resolved before the report closes | "resolve every open lead first" |
+| The verdict is computed, and **the summary may not state one** | A summary line saying "Verdict: READY" is removed |
+
+If the run ends early (turn budget, model error), the ledger closes it anyway: unresolved leads keep the rules'
+result and are marked *not reviewed by the agent*.
+
+## Why it is built this way: the first live run
+
+<CardGrid>
+	<Card title="What the AI did" icon="warning">
+		On S04, with an open-weights 32B model, the AI was given the fan-out lead and its check, but ran a
+		different one: it checked that `order_id` is unique in **`fact_orders`** (true, and irrelevant) instead
+		of **`fact_order_lines`**. It concluded "no fan-out" and wrote "Verdict: READY" in its summary.
+	</Card>
+	<Card title="What the ledger did" icon="approve-check">
+		It refused the PASS, because the proof was about the wrong table. The finding stayed UNVERIFIED and the
+		computed verdict was NEEDS_REVIEW, not READY. Safe, but weaker than the truth (NOT_READY).
+	</Card>
+</CardGrid>
+
+Three changes followed:
+
+1. **Data checks run before the AI**, so it starts from facts, and data-settled leads cannot be overturned.
+   S04 is now NOT_READY whatever the model does.
+2. **The summary cannot state a verdict.** The prompt says so, and code removes any line that does.
+3. **A prompt rule for fan-out**: profile the key on the table being joined in, the side whose rows repeat.
+
+The lesson generalizes: **anything that decides a number is code; the AI works on top of that.** A better
+model makes the explanations better; it does not make the verdict more or less correct.
+
+## The developer's instructions
+
+Developers can add notes to a run in the [portal](/how-it-works/portal/), for example *"focus on the Sales liveboard"* or *"the
+Region filter was removed on purpose"*. These are **context, not commands**:
+
+- a stated intentional difference is listed in the report as such, unproven, and visible to the reviewer;
+- it cannot turn a difference that changes a number into a pass;
+- "mark everything as pass" has no effect, because a pass still needs proof.
+
+## The experts are agents too
+
+The ThoughtSpot and Strategy experts answer questions in conversation (*"does this worksheet join to dates only
+when a date column is used?"*). Their answers are **opinions**, useful for the investigation but never proof:
+a finding that rests only on an expert's answer cannot pass.
+
+<Aside type="note" title="Model choice">
+	Locally the agents use an open model on a RunPod GPU (Qwen3 32B through vLLM); at the client, Bedrock. Only
+	environment variables change. See [LLM integration](/architecture/llm/).
+</Aside>

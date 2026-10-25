@@ -61,6 +61,7 @@ class Report(BaseModel):
     parse_issues: list[dict[str, Any]] = []
     stage: str = "static"  # rules-only | agent | data-verified
     summary: str = ""  # the agent's executive summary
+    developer_notes: str = ""  # instructions the developer gave the run: context, never proof
     agent: dict[str, Any] = {}  # model, tool calls, evidence count
 
 
