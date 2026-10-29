@@ -61,7 +61,7 @@ def test_sql_lineage():
 @pytest.mark.parametrize("sid", IDS)
 def test_every_package_exports(sid):
     exp = export(str(PACKAGES / sid / "thoughtspot"))
-    assert exp.status == "ok" and exp.models and exp.dashboards and exp.sql, exp.issues
+    assert exp.status == "ok" and exp.models and exp.dashboards, exp.issues
     assert ModelExport.model_validate_json(exp.model_dump_json()) == exp
     model = exp.models[0]
     assert all(j.applied == "when_needed" for j in model.joins)  # progressive joins

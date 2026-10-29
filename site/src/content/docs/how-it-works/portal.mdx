@@ -12,8 +12,8 @@ migration, start a validation, read the report and ask about it.
 <Steps>
 1. **Upload.** Give the migration a name and upload both sides:
    - ThoughtSpot: the TML export zip (as ThoughtSpot downloads it), or the `.tml` files;
-   - Strategy: the export zip (model, `dashboards/`, `sql/`), or just the model file (YAML export, REST JSON or
-     Ossie YAML);
+   - Strategy: a zip (model + `dashboards/*.mstr`), or the model file (YAML export, REST JSON or Ossie YAML) and
+     the dashboards' `.mstr` files;
    - optionally a mapping file, for renamed objects.
 
    Or upload one zip with `thoughtspot/` and `strategy/` folders.

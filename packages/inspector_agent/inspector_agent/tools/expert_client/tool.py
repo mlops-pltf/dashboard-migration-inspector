@@ -34,7 +34,7 @@ def ask_expert(side: str, question: str, context_id: str | None = None) -> dict:
 @tool
 def analyze_sql(side: str, sql: str, default_schema: str = "public") -> dict:
     """Have an expert analyse a SELECT (its dialect knowledge applies): lineage of every output column, joins,
-    WHERE, GROUP BY. Use for SQL that is not part of the model, e.g. supplied generated SQL.
+    WHERE, GROUP BY. Use for SQL that is not part of the model, e.g. SQL quoted by a developer.
 
     Args:
         side: "thoughtspot" or "strategy" (whose expert should read it).

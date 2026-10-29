@@ -100,9 +100,9 @@ def upload_form() -> dict | None:
         two, whole = st.tabs(["Two exports", "One package zip"])
         with two:
             ts = st.file_uploader("ThoughtSpot export: the TML zip, or .tml files", accept_multiple_files=True,
-                                  type=["zip", "tml", "sql"])
-            stg = st.file_uploader("Strategy export: a zip (model, dashboards/, sql/) or the model file",
-                                   accept_multiple_files=True, type=["zip", "yaml", "yml", "json"])
+                                  type=["zip", "tml"])
+            stg = st.file_uploader("Strategy: a zip (model + dashboards/*.mstr), or the model file and the .mstr files",
+                                   accept_multiple_files=True, type=["zip", "yaml", "yml", "json", "mstr"])
             mapping = st.file_uploader("Mapping file (optional)", type=["yaml", "yml"])
         with whole:
             pkg_zip = st.file_uploader("A zip with thoughtspot/ and strategy/ folders (and optionally mapping.yaml)",

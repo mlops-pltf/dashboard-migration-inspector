@@ -350,7 +350,6 @@ class Mapping(_Base):
 class Side(_Base):
     models: tuple[SemanticModel, ...] = ()
     dashboards: tuple[Dashboard, ...] = ()
-    sql: dict[str, str] = {}  # name -> SQL text supplied with the package
 
 
 class MigrationPackage(_Base):

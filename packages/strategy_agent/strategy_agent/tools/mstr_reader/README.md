@@ -19,7 +19,8 @@ python -m strategy_agent.tools.mstr_reader.decode  FILE.mstr --json   # full res
 python -m strategy_agent.tools.mstr_reader.explore info FILE.mstr     # version, members, block/object types
 ```
 
-Standard library only. Nothing here calls Strategy.
+Standard library only. Nothing here calls Strategy. The synthetic scenarios' dashboards are written with the
+same encoding (`synthetic/inspector_synth/mstr.py`), so the Inspector's dashboard checks run on `.mstr` input.
 
 ---
 
@@ -74,7 +75,7 @@ Always keep both: the alias is what users see, the object id is what the data me
 ## 4. Dashboard structure (rules in `decode.py`)
 
 **Visualizations.** In the layout tree: a `0000` block whose parent is `x085`, content starts `12 02`, and whose
-*own* strings (not inside child blocks) begin `name, source label, key`. The key looks like `W123`, `K45`,
+*own* strings (not inside child blocks) are `name, [subtitle..], source label, key`. The key looks like `W123`, `K45`,
 `W<32 hex>` or `IGK<32 hex>`. The **template guid and dataset guid** follow the end of an enclosing block
 directly; fallback: the first type-2 object guid inside the innermost enclosing block (grids with column sets).
 
@@ -98,7 +99,7 @@ metric unit = **limit**, e.g. `Rank([Revenue]) <= 10` (Top 10) or `Rank(x) > 1` 
 (`And(In([Year], {2021}))`, `Not In`, `IsNotNull`, dates).
 
 **Dashboard filters (selectors).** `x089` blocks. Own strings: selected element names (each written twice),
-then the selector name, then its key; first guid = source attribute/metric; function guids inside =
+then the selector name, then its key (`W12`, `IGK34`, `W<32 hex>`); first guid = source attribute/metric; function guids inside =
 qualification (e.g. Between on dates). `(All)` means everything selected.
 
 **Expressions** (derived metrics, filters, limits). Root: object `0006` > `x08x` > `0000` > first `x081`,
@@ -136,22 +137,22 @@ the `.mstr` <-> model export id join.
 
 ## 6. How well it works (evidence)
 
-Checked against Strategy's REST answer for the same dashboards: 54 public demo dashboards,
-453 visualizations, all written by **one** Strategy version (MSTRVer 110300, AEVersion 13). Dashboards sit on cubes
-and Excel datasets, **not Mosaic models**.
+Checked against Strategy's REST answer for the same dashboards: **81 public demo dashboards, 1,540
+visualizations** (the full public demo library except one with download disabled), all written by **one**
+Strategy version (MSTRVer 110300, AEVersion 13). Dashboards sit on cubes and Excel datasets, **not Mosaic models**.
 
 | area | result |
 |---|---|
-| dataset object names from the `.mstr` alone | 3453 / 3454 |
-| derived metric expressions fully decoded | 933 / 933 |
-| visualizations linked to their template | 453 / 453 |
-| every shown attribute/metric found in the template | 92 % |
-| exact rows/columns split | 78 % (see section 7) |
-| displayed names (alias or object name) | 96 % |
-| sorts (found / direction) | 93 % / 100 % |
-| metric limits / top-N | 48 / 48 |
-| view filters | 55 / 56 (the miss decodes correctly; the checker's text format differs) |
-| dashboard filters: found, source, selected elements, qualification | 100 % (139 / 139 / 34 / 8) |
+| dataset object names from the `.mstr` alone | 4854 / 4856 |
+| derived metric expressions fully decoded | 1335 / 1335 |
+| visualizations linked to their template | 1517 / 1540 (98.5 %) |
+| every shown attribute/metric found in the template | 95.3 % |
+| exact rows/columns split | 83.3 % (see section 7) |
+| displayed names (alias or object name) | 98.3 % |
+| sorts: found / direction | 158 / 162, 158 / 158 |
+| metric limits / top-N (incl. relative-date and value limits) | 123 / 125 |
+| view filters | 283 / 297 |
+| dashboard filters: found, source, selected elements, qualification | 195 / 195, 195 / 195, 60 / 60, 10 / 10 |
 
 ## 7. Known gaps
 
@@ -165,6 +166,8 @@ and Excel datasets, **not Mosaic models**.
   (the parameter block is the same). Every Count gets a warning; confirm in Strategy. This can change numbers.
 - **Chart type** is not decoded (IR `chart_type = other`; cosmetic).
 - **Selector scope** (which visualizations a filter targets) is not decoded; IR treats filters as dashboard-wide.
+- **Custom groups / derived elements** in filters: the element list comes back empty (seen in "Age Groups"
+  filters); the filter is then reported with no values.
 - Qualification selector values (e.g. Between bounds) are not decoded; only the function.
 - Layout items without a template are text/image/panel widgets (904 in the demo set; none of the 453 checked
   visualizations was among them).

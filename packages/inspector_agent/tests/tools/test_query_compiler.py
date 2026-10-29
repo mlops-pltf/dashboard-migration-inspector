@@ -1,6 +1,6 @@
-"""The query compiler reproduces ThoughtSpot's own SQL: for every liveboard visualization in every package, the
-SQL compiled from the ThoughtSpot IR returns the same numbers as the SQL ThoughtSpot generated (supplied in the
-package)."""
+"""The query compiler reproduces ThoughtSpot's semantics: for every liveboard visualization in every package, the
+SQL compiled from the ThoughtSpot IR returns the same numbers as independent reference SQL written by the synthetic
+generator (ground truth; the project itself supplies no SQL)."""
 
 from pathlib import Path
 
@@ -12,12 +12,12 @@ from inspector_agent.tools.data_probe.client import call
 from inspector_agent.tools.package_inventory.loader import load_cached
 from inspector_agent.tools.query_compiler.compile import compile_query
 
-from conftest import IDS, PACKAGES, needs_synthetic, needs_warehouse, pkg
+from conftest import GROUND_TRUTH, IDS, needs_synthetic, needs_warehouse, pkg
 
 
 def _cases():
     for sid in IDS:
-        for f in sorted((PACKAGES / sid / "thoughtspot" / "sql").glob("*/*.sql")):
+        for f in sorted((GROUND_TRUTH / sid / "thoughtspot_sql").glob("*/*.sql")):
             yield pytest.param(sid, f, id=f"{sid}-{f.stem}")
 
 

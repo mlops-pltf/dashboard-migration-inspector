@@ -68,11 +68,11 @@ import { Tabs, TabItem, Badge, Aside } from '@astrojs/starlight/components';
 		|---|---|---|---|
 		| DB-01 | Visualization query: same dimensions (incl. date bucket) and measures | <Badge text="Blocker" variant="danger" /> | rule |
 		| DB-02 | Default filter values and operators | <Badge text="Blocker" variant="danger" /> | rule |
-		| DB-03 | Filter scope: which visualizations each filter applies to | <Badge text="Blocker" variant="danger" /> | rule |
+		| DB-03 | Filter scope: which visualizations each filter applies to (not yet: scope is not decoded from `.mstr`) | <Badge text="Blocker" variant="danger" /> | rule |
 		| DB-04 | Relative date ranges (`last 30 days`, `this year`) resolve the same | <Badge text="Blocker" variant="danger" /> | rule + judge |
 		| DB-05 | Sort + top-N (incl. ties) changes the shown rows | <Badge text="Blocker" variant="danger" /> | rule |
 		| DB-06 | Aggregation overrides in the search query (`average [Revenue]`) | <Badge text="Blocker" variant="danger" /> | rule |
-		| LF-01 | Chart type mapping | <Badge text="Low" variant="note" /> | rule |
+		| LF-01 | Chart type mapping (only when both sides' chart types are known; `.mstr` chart types are not decoded yet) | <Badge text="Low" variant="note" /> | rule |
 		| LF-02 | Axes, series, titles, number format, column order, colours | <Badge text="Low" variant="note" /> | rule |
 	</TabItem>
 </Tabs>

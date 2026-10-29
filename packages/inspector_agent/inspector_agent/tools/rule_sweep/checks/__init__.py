@@ -3,9 +3,9 @@
 from ...findings_ledger.report import Finding
 
 from ..context import Context
-from . import coverage, filters, joins, lineage, measures
+from . import content, coverage, filters, joins, lineage, measures
 
-CHECKS = (coverage, lineage, measures, joins, filters)
+CHECKS = (coverage, lineage, measures, joins, filters, content)
 
 
 def run_all(ctx: Context) -> list[Finding]:

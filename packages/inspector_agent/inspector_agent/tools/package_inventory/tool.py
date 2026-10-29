@@ -38,10 +38,8 @@ def inspect_package_impl(package: str) -> dict:
     return {
         "package_id": pkg.id,
         "strategy_format": pkg.strategy_format,
-        "thoughtspot": {"models": models(pkg.thoughtspot), "dashboards": dashboards(pkg.thoughtspot),
-                        "sql_supplied": sorted(pkg.thoughtspot.sql)},
-        "strategy": {"models": models(pkg.strategy), "dashboards": dashboards(pkg.strategy),
-                     "sql_supplied": sorted(pkg.strategy.sql)},
+        "thoughtspot": {"models": models(pkg.thoughtspot), "dashboards": dashboards(pkg.thoughtspot)},
+        "strategy": {"models": models(pkg.strategy), "dashboards": dashboards(pkg.strategy)},
         "mapping": mapping,
         "parse_issues": [{"severity": i.severity, "message": i.message, "source": str(i.source) if i.source else None}
                          for i in pkg.issues],
@@ -52,7 +50,7 @@ def inspect_package_impl(package: str) -> dict:
 def inspect_package(package: str) -> dict:
     """Open a migration package: the ThoughtSpot and Strategy experts export their side as IR, and this lists what
     is inside: models (tables, joins, number of attributes/measures, model filters, settings, what the input
-    format cannot carry), dashboards, supplied SQL, the mapping file and any problems. Start every validation
+    format cannot carry), dashboards, the mapping file and any problems. Start every validation
     with this; it always fetches fresh exports.
 
     Args:

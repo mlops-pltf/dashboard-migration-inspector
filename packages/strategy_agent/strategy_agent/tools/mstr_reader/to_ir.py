@@ -140,8 +140,6 @@ def load(path: Path, models: tuple[SemanticModel, ...] = (), root: Path | None =
                 top_n = int(m.group(1))
             else:
                 unparsed.append(f"metric limit: {text}")
-        if v["other_axes"]:
-            unparsed.append("units outside rows/columns (drop zones) are included in dimensions/measures")
         sort = tuple((name.get(next((g for g in s["by"] if g in name), None)) or s["by"][0],
                       "ASC" if s["order"] == "ascending" else "DESC") for s in v["sorts"] if s["by"])
         query = QuerySpec(

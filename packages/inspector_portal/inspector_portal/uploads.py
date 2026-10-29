@@ -2,7 +2,7 @@
 
 Accepted per side:
   ThoughtSpot: a TML export zip (as ThoughtSpot downloads it), or loose .tml files
-  Strategy:    an export zip (model + dashboards/ + sql/), or a single model file (YAML export, REST JSON, Ossie YAML)
+  Strategy:    an export zip (model + dashboards/*.mstr), or the model file plus the dashboards' .mstr files
   Mapping:     optional mapping.yaml
 Or one whole-package zip with thoughtspot/ and strategy/ inside.
 
@@ -23,8 +23,8 @@ import yaml
 
 MAX_TOTAL_BYTES = 200 * 1024 * 1024
 MAX_FILES = 5000
-TS_SUFFIXES = {".tml", ".sql", ".yaml", ".yml", ".json"}
-ST_SUFFIXES = {".yaml", ".yml", ".json"}
+TS_SUFFIXES = {".tml", ".yaml", ".yml", ".json"}
+ST_SUFFIXES = {".yaml", ".yml", ".json", ".mstr"}
 
 
 class UploadError(ValueError):
@@ -80,19 +80,8 @@ def _write(target: Path, rel: PurePosixPath, data: bytes) -> None:
 
 
 def _strategy_place(name: str, data: bytes) -> PurePosixPath:
-    """Where a loose Strategy JSON belongs: dashboards/, sql/ or the model itself."""
-    if name.lower().endswith(".json"):
-        try:
-            import json
-
-            doc = json.loads(data)
-        except ValueError:
-            return PurePosixPath(name)
-        if isinstance(doc, dict) and "chapters" in doc:
-            return PurePosixPath("dashboards", name)
-        if isinstance(doc, dict) and "sqlStatement" in doc:
-            return PurePosixPath("sql", name)
-    return PurePosixPath(name)
+    """Where a loose Strategy file belongs: .mstr dashboards go to dashboards/, anything else is the model."""
+    return PurePosixPath("dashboards", name) if name.lower().endswith(".mstr") else PurePosixPath(name)
 
 
 def _side(target: Path, uploads: list[Upload], suffixes: set[str], strategy: bool) -> int:

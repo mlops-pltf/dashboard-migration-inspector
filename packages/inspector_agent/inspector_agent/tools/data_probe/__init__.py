@@ -1,1 +1,1 @@
-"""Requests to the data agent (placeholder until it exists)."""
+"""Requests to the data agent: key/orphan profiles and query reconciliation that settle leads."""

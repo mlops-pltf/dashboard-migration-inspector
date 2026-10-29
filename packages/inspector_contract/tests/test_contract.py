@@ -4,7 +4,7 @@ import httpx
 import pytest
 from bedrock_agentcore.runtime import build_a2a_app
 
-from inspector_contract import Agg, Join, ModelExport, PCol, PhysicalColumn, SemanticModel
+from inspector_contract import IR_VERSION, Agg, Join, ModelExport, PCol, PhysicalColumn, SemanticModel
 from inspector_contract.a2a import A2AClient, SkillRouterExecutor, agent_card
 
 
@@ -16,7 +16,7 @@ def test_model_export_round_trips():
                           fields=(Field(id="f", name="F", kind="MEASURE", expr=expr, object_type="x", provenance="interpreted"),))
     exp = ModelExport(tool="strategy", location="/p", fingerprint="abc", models=(model,))
     again = ModelExport.model_validate_json(exp.model_dump_json())
-    assert again == exp and again.ir_version == "1"
+    assert again == exp and again.ir_version == IR_VERSION
 
 
 @pytest.fixture

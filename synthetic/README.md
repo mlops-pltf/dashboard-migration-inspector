@@ -20,9 +20,10 @@ Everything is deterministic (fixed seed): regenerating produces byte-identical f
 
 | Path | What | Inspector reads it? |
 |---|---|---|
-| `packages/Sxx/` | One migration package: ThoughtSpot TML + SQL, Strategy model + dashboards + SQL view, optional `mapping.yaml` | **Yes** |
+| `packages/Sxx/` | One migration package: ThoughtSpot TML, Strategy model + one `.mstr` per dashboard, optional `mapping.yaml` | **Yes** |
 | `ground_truth/Sxx/expected_findings.yaml` | Expected verdict, findings (check id, severity, root cause, symptoms, acceptable alternatives), `must_pass` fields | No (eval only) |
 | `ground_truth/Sxx/witnesses/` | Query pairs (ThoughtSpot semantics vs Strategy semantics) that must differ or match | No (eval only) |
+| `ground_truth/Sxx/thoughtspot_sql/` | Reference SQL per ThoughtSpot visualization: the query compiler's test oracle | No (eval only) |
 | `warehouse/` | CSVs, Postgres init scripts (`01_schema`, `02_load`, `03_readonly_role`), Redshift DDL | data_agent |
 
 Ground truth is kept outside the packages so nothing Inspector (or its LLM) reads can give away the
@@ -41,7 +42,7 @@ zero-revenue `Replacement` orders, UTC timestamps near midnight with local `orde
 Sunday week starts, and a fiscal year starting in April.
 
 ThoughtSpot models: **Sales Orders** (Worksheet TML), **Order Lines** (Model TML), **Returns Analysis**
-(Model TML, two facts sharing `dim_product`), with liveboards, an answer, and generated SQL per visualization.
+(Model TML, two facts sharing `dim_product`), with liveboards and an answer.
 
 ## Scenarios
 
@@ -62,7 +63,7 @@ ThoughtSpot models: **Sales Orders** (Worksheet TML), **Order Lines** (Model TML
 | S13 | Chasm trap: lines × returns via product | Freeform SQL | JN-05, plus JN-01: the SQL's `dim_product LEFT JOIN fact_returns` drops refunds for unknown products |
 | S14 | Different formula, same meaning | lookup tables | FX-01 → PASS with data |
 | S15 | Dashboard drift: filter, top-N, week start | lookup tables | LN-01, DB-02, DB-05 |
-| S16 | Cosmetic only | lookup tables | READY + LOW |
+| S16 | Cosmetic only | lookup tables | READY + LOW (LF-02; chart types are not decoded from `.mstr`) |
 | S17 | Missing KPI used by content, extra KPI | lookup tables | CV-01, DB-01, CV-02 |
 | S18 | S08 delivered as Apache Ossie YAML | lookup tables | AG-02, FX-01, JN-01 UNVERIFIED → data |
 
@@ -72,9 +73,11 @@ Strategy shapes follow the official REST API samples (`github.com/MicroStrategy/
 the model YAML export, per-object REST JSON, and Freeform SQL tables as
 `physicalTable.type: "sql"` + `sqlStatement`. These parts are **assumed** until a real export confirms them:
 
-- **A1**: dashboard definition JSON (chapters → pages → visualizations, `definition.grid`, `limit`, chapter `filters`).
 - **A2**: lookup-style join semantics are declared with the model property
   `[Joins].[Preserve all final pass result elements]` = outer join, matching ThoughtSpot LEFT joins.
 - **A5**: the top-level layout of Apache Ossie YAML (`semantic_model[].datasets / relationships / metrics`).
+
+Dashboards are written as binary `.mstr` files (`inspector_synth/mstr.py`) with exactly the encoding
+`strategy_agent/tools/mstr_reader` decodes, using the model export's object ids. Chart types are not written.
 
 When a real sanitised export arrives, adjust `inspector_synth/strategy.py` and regenerate.

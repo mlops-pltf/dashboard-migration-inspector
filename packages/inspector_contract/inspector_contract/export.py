@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 from .ir import Dashboard, ParseIssue, SemanticModel
 
-IR_VERSION = "1"
+IR_VERSION = "2"  # 2: supplied SQL removed (the project delivers only TML, .mstr and the model export)
 
 
 class ModelExport(BaseModel):
@@ -21,6 +21,5 @@ class ModelExport(BaseModel):
     source_format: str | None = None  # e.g. tml, yaml_export, rest_json, ossie_yaml
     models: tuple[SemanticModel, ...] = ()
     dashboards: tuple[Dashboard, ...] = ()
-    sql: dict[str, str] = {}  # SQL supplied with the export (name -> text)
     issues: tuple[ParseIssue, ...] = ()
     status: Literal["ok", "error"] = "ok"

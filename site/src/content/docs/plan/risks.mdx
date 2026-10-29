@@ -9,10 +9,10 @@ import { Aside } from '@astrojs/starlight/components';
 
 | # | Assumption | Mitigation |
 |---|---|---|
-| A1 | Strategy dashboard definition JSON (`/api/v2/dossiers/{id}/definition`) not yet confirmed | Isolated behind one parser |
+| A1 | ~~Strategy dashboard definition JSON~~ Closed: the project delivers `.mstr` files; the binary format was decoded and checked on the 81 public demo dashboards (`mstr_reader` README) | Unknown parts are reported, never guessed |
 | A2 | Mosaic join semantics for multi-table in-memory models | Configurable join-semantics profile + data probes |
 | A3 | How Freeform SQL appears in a **Mosaic** export. *Partly confirmed:* Strategy's modeling API documents Freeform SQL tables as `physicalTable.type: "sql"` + `sqlStatement`; Mosaic pipeline imports use `importSource` | Parser accepts both forms |
-| A4 | Whether developers can easily export ThoughtSpot SQL | Compiler fallback; SQL recommended, not required |
+| A4 | ~~Whether developers can export ThoughtSpot SQL~~ Closed: the project delivers only TML; both sides' SQL is compiled by the Inspector | Query compiler |
 | A5 | Top-level layout of Apache Ossie YAML | Isolated behind the Ossie adapter |
 
 ## Risks
@@ -31,5 +31,5 @@ look & feel · automatic fixes · Strategy performance tuning.
 
 <Aside type="caution" title="First request to the team">
 	One real, sanitised pair (a ThoughtSpot TML export with dependencies, plus the Strategy model
-	YAML export and dashboard JSON) closes A1–A3 before phase P2 is finished.
+	YAML export and a dashboard `.mstr`) closes A2–A3 and confirms the `.mstr` ↔ model id join.
 </Aside>

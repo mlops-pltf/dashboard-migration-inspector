@@ -10,7 +10,7 @@ Scenarios copy these specs and corrupt the Strategy side (``st`` + ``sql`` toget
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 
 # Table name (ThoughtSpot object) -> (physical table, SQL alias)
 TABLE_INFO: dict[str, tuple[str, str]] = {
@@ -394,7 +394,6 @@ RETURNS_OVERVIEW = Liveboard(
     ),
 )
 
-MODELS = {m.name: m for m in (SALES, LINES, RETURNS)}
 CONTENT = {
     "Sales Orders": (SALES_OVERVIEW, SEGMENT_ANSWER),
     "Order Lines": (PRODUCT_PERFORMANCE,),

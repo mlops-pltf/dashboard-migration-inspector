@@ -7,13 +7,6 @@ strategy_style: lookup
 strategy_format: yaml_export
 expected_verdict: READY
 findings:
-- id: E1
-  check: LF-01
-  severity: LOW
-  status: FAIL
-  thoughtspot: Sales Overview::Revenue by Store Region
-  strategy: Sales Overview::Revenue by Store Region
-  note: COLUMN vs horizontal bar
 - id: E2
   check: LF-02
   severity: LOW
@@ -21,13 +14,6 @@ findings:
   thoughtspot: Sales Overview::Monthly Revenue Trend
   strategy: Sales Overview::Revenue Trend by Month
   note: title changed
-- id: E3
-  check: LF-01
-  severity: LOW
-  status: FAIL
-  thoughtspot: Sales Overview::Discount Rate by Status
-  strategy: Sales Overview::Discount Rate by Status
-  note: table vs column chart
 must_pass:
 - Sales Orders::Revenue
 - Sales Orders::Discount

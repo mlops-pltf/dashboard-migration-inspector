@@ -1,5 +1,5 @@
 """Strategy folder -> ModelExport (IR). Detects the model format (YAML export, REST JSON, Ossie YAML), reads
-dashboards and supplied SQL, and makes the join semantics explicit."""
+dashboards (binary .mstr) and makes the join semantics explicit."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from pathlib import Path
 from inspector_contract import ModelExport, ParseIssue, SourceRef
 
 from ..common.locations import materialize
-from ..common.yamlio import load_json, load_yaml
+from ..common.yamlio import load_yaml
 from ..mstr_reader import to_ir as mstr_dashboard
-from ..strategy_reader import dashboard, mosaic, ossie
+from ..strategy_reader import mosaic, ossie
 from .join_semantics import derive_joins, join_type
 
 
@@ -51,11 +51,6 @@ def _build(path: str, fingerprint: str, location: str) -> ModelExport:
     if not models:
         issues.append(ParseIssue(severity="error", message="no Strategy model found (YAML export, REST JSON or Ossie YAML)"))
     dashboards = []
-    for p in sorted((root / "dashboards").glob("*.json")) if (root / "dashboards").exists() else []:
-        try:
-            dashboards.append(dashboard.load(p, root))
-        except Exception as exc:
-            issues.append(ParseIssue(severity="error", message=f"dashboard: {exc}", source=SourceRef(file=p.name)))
     for p in sorted((root / "dashboards").glob("*.mstr")) if (root / "dashboards").exists() else []:
         try:  # the real input: binary .mstr, linked to the model export by object id
             dash, more = mstr_dashboard.load(p, tuple(models), root)
@@ -63,13 +58,8 @@ def _build(path: str, fingerprint: str, location: str) -> ModelExport:
             issues.extend(more)
         except Exception as exc:
             issues.append(ParseIssue(severity="error", message=f"dashboard {p.name}: {exc}", source=SourceRef(file=p.name)))
-    sql = {}
-    for p in sorted((root / "sql").glob("*.json")) if (root / "sql").exists() else []:
-        doc = load_json(p)
-        if isinstance(doc, dict) and doc.get("sqlStatement"):
-            sql[p.stem] = str(doc["sqlStatement"])
     return ModelExport(tool="strategy", location=location, fingerprint=fingerprint, source_format=fmt,
-                       models=tuple(models), dashboards=tuple(dashboards), sql=sql, issues=tuple(issues),
+                       models=tuple(models), dashboards=tuple(dashboards), issues=tuple(issues),
                        status="error" if any(i.severity == "error" for i in issues) else "ok")
 
 

@@ -4,10 +4,9 @@ Shapes follow the official REST API samples (github.com/MicroStrategy/rest-api-d
   * model YAML export   POST /api/model/dataModels/{id}/export
   * REST JSON           GET  /api/model/dataModels/{id}[/tables|/attributes|/factMetrics|/metrics|/hierarchy]
   * Freeform SQL table  physicalTable.type = "sql" + sqlStatement (modeling "create a freeform SQL table")
-  * model SQL view      GET  /api/v2/cubes/{dataModelId}/sqlView
+  * dashboards          binary .mstr (mstr.py), decoded by strategy_agent/tools/mstr_reader
 
 Synthetic assumptions (to replace once a real export is available; see synthetic/README.md):
-  A1  dashboard definition JSON shape
   A2  lookup-style join semantics declared via advancedProperties "[Joins].[Preserve all final pass result elements]"
   A5  Apache Ossie YAML top-level layout
 """
@@ -17,9 +16,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from . import CONNECTION, DB, SCHEMA
+from . import CONNECTION, SCHEMA
 from .domain import ALIAS_TO_TABLE, TABLE_INFO, Liveboard, SemanticModel
 from .ids import fingerprint, strategy_id
+from .mstr import mstr_bytes
 from .sqlgen import FreeformSql, fq
 from .warehouse import TABLES
 
@@ -29,7 +29,6 @@ DATASOURCE = {"objectId": strategy_id("datasource", CONNECTION), "subType": "db_
 PRESERVE_OUTER = {"name": "[Joins].[Preserve all final pass result elements]",
                   "value": "preserve_all_final_pass_result_elements_outer_join"}
 
-_VIZ_TYPES = {"COLUMN": "vertical_bar", "BAR": "horizontal_bar", "LINE": "line", "TABLE": "grid", "KPI": "kpi"}
 _PLACEHOLDER = re.compile(r"\{([a-z]{1,2})\.([a-z_]+)\}")
 
 
@@ -433,59 +432,19 @@ def ossie_yaml(spec: StrategySpec) -> dict:
         "datasets": datasets, "relationships": relationships, "metrics": metrics}]}
 
 
-def dashboard(spec: StrategySpec, builder: _Builder, lb: Liveboard) -> dict:
-    model_id = builder.oid("model", spec.name)
+def dashboard_mstr(spec: StrategySpec, builder: _Builder, lb: Liveboard) -> bytes:
+    """The dashboard as a binary .mstr; object ids are the model export's, so the two files join by id."""
     measure_kind = {spec.sname(f.name): ("fact_metric" if f.st.kind == "fact_metric" else "metric")
                     for f in spec.model.fields if f.kind == "MEASURE"}
     measure_kind |= {n: "metric" for n, _ in spec.extra_metrics}
 
-    def obj(ts_name: str) -> dict:
+    def obj(ts_name: str) -> tuple[str, int, str]:
         name = spec.sname(ts_name)
         if name in measure_kind:
-            return {"id": builder.oid(measure_kind[name], name), "name": name, "type": "metric"}
-        return {"id": builder.oid("attribute", name), "name": name, "type": "attribute"}
+            return builder.oid(measure_kind[name], name), 4, name
+        return builder.oid("attribute", name), 12, name
 
-    vizs = []
-    for i, v in enumerate(lb.visualizations, 1):
-        definition = {"grid": {"rows": [obj(d) for d in v.dims], "columns": [obj(m) for m in v.measures]}}
-        if v.sort:
-            definition["sorts"] = [obj(v.sort[0]) | {"order": "descending" if v.sort[1] == "DESC" else "ascending"}]
-        if v.top_n:
-            definition["limit"] = {"type": "top", "count": v.top_n, "by": obj(v.sort[0]) if v.sort else None}
-        vizs.append({"key": f"W{i}", "name": v.title or v.name, "visualizationType": _VIZ_TYPES[v.chart],
-                     "datasetId": model_id, "definition": definition})
-
-    filters = []
-    for i, flt in enumerate(lb.filters, 1):
-        target = obj(flt.field)
-        filters.append({
-            "key": f"F{i}", "name": target["name"], "source": target,
-            "selector": {"type": "element_list", "multiSelection": True},
-            "currentSelection": {"selectionStatus": "excluded" if flt.oper == "not in" else "included",
-                                 "elements": [{"id": f"h{v};{target['id']}", "name": v} for v in flt.values]},
-            "targets": "all_visualizations",
-        })
-    return {
-        "id": strategy_id(spec.name, "dashboard", lb.name),
-        "name": lb.name,
-        "type": "dashboard",
-        "datasets": [{"id": model_id, "name": spec.name, "type": "data_model"}],
-        "chapters": [{"key": "C1", "name": lb.name, "filters": filters,
-                      "pages": [{"key": "K1", "name": "Overview", "visualizations": vizs}]}],
-    }
-
-
-def model_sql_view(spec: StrategySpec) -> dict:
-    header = f"[DB Instance: {CONNECTION}]\n\n"
-    if spec.style == "ffsql":
-        return {"sqlStatement": header + spec.ffsql.sql + "\n"}
-    statements = []
-    for i, t in enumerate(spec.model.tables, 1):
-        physical = TABLE_INFO[t][0]
-        sql = filtered_table_sql(spec.model, t)
-        if sql:
-            statements.append(sql)
-            continue
-        cols = ",\n\t".join(f'"a1{i}"."{c.name}" AS "{c.name}"' for c in TABLES[physical].columns)
-        statements.append(f'select\t{cols}\nfrom\t"{DB}"."{SCHEMA}"."{physical}"\t"a1{i}"')
-    return {"sqlStatement": header + "\n\n".join(statements) + "\n\n[Analytical engine calculation steps:\n]\n"}
+    used = {n for v in lb.visualizations for n in (*v.dims, *v.measures)} | {f.field for f in lb.filters}
+    used |= {v.sort[0] for v in lb.visualizations if v.sort}
+    return mstr_bytes(lb, strategy_id(spec.name, "dashboard", lb.name), (builder.oid("model", spec.name), spec.name),
+                      {n: obj(n) for n in used})

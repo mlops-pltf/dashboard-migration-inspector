@@ -17,7 +17,6 @@ def summarize_export_impl(location: str) -> dict:
                     "measures": sum(f.kind == "MEASURE" for f in m.fields),
                     "filters": len(m.filters), "settings": m.settings} for m in exp.models],
         "dashboards": [{"name": d.name, "kind": d.kind, "visualizations": len(d.visualizations)} for d in exp.dashboards],
-        "sql_supplied": sorted(exp.sql),
         "issues": [{"severity": i.severity, "message": i.message, "source": str(i.source) if i.source else None}
                    for i in exp.issues],
     }
@@ -25,9 +24,9 @@ def summarize_export_impl(location: str) -> dict:
 
 @tool
 def summarize_export(location: str) -> dict:
-    """Read a ThoughtSpot export folder (TML files plus optional sql/) and summarise it: worksheets/models with
+    """Read a ThoughtSpot export folder (TML files) and summarise it: worksheets/models with
     their tables, joins (type and whether applied only when needed), field counts, filters, settings,
-    liveboards/answers, supplied SQL and parse problems.
+    liveboards/answers and parse problems.
 
     Args:
         location: Folder, zip or s3:// prefix with the ThoughtSpot TML.

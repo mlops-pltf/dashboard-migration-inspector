@@ -56,8 +56,8 @@ def test_loose_strategy_files_are_placed_by_content(tmp_path):
     files = [Upload(p.name, p.read_bytes()) for p in (S04 / "strategy").rglob("*") if p.is_file()]
     tml = [Upload(p.name, p.read_bytes()) for p in (S04 / "thoughtspot").glob("*.tml")]
     folder = build_package(tmp_path, "p2", "x", thoughtspot=tml, strategy=files)
-    assert (folder / "strategy" / "dashboards" / "Sales Overview.json").exists()
-    assert (folder / "strategy" / "sql" / "model_sqlview.json").exists()
+    assert (folder / "strategy" / "dashboards" / "Sales Overview.mstr").exists()
+    assert (folder / "strategy" / "model.yaml").exists()
 
 
 @needs_synthetic

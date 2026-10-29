@@ -26,7 +26,7 @@ PROPERTY_NOISE = {"SubBlockDirection", "SubBlockSize", "FunctionType", "InputTex
                   "WatchFlag", "TableGuide", "JointElementEnhancement", "ScriptFile", ":"}
 COMPARE = {"<=", ">", "<", ">=", "=", "<>", "Between", "NotBetween", "In", "NotIn"}
 VIZ_KEY = re.compile(r"W\d+|K\d+|(?:W|K|IGK)?[0-9A-Fa-f]{32}")
-SELECTOR_KEY = re.compile(r"W\d+|(?:IGK|W|K)?[0-9A-F]{32}")
+SELECTOR_KEY = re.compile(r"W\d+|IGK\d+|(?:IGK|W|K)?[0-9A-F]{32}")
 UNIT_KIND = {0x00: "attribute", 0x04: "templateMetrics", 0x08: "metric"}
 
 
@@ -234,16 +234,17 @@ def render(n: dict | None, names: dict[str, str], inline: dict[str, dict] | None
 # ---------------------------------------------------------------- layout and templates
 
 def layout_visualizations(d: Doc, objs: dict[str, dict]) -> list[dict]:
-    """Viz = 0000 block (parent x085) whose own strings start (name, source label, key) and whose content starts 12 02.
+    """Viz = 0000 block (parent x085), content starts 12 02, own strings: name, [subtitle..], source label, key.
     The template guid and dataset guid follow the end of an enclosing block; fallback: first template inside it."""
     out = []
     for i, (_s, _e, t, c) in enumerate(d.bl):
         if t != 0 or d.b[c:c + 2] != b"\x12\x02" or d.par[i] is None or d.bl[d.par[i]][2] & 0x0FFF != 0x0085:
             continue
         st = d.own_strings(i)
-        if len(st) < 3 or not VIZ_KEY.fullmatch(st[2][1] or ""):
+        k = next((n for n in range(2, min(len(st), 6)) if VIZ_KEY.fullmatch(st[n][1] or "")), None)
+        if k is None:
             continue
-        pos, name, key = st[1][0], st[0][1], st[2][1]
+        pos, name, key = st[k - 1][0], st[0][1], st[k][1]
         tmpl = ds = None
         for a in d.chain(pos):
             end = d.bl[a][1]
@@ -259,7 +260,7 @@ def layout_visualizations(d: Doc, objs: dict[str, dict]) -> list[dict]:
                     tmpl = g
                     ds = next((x for x in gs[n + 1:n + 2] if x != NULL), ds)
                     break
-        out.append({"key": key, "name": name, "source_label": st[1][1], "template": tmpl, "dataset": ds})
+        out.append({"key": key, "name": name, "source_label": st[k - 1][1], "template": tmpl, "dataset": ds})
     return out
 
 

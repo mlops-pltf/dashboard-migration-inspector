@@ -10,6 +10,6 @@ files. Independent of the agent; can move to a tool repository unchanged.
     join_analyzer        get_join_graph, compare_joins, analyze_row_multiplication
     filter_inspector     compare_filters
     rule_sweep           run_rule_sweep                (deterministic checks -> leads)
-    data_probe           request_data_probe            (data agent; placeholder)
+    data_probe           request_data_probe            (data agent: profiles, reconciliation)
     findings_ledger      record_finding, finalize_report  (evidence rules, verdict)
 """

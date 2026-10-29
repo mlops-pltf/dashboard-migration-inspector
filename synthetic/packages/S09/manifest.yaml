@@ -2,9 +2,7 @@ package_id: S09
 description: Migration of ThoughtSpot model 'Order Lines' and its content to Strategy model 'Order Lines'.
 thoughtspot:
   tml_dir: thoughtspot/
-  sql_dir: thoughtspot/sql/
 strategy:
   model: strategy/model.yaml
   model_format: yaml_export
   dashboards_dir: strategy/dashboards/
-  sql_dir: strategy/sql/

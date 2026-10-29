@@ -2,9 +2,7 @@ package_id: S13
 description: Migration of ThoughtSpot model 'Returns Analysis' and its content to Strategy model 'Returns Analysis'.
 thoughtspot:
   tml_dir: thoughtspot/
-  sql_dir: thoughtspot/sql/
 strategy:
   model: strategy/model.yaml
   model_format: yaml_export
   dashboards_dir: strategy/dashboards/
-  sql_dir: strategy/sql/

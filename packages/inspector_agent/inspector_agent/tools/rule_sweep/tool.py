@@ -68,8 +68,8 @@ def run_rule_sweep_impl(package: str) -> dict:
 @tool(context=True)
 def run_rule_sweep(package: str, tool_context: ToolContext) -> dict:
     """Run every deterministic check (coverage, attribute lineage, measure definitions, joins, fan-out/chasm,
-    model filters) as a quick first pass. Returns OPEN LEADS to investigate (FAIL or UNVERIFIED, with the rule's
-    reasoning) and the items the rules already proved identical. Leads are not verdicts: confirm, refine, group
+    model filters, dashboards: queries, default filters, top-N, titles) as a quick first pass. Returns OPEN LEADS
+    to investigate (FAIL or UNVERIFIED, with the rule's reasoning) and the items the rules already proved identical. Leads are not verdicts: confirm, refine, group
     by root cause or overturn them with evidence, then record findings that resolve them. In a validation run the
     leads' data probes have already run: leads marked settled_by_data are decided and cannot be overturned.
 

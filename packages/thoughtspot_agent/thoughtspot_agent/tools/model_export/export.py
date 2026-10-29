@@ -33,13 +33,10 @@ def _build(path: str, fingerprint: str, location: str) -> ModelExport:
     models.extend(_sql_view_model(obj) for obj in bundle.of("sql_view"))
     by_name = {m.name: m for m in models}
     dashboards = [tml.parse_content(o, by_name) for o in bundle.of("liveboard") + bundle.of("answer")]
-    sql_dir = root / "sql"
-    sql = {str(p.relative_to(sql_dir).with_suffix("")): p.read_text() for p in sorted(sql_dir.rglob("*.sql"))} \
-        if sql_dir.exists() else {}
     if not models:
         issues.append(ParseIssue(severity="error", message="no ThoughtSpot worksheet, model or SQL view found"))
     return ModelExport(tool="thoughtspot", location=location, fingerprint=fingerprint, source_format="tml",
-                       models=tuple(models), dashboards=tuple(dashboards), sql=sql, issues=tuple(issues),
+                       models=tuple(models), dashboards=tuple(dashboards), issues=tuple(issues),
                        status="error" if any(i.severity == "error" for i in issues) else "ok")
 
 

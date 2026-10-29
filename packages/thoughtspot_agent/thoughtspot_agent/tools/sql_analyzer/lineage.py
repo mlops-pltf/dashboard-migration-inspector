@@ -11,7 +11,7 @@ import sqlglot
 from sqlglot import exp
 from sqlglot.errors import ParseError as SqlParseError
 
-from inspector_contract import BinOp, Col, Expr, Opaque, PCol, PhysicalColumn, PhysicalTable, SqlJoin, SqlLineage
+from inspector_contract import BinOp, Col, Expr, PCol, PhysicalColumn, PhysicalTable, SqlJoin, SqlLineage
 from .convert import DIALECT, split_and, to_ir
 
 
@@ -161,7 +161,3 @@ def analyze(sql: str, dialect: str = DIALECT, default_namespace: str = "public")
     except SqlParseError as exc:
         return SqlLineage(outputs={}, sources={}, errors=(f"parse error: {exc}",))
     return _analyze(node, {}, default_namespace)
-
-
-def output_expr(lineage: SqlLineage, column: str) -> Expr:
-    return lineage.outputs.get(column.lower()) or Opaque(dialect="sql", text=column, reason="not an output column")

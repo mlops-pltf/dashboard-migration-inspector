@@ -43,7 +43,8 @@ def test_report_level():
 def test_every_package_exports(sid):
     exp = export(str(PACKAGES / sid / "strategy"))
     assert not [i for i in exp.issues if i.severity == "error"], exp.issues
-    assert exp.models and exp.dashboards and exp.sql
+    assert exp.models and exp.dashboards
+    assert not [i for i in exp.issues if "not in the model export" in i.message]  # .mstr ids join the model
     assert ModelExport.model_validate_json(exp.model_dump_json()) == exp
 
 

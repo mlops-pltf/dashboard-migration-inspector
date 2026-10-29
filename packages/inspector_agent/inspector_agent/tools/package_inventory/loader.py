@@ -67,7 +67,7 @@ def _assemble(location: str) -> tuple[MigrationPackage, str]:
 
     def side(name: str) -> Side:
         exp = exports.get(name)
-        return Side(models=exp.models, dashboards=exp.dashboards, sql=exp.sql) if exp else Side()
+        return Side(models=exp.models, dashboards=exp.dashboards) if exp else Side()
 
     mapping_name = manifest.get("mapping") or "mapping.yaml"
     pkg = MigrationPackage(

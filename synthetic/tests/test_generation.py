@@ -53,7 +53,13 @@ def test_packages_do_not_leak_ground_truth(generated):
     titles = [sc.title for sc in SCENARIOS.values()]
     for path in (generated / "packages").rglob("*"):
         if path.is_file():
-            text = path.read_text()
+            if path.suffix == ".mstr":  # binary zip: check the decompressed members
+                import zipfile
+
+                with zipfile.ZipFile(path) as z:
+                    text = "".join(z.read(n).decode("latin-1") for n in z.namelist())
+            else:
+                text = path.read_text()
             assert "expected_findings" not in text and "witness" not in text.lower(), path
             assert not any(t in text for t in titles), path
 
@@ -65,7 +71,7 @@ def test_each_package_has_both_sides(generated):
         assert list((pkg / "thoughtspot").glob(f"*.{sc.ts_model.style}.tml"))
         model = yaml.safe_load((pkg / "manifest.yaml").read_text())["strategy"]["model"]
         assert (pkg / model).exists()
-        assert list((pkg / "strategy" / "dashboards").glob("*.json"))
+        assert list((pkg / "strategy" / "dashboards").glob("*.mstr"))
 
 
 def test_yaml_export_fingerprint_matches_body(generated):

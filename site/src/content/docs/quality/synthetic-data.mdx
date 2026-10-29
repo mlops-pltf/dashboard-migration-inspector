@@ -45,11 +45,9 @@ numeric difference**:
     - S04/
       - manifest.yaml
       - thoughtspot/ Table, Worksheet/Model, Liveboard, Answer TML
-        - sql/ ThoughtSpot SQL per visualization
       - strategy/
         - model.yaml or model/\*.json or model.ossie.yaml
-        - dashboards/
-        - sql/model_sqlview.json
+        - dashboards/\*.mstr (binary, the format the reader decodes)
   - ground_truth/ **eval only, never read by Inspector**
     - S04/
       - expected_findings.yaml verdict, findings, root causes, must_pass
@@ -109,7 +107,7 @@ uv run pytest                         # determinism, parsing, no leakage, traps,
 ```
 
 <Aside type="caution" title="Synthetic assumptions">
-	The dashboard JSON (A1), how lookup-style join semantics are declared (A2) and the Ossie YAML
+	How lookup-style join semantics are declared (A2) and the Ossie YAML
 	layout (A5) are modelled on our best information. They will be adjusted when a real sanitised
 	export arrives. See [Assumptions & risks](/plan/risks/).
 </Aside>

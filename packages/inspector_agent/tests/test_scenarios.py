@@ -16,9 +16,10 @@ from inspector_agent.inspector_agent import run_rules_only
 ROOT = Path(__file__).resolve().parents[3] / "synthetic"
 IDS = sorted(p.name for p in (ROOT / "packages").iterdir()) if (ROOT / "packages").exists() else []
 
-# checks implemented by static validation (content checks DB-*/LF-* arrive in P6)
+# checks implemented by static validation
 STATIC_CHECKS = {"CV-01", "CV-02", "LN-01", "AG-01", "AG-02", "AG-03", "FL-01", "FL-02",
-                 "FX-01", "FX-02", "FX-03", "JN-01", "JN-02", "JN-04", "JN-05", "JN-06", "JN-07"}
+                 "FX-01", "FX-02", "FX-03", "JN-01", "JN-02", "JN-04", "JN-05", "JN-06", "JN-07",
+                 "DB-01", "DB-02", "DB-05", "DB-06", "LF-01", "LF-02"}
 
 pytestmark = pytest.mark.skipif(not IDS, reason="run `uv run inspector-synth generate` first")
 
@@ -64,7 +65,7 @@ def test_verdict(case):
     sid, truth, report = case
     out_of_scope = [e for e in truth["findings"] if e["severity"] == "BLOCKER" and not _accepts(e) & STATIC_CHECKS]
     if out_of_scope:
-        pytest.skip(f"{sid}: verdict depends on content checks (P6)")
+        pytest.skip(f"{sid}: verdict depends on checks not implemented statically")
     assert report.verdict == truth["expected_verdict"]
 
 
