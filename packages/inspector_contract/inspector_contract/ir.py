@@ -317,6 +317,7 @@ class Dashboard(_Base):
     models: tuple[str, ...]
     visualizations: tuple[Visualization, ...]
     filters: tuple[DashboardFilter, ...] = ()
+    fields: tuple[Field, ...] = ()  # defined in the dashboard itself (Strategy derived metrics), used by name
     source: SourceRef | None = None
 
 

@@ -10,6 +10,7 @@ from inspector_contract import ModelExport, ParseIssue, SourceRef
 
 from ..common.locations import materialize
 from ..common.yamlio import load_json, load_yaml
+from ..mstr_reader import to_ir as mstr_dashboard
 from ..strategy_reader import dashboard, mosaic, ossie
 from .join_semantics import derive_joins, join_type
 
@@ -55,6 +56,13 @@ def _build(path: str, fingerprint: str, location: str) -> ModelExport:
             dashboards.append(dashboard.load(p, root))
         except Exception as exc:
             issues.append(ParseIssue(severity="error", message=f"dashboard: {exc}", source=SourceRef(file=p.name)))
+    for p in sorted((root / "dashboards").glob("*.mstr")) if (root / "dashboards").exists() else []:
+        try:  # the real input: binary .mstr, linked to the model export by object id
+            dash, more = mstr_dashboard.load(p, tuple(models), root)
+            dashboards.append(dash)
+            issues.extend(more)
+        except Exception as exc:
+            issues.append(ParseIssue(severity="error", message=f"dashboard {p.name}: {exc}", source=SourceRef(file=p.name)))
     sql = {}
     for p in sorted((root / "sql").glob("*.json")) if (root / "sql").exists() else []:
         doc = load_json(p)
