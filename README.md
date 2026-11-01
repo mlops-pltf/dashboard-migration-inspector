@@ -97,7 +97,7 @@ sequenceDiagram
     loop agent turns (LLM)
         I->>E: ask / analyze_sql (when meaning is unclear)
         I->>D: more data probes
-        I->>L: record_finding (needs evidence; ledger may refuse)
+        I->>L: record_finding (needs evidence, the ledger may refuse)
     end
     I->>L: finalize_report (refused while leads are open)
     L-->>I: verdict computed from findings
