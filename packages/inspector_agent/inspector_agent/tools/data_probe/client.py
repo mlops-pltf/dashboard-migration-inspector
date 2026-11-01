@@ -22,9 +22,9 @@ def register(client: A2AClient | None) -> None:
 
 def data_agent() -> A2AClient:
     if not _registered:
-        _registered.append(A2AClient(os.environ.get("INSPECTOR_DATA_AGENT_URL", "http://localhost:9003/"),
-                                     auth=os.environ.get("INSPECTOR_A2A_AUTH", "none"),
-                                     region=os.environ.get("AWS_REGION")))
+        _registered.append(A2AClient(os.environ.get("INSPECTOR_DATA_AGENT_URL") or "http://localhost:9003/",
+                                     auth=os.environ.get("INSPECTOR_A2A_AUTH") or "none",
+                                     region=os.environ.get("AWS_REGION") or None))
     return _registered[0]
 
 

@@ -12,6 +12,9 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import contextvars
+import logging
+import time
 import uuid
 from collections.abc import Callable
 from typing import Any
@@ -26,6 +29,7 @@ from a2a.types import (
 from a2a.utils import new_agent_parts_message, new_agent_text_message
 
 SESSION_HEADER = "X-Amzn-Bedrock-AgentCore-Runtime-Session-Id"
+log = logging.getLogger("inspector.a2a")
 
 Handler = Callable[[dict], dict]
 
@@ -53,13 +57,17 @@ class SkillRouterExecutor(AgentExecutor):
         if request is not None:
             name, args = request
             handler = self.skills.get(name)
+            started = time.monotonic()
+            log.info("%s: started %s", name, _brief(args))
             if handler is None:
                 result: dict = {"error": f"unknown skill {name!r}", "skills": sorted(self.skills)}
             else:
                 try:
-                    result = await asyncio.to_thread(handler, args)
+                    result = await asyncio.to_thread(handler, args)  # copies the context itself
                 except Exception as exc:  # reported to the caller, not raised into the server
                     result = {"error": f"{type(exc).__name__}: {exc}"}
+            outcome = f"failed: {result['error']}" if isinstance(result, dict) and "error" in result else "done"
+            log.info("%s: %s in %.1fs", name, outcome, time.monotonic() - started)
             await event_queue.enqueue_event(new_agent_parts_message(
                 [Part(root=DataPart(data=result))], context.context_id, context.task_id))
             return
@@ -67,11 +75,18 @@ class SkillRouterExecutor(AgentExecutor):
             await event_queue.enqueue_event(new_agent_text_message(
                 f"Send a structured request; skills: {sorted(self.skills)}", context.context_id, context.task_id))
             return
+        log.info("ask: %s", context.get_user_input()[:120])
         await self.conversation.execute(context, event_queue)
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
         if self.conversation is not None:
             await self.conversation.cancel(context, event_queue)
+
+
+def _brief(args: dict) -> str:
+    """The arguments that say what a call is about (a location, a table), without SQL or large values."""
+    keep = {k: v for k, v in args.items() if isinstance(v, (str, int, float)) and len(str(v)) <= 120}
+    return " ".join(f"{k}={v}" for k, v in keep.items())
 
 
 def agent_card(name: str, description: str, url: str, structured: dict[str, str],
@@ -117,16 +132,33 @@ def _run(coro):
         asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.run(coro)
+    context = contextvars.copy_context()  # the caller's context (e.g. a host's OpenTelemetry trace) follows the call
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # already inside an event loop
-        return pool.submit(asyncio.run, coro).result()
+        return pool.submit(context.run, asyncio.run, coro).result()
 
 
 CARD_RETRY_WAITS = (1, 2, 4, 8, 15, 30)  # seconds: an agent that is starting or restarting gets about 60 s to answer
 
 
+def runtime_url(target: str) -> str:
+    """An agent's address: a URL as given, or an AgentCore runtime ARN turned into its invocation URL
+    (arn:aws:bedrock-agentcore:<region>:<account>:runtime/<id> -> https://bedrock-agentcore.<region>.amazonaws.com/
+    runtimes/<encoded ARN>/invocations/), so a deployment can pass ARNs, which exist as soon as a runtime is created."""
+    if not target.startswith("arn:"):
+        return target
+    from urllib.parse import quote
+
+    parts = target.split(":")
+    if len(parts) < 6 or parts[2] != "bedrock-agentcore":
+        raise ValueError(f"not an AgentCore runtime ARN: {target}")
+    suffix = "amazonaws.com.cn" if parts[1] == "aws-cn" else "amazonaws.com"
+    return f"https://bedrock-agentcore.{parts[3]}.{suffix}/runtimes/{quote(target, safe='')}/invocations/"
+
+
 class A2AClient:
     def __init__(self, url: str, auth: str = "none", region: str | None = None, timeout: float = 900,
                  transport: httpx.AsyncBaseTransport | None = None, session_id: str | None = None):
+        url = runtime_url(url)
         self.url = url if url.endswith("/") else url + "/"
         self.auth = SigV4(region or "us-east-1") if auth == "sigv4" else None
         self.timeout = timeout

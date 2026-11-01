@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS runs (
 
 
 def data_dir() -> Path:
-    path = Path(os.environ.get("PORTAL_DATA_DIR", "./portal-data")).resolve()
+    path = Path(os.environ.get("PORTAL_DATA_DIR") or "./portal-data").resolve()
     path.mkdir(parents=True, exist_ok=True)
     return path
 

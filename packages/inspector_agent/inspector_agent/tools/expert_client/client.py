@@ -27,7 +27,7 @@ def expert(side: str) -> A2AClient:
     if side not in SIDES:
         raise ValueError(f"side must be one of {SIDES}")
     if side not in _registered:
-        url = os.environ.get(f"INSPECTOR_{side.upper()}_AGENT_URL", _DEFAULTS[side])
-        _registered[side] = A2AClient(url, auth=os.environ.get("INSPECTOR_A2A_AUTH", "none"),
-                                      region=os.environ.get("AWS_REGION"))
+        url = os.environ.get(f"INSPECTOR_{side.upper()}_AGENT_URL") or _DEFAULTS[side]
+        _registered[side] = A2AClient(url, auth=os.environ.get("INSPECTOR_A2A_AUTH") or "none",
+                                      region=os.environ.get("AWS_REGION") or None)
     return _registered[side]

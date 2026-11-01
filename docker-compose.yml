@@ -41,6 +41,7 @@ services:
       INSPECTOR_LLM_MODEL_FAST: ${INSPECTOR_LLM_MODEL_FAST:-}
       INSPECTOR_LLM_API_BASE: ${INSPECTOR_LLM_API_BASE:-}
       INSPECTOR_LLM_API_KEY: ${INSPECTOR_LLM_API_KEY:-}
+      INSPECTOR_LOG_LEVEL: ${INSPECTOR_LOG_LEVEL:-INFO}   # progress lines: docker compose logs -f <agent>
       PACKAGE_ROOT: /packages:/uploads   # synthetic packages, and what developers upload in the portal
     volumes: &packages
       - ./synthetic/packages:/packages:ro

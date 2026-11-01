@@ -84,6 +84,12 @@ Not implemented here (no registry to test against). Where it plugs in, without t
   `INSPECTOR_<SIDE>_AGENT_URL`; `register(side, client)` overrides it.
 - `inspector_agent/tools/data_probe/client.py`: `data_agent()` from `INSPECTOR_DATA_AGENT_URL`; `register(client)`.
 
+Without the registry, set the three variables to the runtimes' invocation URLs or simply to their **ARNs**: the
+client turns `arn:aws:bedrock-agentcore:<region>:<account>:runtime/<id>` into
+`https://bedrock-agentcore.<region>.amazonaws.com/runtimes/<encoded ARN>/invocations/` itself. ARNs exist as soon as
+a runtime is created, so deploy the three agents first and pass their ARNs to the Inspector (or update its
+environment later; clients are created on first use).
+
 So the host either resolves the three URLs from the registry into those variables at start-up, or looks the
 records up and calls `register(...)` with `A2AClient(<endpoint from the card>, auth="sigv4", region=...)`. Each
 agent's card `url` comes from `AGENTCORE_RUNTIME_URL`: set it to the runtime's invocation URL so the registered

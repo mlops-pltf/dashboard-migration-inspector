@@ -1,4 +1,9 @@
-"""Where package files live: a local folder (shared mount), a local zip, or an S3 prefix (AgentCore).
+"""Where package files live. A location is a string; its scheme picks the reader:
+
+    /path/to/folder, /path/to/package.zip, file://...   local (a shared mount locally)
+    s3://bucket/prefix/                                 S3 (AWS credentials from the environment or the runtime role;
+                                                        AWS_ENDPOINT_URL for an S3-compatible store)
+    <scheme>://...                                      anything a host adds with register_reader()
 
 ``materialize(location)`` returns a local folder plus a fingerprint that changes when the files change.
 Local paths must sit under PACKAGE_ROOT when that is set (several folders separated by ':', e.g. the synthetic
@@ -9,10 +14,15 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import shutil
 import tempfile
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
+
+Reader = Callable[[str], tuple[Path, str]]  # location -> (local folder, fingerprint)
+_READERS: dict[str, Reader] = {}
 
 
 def is_junk(path: Path, root: Path) -> bool:
@@ -81,6 +91,9 @@ def _s3(location: str) -> tuple[Path, str]:
     import boto3
 
     bucket, _, prefix = location.removeprefix("s3://").partition("/")
+    inside = ""
+    if (m := re.search(r"\.zip/", prefix, re.IGNORECASE)) is not None:  # a folder inside a zipped package
+        prefix, inside = prefix[:m.end() - 1], prefix[m.end():].strip("/")
     s3 = boto3.client("s3")
     objects = []
     for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
@@ -88,6 +101,16 @@ def _s3(location: str) -> tuple[Path, str]:
     if not objects:
         raise FileNotFoundError(f"nothing under {location}")
     fp = hashlib.sha256("".join(f"{o['Key']}:{o['ETag']}" for o in objects).encode()).hexdigest()[:16]
+    if prefix.lower().endswith(".zip"):  # one zipped package: download it, then unpack like a local zip
+        archive = Path(tempfile.gettempdir()) / f"s3-{fp}.zip"
+        if not archive.exists():
+            tmp = archive.with_suffix(".partial")
+            s3.download_file(bucket, prefix, str(tmp))
+            tmp.rename(archive)
+        root = _unzip(archive, fp)
+        if inside and not (root / inside).is_dir():
+            raise FileNotFoundError(f"not found: {location}")
+        return (root / inside if inside else root), fp
     target = Path(tempfile.gettempdir()) / f"s3-{fp}"
     if not target.exists():
         tmp = Path(tempfile.mkdtemp(prefix="s3-partial-"))
@@ -102,9 +125,22 @@ def _s3(location: str) -> tuple[Path, str]:
     return target, fp
 
 
+def register_reader(scheme: str, reader: Reader) -> None:
+    """Add a source of packages, e.g. a host's artifact store: locations `<scheme>://...` go to `reader`, which
+    returns a local folder holding the package and a fingerprint that changes when the files change."""
+    _READERS[scheme.lower()] = reader
+
+
+def scheme_of(location: str) -> str:
+    return location.split("://", 1)[0].lower() if "://" in location else ""
+
+
 def materialize(location: str) -> tuple[Path, str]:
-    if location.startswith("s3://"):
-        return _s3(location)
+    scheme = scheme_of(location)
+    if scheme in _READERS:
+        return _READERS[scheme](location)
+    if scheme not in ("", "file"):
+        raise ValueError(f"no reader for {scheme}:// locations (register_reader)")
     path = _local(location)
     if path.suffix.lower() == ".zip":
         digest = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
@@ -115,3 +151,6 @@ def materialize(location: str) -> tuple[Path, str]:
 def join(location: str, *parts: str) -> str:
     """Child location (works for local paths and S3 prefixes)."""
     return "/".join([location.rstrip("/"), *parts])
+
+
+register_reader("s3", _s3)

@@ -20,4 +20,7 @@ inspector-portal = { workspace = true }
 members = ["packages/*", "synthetic"]
 
 [dependency-groups]
-dev = ["pytest>=8.3.3"]
+dev = [
+    "moto[s3]>=5",
+    "pytest>=8.3.3",
+]

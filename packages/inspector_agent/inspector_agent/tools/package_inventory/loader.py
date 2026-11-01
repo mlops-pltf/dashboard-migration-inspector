@@ -17,14 +17,15 @@ from inspector_contract import (
 )
 
 from ..expert_client.client import SIDES, expert
-from .locations import join, materialize
+from .locations import join, materialize, scheme_of
 
 _local = threading.local()  # ruamel YAML instances are not thread-safe: one per thread
 _cache: dict[str, tuple[MigrationPackage, str]] = {}
 
 
 def location_of(package: str) -> str:
-    if str(package).startswith("s3://"):
+    """Remote locations stay as given (each expert reads them itself); local ones become their folder."""
+    if scheme_of(str(package)) not in ("", "file"):
         return str(package).rstrip("/")
     path, _ = materialize(str(package))
     return str(path)

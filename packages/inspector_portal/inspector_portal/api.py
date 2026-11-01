@@ -178,7 +178,7 @@ def _missing(what: str):
 def main() -> None:
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8080")))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT") or "8080"))
 
 
 if __name__ == "__main__":

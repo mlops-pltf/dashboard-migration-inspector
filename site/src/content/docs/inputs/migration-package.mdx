@@ -32,9 +32,23 @@ ThoughtSpot worksheet/model plus the liveboards and answers built on it.
 | Strategy dashboards | The dashboard's `.mstr` file (Share > Download Dashboard). Binary; read by the Strategy expert's `mstr_reader` (format and known gaps in its README) | <Badge text="If content migrated" variant="caution" /> |
 | `mapping.yaml` | The developer, only for renames or intentional exclusions | <Badge text="Optional" variant="note" /> |
 
-## Package sources
+## Where packages and reports live
 
-Packages are loaded from a local path (mounted volume), a zip, `s3://…`, or inline base64 in the request.
+A package location is a string; its scheme picks how it is read. The same applies to where run folders go
+(`INSPECTOR_RUNS_DIR`). Both ends are plug-in, so a host can add its own store without touching the agents.
+
+| | Input: `validate {package: ...}` | Output: `INSPECTOR_RUNS_DIR` |
+|---|---|---|
+| Local | a folder or a `.zip` (under `PACKAGE_ROOT`), or `file://...` | a folder, e.g. `/runs` |
+| S3 | `s3://bucket/prefix/` (a package folder) or `s3://bucket/key.zip` | `s3://bucket/prefix` |
+| Anything else | `register_reader("<scheme>", fn)` in each agent that reads packages | `register_writer("<scheme>", fn)` in the Inspector |
+
+With S3, every agent that reads the package downloads it itself, with its own AWS credentials (the runtime's
+role on AgentCore): the Inspector reads `manifest.yaml` / `mapping.yaml`, the ThoughtSpot expert `thoughtspot/`,
+the Strategy expert `strategy/`. So each role needs `s3:ListBucket` and `s3:GetObject` on the package prefix, and
+the Inspector's role `s3:PutObject` on the reports prefix. `AWS_ENDPOINT_URL` points boto3 at an S3-compatible
+store. Downloads are cached per content (S3 ETags) and published atomically. The full report also comes back in
+the `validate` response, so a failed write to the reports location loses nothing.
 
 <Aside type="tip" title="Planned: export helper">
 	A small script that pulls all of the above for a given ThoughtSpot ↔ Strategy object pair, so

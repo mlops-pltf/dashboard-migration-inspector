@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from . import store
 from .agents import client
 
-_pool = ThreadPoolExecutor(max_workers=int(os.environ.get("PORTAL_MAX_PARALLEL_RUNS", "2")),
+_pool = ThreadPoolExecutor(max_workers=int(os.environ.get("PORTAL_MAX_PARALLEL_RUNS") or "2"),
                            thread_name_prefix="validation")
 
 
@@ -24,7 +24,7 @@ def _run(run_id: str) -> None:
     try:
         result = client("inspector").call("validate", {
             "package": package["location"], "mode": run["mode"], "instructions": run["instructions"],
-            "max_turns": int(os.environ.get("PORTAL_MAX_TURNS", "60"))})
+            "max_turns": int(os.environ.get("PORTAL_MAX_TURNS") or "60")})
     except Exception as exc:  # the Inspector is down or the call failed: the run fails, nothing is invented
         store.update_run(run_id, status="failed", finished=time.time(), error=f"{type(exc).__name__}: {exc}")
         return

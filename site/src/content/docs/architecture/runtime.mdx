@@ -32,6 +32,28 @@ serve_a2a(executor, agent_card("thoughtspot_agent", "...", url, SKILL_DOCS, conv
 | `data-agent` | 9003 → 9000 | A2A: `run_query`, `key_profile`, `orphan_profile`, `compare_queries` ... + conversation |
 | `docs` + `docs-tunnel` | 4321 | This site, plus an optional Cloudflare tunnel |
 
+## Without Docker
+
+The agents are plain Python processes; Docker is only a convenience.
+
+```bash
+uv sync --all-packages          # or: pip install -e packages/inspector_contract "packages/<agent>[runpod]" ...
+uv run inspector-validate synthetic/packages/S07 --rules-only --with-data --in-process
+```
+
+`--in-process` runs the experts and the data agent inside the command's own process (the same A2A requests,
+without servers or ports). To run them as four servers instead, start each in its own terminal:
+
+```bash
+A2A_PORT=9001 uv run --env-file .env python -m thoughtspot_agent.thoughtspot_agent
+A2A_PORT=9002 uv run --env-file .env python -m strategy_agent.strategy_agent
+A2A_PORT=9003 uv run --env-file .env python -m data_agent.data_agent
+A2A_PORT=9000 PACKAGE_ROOT=$PWD/synthetic/packages uv run --env-file .env python -m inspector_agent.inspector_agent
+```
+
+The Inspector's defaults already point at `localhost:9001`-`9003`. The data agent needs a warehouse
+(`WAREHOUSE_DSN`); without one, rules-only runs still work.
+
 ## Stack
 
 <CardGrid>

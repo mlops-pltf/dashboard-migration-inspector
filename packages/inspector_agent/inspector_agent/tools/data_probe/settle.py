@@ -9,8 +9,12 @@
 
 from __future__ import annotations
 
+import logging
+
 from ..findings_ledger.report import Finding
 from .probes import run_spec
+
+log = logging.getLogger("inspector_agent.data_checks")
 
 
 def _decide(results: list[dict]) -> bool | None:
@@ -27,6 +31,8 @@ def settle(package: str, leads: list[Finding]) -> list[Finding]:
         if f.status == "PASS" or not f.probes:
             continue
         results = [run_spec(package, spec) for spec in f.probes]
+        for r in results:
+            log.info("data check (%s): %s", f.title[:80], str(r["summary"])[:200])
         f.evidence = {**f.evidence, "data": [r["summary"] for r in results]}
         f.evidence["data_probes"] = results
         decided = _decide(results)

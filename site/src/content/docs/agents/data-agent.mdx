@@ -107,6 +107,59 @@ store type. The definitions differ, and the data shows where and by how much.
 ground truth after data on all 17 scenarios: statuses, latent defects and verdicts, for example S04 NEEDS_REVIEW →
 NOT_READY (fan-out confirmed), S14 NEEDS_REVIEW → READY (Net Revenue proven equal by data), S06 latent.
 
+## Connecting to the warehouse
+
+Every query the data agent runs goes through one function, `fetch(sql)` in
+`data_agent/tools/warehouse/connection.py`: SQL in (already checked by `sql_guard`: a single read-only SELECT on
+the allowed schemas, transpiled to `WAREHOUSE_DIALECT`), column names and rows out. The built-in `postgres` backend
+connects directly (`WAREHOUSE_DSN`). To use the Redshift Data API with credentials from Secrets Manager, register
+another backend in a plug-in module and select it; the tools do not change:
+
+```python title="my_project/warehouse.py  (INSPECTOR_PLUGINS=my_project.warehouse, WAREHOUSE_BACKEND=redshift_data)"
+import os, time
+from decimal import Decimal
+import boto3
+from data_agent.tools.warehouse.connection import register_backend, timeout_s
+
+client = boto3.client("redshift-data")
+TARGET = {"Database": os.environ["REDSHIFT_DATABASE"], "SecretArn": os.environ["REDSHIFT_SECRET_ARN"],
+          "WorkgroupName": os.environ["REDSHIFT_WORKGROUP"]}        # or ClusterIdentifier= for a provisioned cluster
+
+def _value(cell, type_name):
+    if cell.get("isNull"):
+        return None
+    v = next(iter(cell.values()))
+    return float(Decimal(v)) if type_name in ("numeric", "decimal") else v   # decimals arrive as strings
+
+def fetch(sql):
+    run = client.execute_statement(Sql=sql, **TARGET)["Id"]
+    deadline = time.monotonic() + timeout_s()
+    while (d := client.describe_statement(Id=run))["Status"] not in ("FINISHED", "FAILED", "ABORTED"):
+        if time.monotonic() > deadline:
+            client.cancel_statement(Id=run)
+            raise TimeoutError(f"query exceeded {timeout_s()} s")
+        time.sleep(0.5)
+    if d["Status"] != "FINISHED":
+        raise RuntimeError(d.get("Error", d["Status"]))
+    columns, rows, token = [], [], None
+    while True:
+        page = client.get_statement_result(Id=run, **({"NextToken": token} if token else {}))
+        meta = page["ColumnMetadata"]
+        columns = [c["name"] for c in meta]
+        rows += [[_value(c, m.get("typeName", "")) for c, m in zip(r, meta)] for r in page["Records"]]
+        if not (token := page.get("NextToken")):
+            return columns, rows
+
+register_backend("redshift_data", fetch)
+```
+
+Set `WAREHOUSE_DIALECT=redshift` as well. The Data API has no read-only session switch: use a database user that
+can only read the allowed schemas (the SQL guard is the second line). The data agent's role needs
+`redshift-data:ExecuteStatement`, `DescribeStatement`, `GetStatementResult`, `CancelStatement`,
+`secretsmanager:GetSecretValue` on the secret, and `redshift-serverless:GetCredentials` (or
+`redshift:GetClusterCredentials`) as your setup requires. A test (`test_a_registered_warehouse_backend_receives_every_query`)
+shows the contract with a fake backend.
+
 ## Guardrails
 
 | Area | Rule |

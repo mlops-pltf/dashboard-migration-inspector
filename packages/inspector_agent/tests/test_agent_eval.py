@@ -3,7 +3,8 @@
     INSPECTOR_LIVE_EVAL=1 [INSPECTOR_EVAL_SCENARIOS=S01,S04,S13] uv run pytest packages/inspector_agent/tests/test_agent_eval.py -s
 
 Scores per scenario: recall (expected findings found), precision (no unexpected blocking findings),
-must-pass fields not flagged, verdict. Content checks (DB-*, LF-*) arrive with P6.
+must-pass fields not flagged, verdict. An agent run starts from leads the data checks already settled, so the
+answer key's after-data statuses and verdict apply (as in test_scenarios_data.py).
 """
 
 import os
@@ -25,6 +26,14 @@ def accepts(e: dict) -> set[str]:
     return {e["check"], *e.get("also_acceptable", [])}
 
 
+def status(e: dict) -> str:
+    return e.get("status_after_data") or e["status"]
+
+
+def verdict(truth: dict) -> str:
+    return truth.get("expected_verdict_after_data") or truth["expected_verdict"]
+
+
 @pytest.fixture(scope="module", params=SELECTED)
 def run(request):
     from inspector_agent.inspector_agent import run_validation
@@ -32,7 +41,7 @@ def run(request):
     sid = request.param
     truth = yaml.safe_load((GROUND_TRUTH / sid / "expected_findings.yaml").read_text())
     report = run_validation(pkg(sid))
-    print(f"\n{sid}: {report.verdict} (expected {truth['expected_verdict']}) · {report.counts} · {report.agent}")
+    print(f"\n{sid}: {report.verdict} (expected {verdict(truth)}) · {report.counts} · {report.agent}")
     return sid, truth, report
 
 
@@ -41,15 +50,15 @@ def test_recall(run):
     for e in truth["findings"]:
         if not accepts(e) & IN_SCOPE:
             continue
-        assert any(f.check in accepts(e) and f.status == e["status"] for f in report.findings), \
-            f"{sid} missed {e['check']} {e['status']}: {e['note']}"
+        assert any(f.check in accepts(e) and f.status == status(e) for f in report.findings), \
+            f"{sid} missed {e['check']} {status(e)}: {e['note']}"
 
 
 def test_precision(run):
     sid, truth, report = run
     for f in report.findings:
         if f.blocking:
-            assert any(f.check in accepts(e) and f.status == e["status"] for e in truth["findings"]), \
+            assert any(f.check in accepts(e) and f.status == status(e) for e in truth["findings"]), \
                 f"{sid} unexpected {f.check} {f.status}: {f.title}"
 
 
@@ -65,3 +74,8 @@ def test_agent_finished_and_resolved_every_lead(run):
     assert report.agent.get("unreviewed_leads", 0) == 0, f"{sid}: agent left leads unreviewed"
     assert "stopped" not in report.agent, report.agent.get("stopped")
     assert report.summary
+
+
+def test_verdict(run):
+    sid, truth, report = run
+    assert report.verdict == verdict(truth), f"{sid}: {report.verdict}, expected {verdict(truth)}"

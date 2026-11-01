@@ -39,5 +39,5 @@ def get_model(tier: Tier = "strong", **params: Any):
                            model_id=model_id(tier), params={"temperature": 0, "max_tokens": MAX_TOKENS, **params})
     from strands.models.bedrock import BedrockModel
 
-    return BedrockModel(model_id=model_id(tier), region_name=os.environ.get("AWS_REGION"),
+    return BedrockModel(model_id=model_id(tier), region_name=os.environ.get("AWS_REGION") or None,
                         temperature=0, max_tokens=MAX_TOKENS, **params)

@@ -12,7 +12,7 @@ from datetime import datetime
 import httpx
 import streamlit as st
 
-API = os.environ.get("PORTAL_API_URL", "http://localhost:8080").rstrip("/")
+API = (os.environ.get("PORTAL_API_URL") or "http://localhost:8080").rstrip("/")
 MODES = {"Full validation (rules, data and AI review)": "agent",
          "Quick check (rules and data, no AI, seconds)": "rules+data"}
 VERDICT_STYLE = {"READY": ("green", "Ready for human review"), "NOT_READY": ("red", "Not ready: fix the blockers"),

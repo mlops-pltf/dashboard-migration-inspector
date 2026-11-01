@@ -68,7 +68,11 @@ def app(url: str = "http://localhost:9000/", conversation: bool = True):
 def main() -> None:
     from bedrock_agentcore.runtime import serve_a2a
 
-    serve_a2a(executor(), card(os.environ.get("AGENTCORE_RUNTIME_URL", "http://localhost:9000/")))
+    from inspector_contract import plugins, progress
+
+    progress.setup()
+    plugins.load()
+    serve_a2a(executor(), card(os.environ.get("AGENTCORE_RUNTIME_URL") or "http://localhost:9000/"))
 
 
 if __name__ == "__main__":

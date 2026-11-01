@@ -26,11 +26,11 @@ _QUERY_ROOTS = (exp.Select, exp.Union, exp.Intersect, exp.Except)
 
 
 def allowed_schemas() -> set[str]:
-    return {s.strip().lower() for s in os.environ.get("WAREHOUSE_ALLOWED_SCHEMAS", "retail").split(",") if s.strip()}
+    return {s.strip().lower() for s in (os.environ.get("WAREHOUSE_ALLOWED_SCHEMAS") or "retail").split(",") if s.strip()}
 
 
 def warehouse_dialect() -> str:
-    return os.environ.get("WAREHOUSE_DIALECT", "postgres")
+    return os.environ.get("WAREHOUSE_DIALECT") or "postgres"
 
 
 @dataclass

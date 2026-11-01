@@ -27,8 +27,9 @@ def describe_table_impl(table: str) -> dict:
     schema, tbl = name.split(".")
     if schema not in allowed_schemas():
         return {"error": f"schema {schema} is not allowed"}
+    # schema and table passed identifier() (letters, digits, _ and $ only), so they are safe as literals
     _, cols = fetch("SELECT column_name, data_type, is_nullable FROM information_schema.columns "
-                    "WHERE table_schema = %s AND table_name = %s ORDER BY ordinal_position", (schema, tbl))
+                    f"WHERE table_schema = '{schema}' AND table_name = '{tbl}' ORDER BY ordinal_position")
     if not cols:
         return {"error": f"table {name} not found"}
     _, count = fetch(f"SELECT COUNT(*) FROM {name}")

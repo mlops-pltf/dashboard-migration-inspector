@@ -111,3 +111,25 @@ def test_a2a_structured_skills():
     r = client.call("key_profile", {"source": "retail.dim_customer", "keys": ["customer_id"]})
     assert r["unique"] is True
     assert "error" in client.call("run_query", {"sql": "DELETE FROM retail.fact_orders"})
+
+
+def test_a_registered_warehouse_backend_receives_every_query(monkeypatch):
+    """How a host plugs in its own warehouse access (e.g. the Redshift Data API): one function, SQL in, rows out."""
+    from data_agent.tools.warehouse import connection
+    from data_agent.tools.warehouse.tool import describe_table_impl, run_query_impl
+
+    seen = []
+
+    def fake(sql):
+        seen.append(sql)
+        if "information_schema" in sql:
+            return ["column_name", "data_type", "is_nullable"], [["order_id", "integer", "NO"]]
+        return ["count"], [[42]]
+
+    connection.register_backend("fake", fake)
+    monkeypatch.setenv("WAREHOUSE_BACKEND", "fake")
+    assert describe_table_impl("retail.fact_orders") == {
+        "table": "retail.fact_orders", "row_count": 42,
+        "columns": [{"name": "order_id", "type": "integer", "nullable": False}]}
+    assert run_query_impl("SELECT COUNT(*) FROM retail.fact_orders")["rows"] == [[42]]
+    assert len(seen) == 3 and all("retail" in s for s in seen)

@@ -17,10 +17,44 @@ so how the run reached each conclusion is in the report itself.
 
 Tracing is left to the host: Strands emits OpenTelemetry spans for every model and tool call, so a framework
 that installs an OpenTelemetry tracer provider (for example AgentCore observability) collects them with no
-change here.
+change here. Checked with the standard launcher:
+
+```dockerfile
+RUN pip install opentelemetry-distro opentelemetry-exporter-otlp \
+    opentelemetry-instrumentation-httpx opentelemetry-instrumentation-starlette   # or: opentelemetry-bootstrap -a install
+ENV OTEL_SERVICE_NAME=strategy_agent \
+    OTEL_INSTRUMENTATION_A2A_SDK_ENABLED=false   # the A2A library's own internal spans (about 18 per call) are noise
+CMD ["opentelemetry-instrument", "python", "-m", "strategy_agent.strategy_agent"]
+```
+
+Nothing in the agents sets a tracer provider, so the launcher's is the one used (the AgentCore SDK only adds a
+processor to it). Calls between agents carry the trace context: the A2A client keeps the caller's context even
+when it sends from a helper thread, and the httpx and Starlette instrumentations link the expert's server span to
+the Inspector's call.
+
+## Progress on the console
+
+Every agent writes one line per step to stdout (standard Python logging), so `docker compose logs -f
+inspector-agent` follows a run locally and a host runtime collects the lines like any other output:
+
+```text
+[R-5ca86a97] reading the package .../S04 (both experts)
+[R-5ca86a97]   strategy: 1 models, 2 dashboards
+[R-5ca86a97] rule checks: 2 open (1 could change numbers), 31 proven
+data check (Possible fan-out ...): retail.fact_order_lines(order_id) is not unique: 19145 keys repeat ...
+[R-5ca86a97] data checks: 2 open (1 could change numbers), 31 proven; 1 settled by data
+[R-5ca86a97] agent starts (Qwen/Qwen3-32B-AWQ, at most 60 turns)
+[R-5ca86a97] agent turn 1
+[R-5ca86a97]   run_rule_sweep -> success · 2 leads open
+[R-5ca86a97] done: NOT_READY {...} in 95s
+```
+
+The experts and the data agent log each request they answer (`export_model: started location=...`,
+`export_model: done in 0.9s`). A host that configures logging itself keeps its own setup.
 
 ## Settings
 
 | Variable | |
 |---|---|
-| `INSPECTOR_RUNS_DIR` | Where run folders go (`/runs` in compose, mounted from `./runs`). Unset: nothing is written |
+| `INSPECTOR_LOG_LEVEL` | `INFO` (progress lines, default), `DEBUG`, or `WARNING` for quiet |
+| `INSPECTOR_RUNS_DIR` | Where run folders go: a folder (`/runs` in compose, mounted from `./runs`), `s3://bucket/prefix`, or a registered scheme. Unset: nothing is written |

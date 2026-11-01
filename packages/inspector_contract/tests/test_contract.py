@@ -41,3 +41,44 @@ def test_text_without_conversation_lists_skills(client):
 def test_card(client):
     card = client.card()
     assert [s.id for s in card.skills] == ["double", "boom"]
+
+
+def test_a2a_run_keeps_the_callers_context_inside_an_event_loop():
+    """A host's trace context (contextvars) must reach the request even when the call runs on a helper thread."""
+    import asyncio
+    import contextvars
+
+    from inspector_contract.a2a import _run
+
+    var = contextvars.ContextVar("trace", default=None)
+
+    async def read():
+        return var.get()
+
+    async def caller():
+        var.set("trace-123")
+        return _run(read())  # inside a running loop: _run switches to a thread
+
+    assert asyncio.run(caller()) == "trace-123"
+
+
+def test_agentcore_runtime_arn_becomes_its_invocation_url():
+    from bedrock_agentcore.runtime.a2a import build_runtime_url
+
+    from inspector_contract.a2a import A2AClient, runtime_url
+
+    arn = "arn:aws:bedrock-agentcore:eu-west-1:123456789012:runtime/strategy_agent-AbC123"
+    assert runtime_url(arn).rstrip("/") == build_runtime_url(arn)  # same as the AgentCore SDK
+    assert A2AClient(arn).url == build_runtime_url(arn) + "/"  # the card is fetched from <url>/.well-known/...
+    assert runtime_url("http://localhost:9002/") == "http://localhost:9002/"
+
+
+def test_plugins_named_in_the_environment_are_imported(tmp_path, monkeypatch):
+    (tmp_path / "host_plugin.py").write_text("LOADED = True\n")
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("INSPECTOR_PLUGINS", "host_plugin, ")
+    from inspector_contract import plugins
+
+    assert plugins.load() == ["host_plugin"]
+    import host_plugin
+    assert host_plugin.LOADED

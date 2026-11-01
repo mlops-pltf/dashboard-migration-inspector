@@ -17,8 +17,8 @@ _DEFAULTS = {"inspector": "http://localhost:9000/", "thoughtspot": "http://local
 
 
 def client(name: str, timeout: float = 3600) -> A2AClient:
-    url = os.environ.get(f"PORTAL_{name.upper()}_URL", _DEFAULTS[name])
-    return A2AClient(url, auth=os.environ.get("PORTAL_A2A_AUTH", "none"), region=os.environ.get("AWS_REGION"),
+    url = os.environ.get(f"PORTAL_{name.upper()}_URL") or _DEFAULTS[name]
+    return A2AClient(url, auth=os.environ.get("PORTAL_A2A_AUTH") or "none", region=os.environ.get("AWS_REGION") or None,
                      timeout=timeout)
 
 
