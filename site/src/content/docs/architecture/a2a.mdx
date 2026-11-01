@@ -34,7 +34,7 @@ import Mermaid from '../../../components/Mermaid.astro';
 		Reads TML, formulas and search queries; exports its side as **IR**; answers questions about ThoughtSpot.
 	</Card>
 	<Card title="strategy_agent" icon="document">
-		Reads Mosaic exports (YAML, REST JSON, Ossie), metrics, Freeform SQL and dashboards; makes Strategy's join
+		Reads the Mosaic YAML export, metrics, Freeform SQL and dashboards; makes Strategy's join
 		semantics explicit; exports IR; answers questions about Strategy.
 	</Card>
 	<Card title="inspector_agent" icon="magnifier">
@@ -63,13 +63,31 @@ A small shared package, the only thing the agents have in common:
 
 - **IR** data types: models, tables, joins (type, keys, cardinality, `applied: when_needed | always`), fields
   (`provenance: parsed | interpreted`), filters, dashboards, expressions.
-- **`ModelExport`**: the versioned envelope an expert returns (`ir_version`, `fingerprint`, models, dashboards, SQL, issues).
+- **`ModelExport`**: the versioned envelope an expert returns (`ir_version`, `fingerprint`, models, dashboards, issues).
 - **A2A conventions**: the skill router (structured to code, text to the agent), agent-card builder, and a client
   (no auth locally, SigV4 on AgentCore).
 
 <Aside type="tip" title="Adding a BI tool later">
 	A Power BI or Tableau expert implements `export_model` (IR) and `ask`. The Inspector does not change.
 </Aside>
+
+## Discovery: AWS Agent Registry (project)
+
+In the project, the three agents are registered in AWS Agent Registry and the Inspector finds them there. The
+registry stores each agent's A2A **agent card** (the one served at `/.well-known/agent-card.json`: protocol 0.3.0,
+names `thoughtspot_agent`, `strategy_agent`, `data_agent`, skills `export_model`, `analyze_sql`, ... ) and returns it
+on search; calling the agent is still plain A2A to the card's endpoint, signed with SigV4.
+
+Not implemented here (no registry to test against). Where it plugs in, without touching the agents:
+
+- `inspector_agent/tools/expert_client/client.py`: `expert(side)` builds a client from
+  `INSPECTOR_<SIDE>_AGENT_URL`; `register(side, client)` overrides it.
+- `inspector_agent/tools/data_probe/client.py`: `data_agent()` from `INSPECTOR_DATA_AGENT_URL`; `register(client)`.
+
+So the host either resolves the three URLs from the registry into those variables at start-up, or looks the
+records up and calls `register(...)` with `A2AClient(<endpoint from the card>, auth="sigv4", region=...)`. Each
+agent's card `url` comes from `AGENTCORE_RUNTIME_URL`: set it to the runtime's invocation URL so the registered
+card points at the right place. The skill ids are the contract the Inspector relies on: keep them stable.
 
 ## Deployment
 

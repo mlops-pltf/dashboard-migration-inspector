@@ -127,3 +127,30 @@ def test_leads_settled_by_data_cannot_be_overturned():
     assert r["accepted"]
     ledger.finalize("Fix the order-lines join first.", force=True)
     assert ledger.report.verdict == "NOT_READY"
+
+
+
+def test_report_shows_the_agents_words_and_folds_the_codes_away():
+    from inspector_agent.tools.findings_ledger import Report, markdown
+    from inspector_agent.tools.findings_ledger.report import Finding, ObjectRef
+
+    f = Finding(id="F-001", check="JN-04", severity="BLOCKER", status="FAIL", title="Revenue is overstated",
+                thoughtspot=ObjectRef(model="Sales", name="Revenue"), evidence={"explanation": "Orders repeat."},
+                evidence_refs=["E3"], resolves=["L02"], suggested_fix="Join order lines once per order.")
+    md = markdown(Report(run_id="R-1", package_id="P", verdict="NOT_READY", findings=[f], summary="Revenue is high."))
+    body, details = md.split("<details>", 1)
+    for text in ("Not ready", "Revenue is high.", "Revenue is overstated", "Orders repeat.",
+                 "Join order lines once per order.", "Must fix: changes numbers"):
+        assert text in body  # the agent's words, unchanged, plus the fixed label
+    assert not any(code in body for code in ("JN-04", "F-001", "E3", "L02", "BLOCKER"))
+    assert "JN-04" in details and "E3" in details  # developers still get the codes, folded away
+    assert Report.model_validate_json(Report(run_id="R", package_id="P", verdict="READY").model_dump_json()).verdict_text == "Ready"
+
+
+def test_summary_cannot_claim_ready_in_lower_case():
+    from inspector_agent.tools.findings_ledger.ledger import without_verdict_claims
+
+    text, removed = without_verdict_claims("Revenue is overstated.\nThe package is ready to go live.", "NOT_READY")
+    assert text == "Revenue is overstated." and removed == 1
+    text, removed = without_verdict_claims("Two KPIs are wrong; it is not ready yet.", "NOT_READY")
+    assert removed == 0  # agrees with the computed verdict

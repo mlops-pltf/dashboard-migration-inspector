@@ -15,15 +15,11 @@ PRESERVE_FINAL_PASS = "preserve all final pass result elements"
 
 
 def join_type(model: SemanticModel) -> str:
-    if model.kind == "ossie":
-        return "UNKNOWN"
     props = {str(k).lower(): str(v).lower() for k, v in (model.settings.get("advancedProperties") or {}).items()}
     return "LEFT" if any(PRESERVE_FINAL_PASS in k and "outer" in v for k, v in props.items()) else "INNER"
 
 
 def derive_joins(model: SemanticModel) -> tuple[Join, ...]:
-    if model.kind == "ossie":
-        return model.joins
     jtype = join_type(model)
     edges: dict[tuple[str, str], Join] = {}
     for f in model.fields:

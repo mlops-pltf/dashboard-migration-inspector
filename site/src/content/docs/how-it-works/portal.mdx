@@ -12,7 +12,7 @@ migration, start a validation, read the report and ask about it.
 <Steps>
 1. **Upload.** Give the migration a name and upload both sides:
    - ThoughtSpot: the TML export zip (as ThoughtSpot downloads it), or the `.tml` files;
-   - Strategy: a zip (model + `dashboards/*.mstr`), or the model file (YAML export, REST JSON or Ossie YAML) and
+   - Strategy: a zip (model + `dashboards/*.mstr`), or the model YAML export and
      the dashboards' `.mstr` files;
    - optionally a mapping file, for renamed objects.
 
@@ -60,7 +60,7 @@ migration, start a validation, read the report and ask about it.
 - Uploaded packages go to a shared volume that the agents can read but not change.
 
 <Aside type="caution" title="Sharing the portal">
-	Locally it runs at http://localhost:8501. An ngrok URL is public, so share it only with a password:
+	Start it with `docker compose --profile portal up -d` (not part of the default stack); it runs at http://localhost:8501. An ngrok URL is public, so share it only with a password:
 	`ngrok http 8501 --basic-auth "user:password"`. Logins and SSO come later, with the client's hosting.
 </Aside>
 

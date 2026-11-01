@@ -51,6 +51,15 @@ def _save(state: dict) -> None:
     STATE.chmod(0o600)
 
 
+def _forget_if_gone(state: dict) -> bool:
+    """Drop the recorded state when the pod no longer exists (e.g. terminated from the RunPod console)."""
+    if runpod.get_pod(state["pod_id"]):
+        return False
+    STATE.unlink()
+    print(f"Pod {state['pod_id']} no longer exists on RunPod (terminated outside this script); cleared {STATE.name}.")
+    return True
+
+
 def _base_url(pod_id: str) -> str:
     return f"https://{pod_id}-{PORT}.proxy.runpod.net/v1"
 
@@ -90,7 +99,7 @@ def _wait_ready(state: dict, timeout_s: int) -> None:
 
 
 def _print_env(state: dict) -> None:
-    model = f"hosted_vllm/{state['model']}"
+    model = state["model"]
     print("\nAdd to .env (one model serves both tiers):\n")
     print(f"INSPECTOR_LLM_MODEL_STRONG={model}")
     print(f"INSPECTOR_LLM_MODEL_FAST={model}")
@@ -99,7 +108,7 @@ def _print_env(state: dict) -> None:
 
 
 def up(args: argparse.Namespace) -> None:
-    if STATE.exists():
+    if STATE.exists() and not _forget_if_gone(_load()):
         sys.exit(f"A pod is already recorded ({_load()['pod_id']}). Use `status`, `start` or `down` first.")
     api_key = secrets.token_hex(24)
     gpus = args.gpu or DEFAULT_GPUS
@@ -130,7 +139,8 @@ def status(_: argparse.Namespace) -> None:
     state = _load()
     pod = runpod.get_pod(state["pod_id"])
     if not pod:
-        sys.exit(f"Pod {state['pod_id']} not found (terminated?). Delete {STATE} to start over.")
+        _forget_if_gone(state)
+        sys.exit("Run `up` to create a new one.")
     uptime = pod.get("uptimeSeconds") or 0
     print(f"pod {pod['id']}  {pod.get('desiredStatus')}  {state['gpu']}  ${pod.get('costPerHr')}/h  "
           f"uptime {uptime // 3600}h{uptime % 3600 // 60:02d}m")
@@ -157,6 +167,8 @@ def start(args: argparse.Namespace) -> None:
 
 def down(_: argparse.Namespace) -> None:
     state = _load()
+    if _forget_if_gone(state):
+        return
     runpod.terminate_pod(state["pod_id"])
     STATE.unlink()
     print(f"Pod {state['pod_id']} terminated. Remove the INSPECTOR_LLM_* lines from .env.")

@@ -129,9 +129,12 @@ class Doc:
         return strings(self.b, self.bl[i][3], self.bl[i][1])
 
     def own_strings(self, i: int) -> list[tuple[int, str]]:
-        """Strings directly in block i, not inside its child blocks."""
-        kids = [(self.bl[k][0], self.bl[k][1]) for k in self.kids[i]]
-        return [(p, s) for p, s in self.strings_in(i) if not any(a <= p < z for a, z in kids)]
+        """Strings directly in block i, not inside its child blocks (only the gaps between children are scanned)."""
+        out, pos = [], self.bl[i][3]
+        for k in self.kids[i]:
+            out += strings(self.b, pos, self.bl[k][0])
+            pos = self.bl[k][1]
+        return out + strings(self.b, pos, self.bl[i][1])
 
     def i32s(self, lo: int, hi: int, limit: int = 32) -> list[int]:
         out, p = [], lo

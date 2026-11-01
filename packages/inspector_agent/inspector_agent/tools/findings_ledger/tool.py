@@ -34,15 +34,15 @@ def record_finding(check: str, severity: str, status: str, title: str, explanati
         check: Check id from the catalogue, e.g. JN-04, AG-02, FX-01.
         severity: BLOCKER (can change a number), WARNING, LOW (cosmetic) or INFO.
         status: FAIL, PASS or UNVERIFIED.
-        title: One line a developer understands.
-        explanation: Why, in two or three sentences, referring to the evidence.
+        title: What is wrong and its effect, in one line a business owner understands (no check or evidence ids).
+        explanation: Why it matters, in two or three plain sentences: what differs and how it changes numbers.
         evidence_ids: Evidence ids supporting this finding.
         thoughtspot_object: "Model::Object" on the ThoughtSpot side, if any.
         strategy_object: "Model::Object" on the Strategy side, if any.
         resolves_leads: Rule-sweep lead ids settled by this finding.
         symptoms: Other objects affected by the same root cause.
         needs: What would settle an UNVERIFIED finding, e.g. data:kpi_equivalence.
-        suggested_fix: What the developer should change.
+        suggested_fix: What the Strategy developer should change, concretely, in plain words.
         latent: True for a real definition difference that data shows has no impact today (still a FAIL).
     """
     return _ledger(tool_context).record(
@@ -58,6 +58,7 @@ def finalize_report(summary: str, tool_context: ToolContext) -> dict:
     (READY / NOT_READY / NEEDS_REVIEW) is computed from the recorded findings, not chosen.
 
     Args:
-        summary: Executive summary for the developer: verdict drivers, root causes, what to fix first.
+        summary: The brief at the top of the report, for the dashboard owner: can the numbers be trusted, what is
+            wrong and how much it moves them, what to fix first. Plain words, no ids, no verdict word.
     """
     return _ledger(tool_context).finalize(summary)

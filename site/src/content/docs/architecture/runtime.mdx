@@ -25,7 +25,6 @@ serve_a2a(executor, agent_card("thoughtspot_agent", "...", url, SKILL_DOCS, conv
 
 | Service | Port | Purpose |
 |---|---|---|
-| `ollama` | 11434 | Optional local models (`--profile local-llm`) |
 | `warehouse` | 5439 | Postgres seeded with the synthetic warehouse, standing in for Redshift |
 | `inspector-agent` | 9000 | A2A: `validate` skill + conversation |
 | `thoughtspot-agent` | 9001 → 9000 | A2A: `export_model`, `analyze_sql` + conversation |
@@ -48,7 +47,7 @@ serve_a2a(executor, agent_card("thoughtspot_agent", "...", url, SKILL_DOCS, conv
 		redshift-connector · psycopg (local Postgres stand-in) · in-warehouse reconciliation
 	</Card>
 	<Card title="Operations" icon="information">
-		Strands OpenTelemetry traces · per-run counters in the report · run store on a local volume
+		Strands OpenTelemetry spans (collected by the host) · per-run counters in the report · run store on a local volume
 		now, S3 later
 	</Card>
 </CardGrid>

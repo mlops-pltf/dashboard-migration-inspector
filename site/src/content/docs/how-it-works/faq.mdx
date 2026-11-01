@@ -38,11 +38,10 @@ comparison, or Strategy's report SQL). An unverified blocker makes the package N
 A proven difference in the definitions that doesn't change any number on today's data. It still fails, because
 the client needs numbers right from day 1, and tomorrow's data may differ.
 
-### Ossie YAML lost the join types. What then?
+### The input can't express something. What then?
 
-What a format can't carry is listed in the IR. Checks that depend on it go to the data. If the data can't
-decide either (S18: 749 orders without a customer, join type unknown), the finding stays UNVERIFIED and the
-report asks for Strategy's report SQL.
+What a file can't carry (for example Count vs Count Distinct in a `.mstr`) is reported, and checks that depend on
+it go to the data. If the data can't decide either, the finding stays UNVERIFIED with the reason: never PASS.
 
 ### Does the developer's prompt change the result?
 
@@ -57,4 +56,4 @@ results should make it shorter. On Bedrock at the client, cost depends on the mo
 
 ### Where can I see what a run did?
 
-In its trace in Langfuse, and in its run folder. See [Seeing a run](/how-it-works/seeing-a-run/).
+In its run folder. See [Seeing a run](/how-it-works/seeing-a-run/).

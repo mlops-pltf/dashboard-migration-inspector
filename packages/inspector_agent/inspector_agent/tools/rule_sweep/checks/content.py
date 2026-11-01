@@ -161,10 +161,12 @@ def run(ctx: Context) -> list[Finding]:
     names = _Names(ctx)
     out: list[Finding] = []
     paired = _pairs(ctx)
+    unread = [i.source.file for i in ctx.package.errors if i.source and i.source.file.lower().endswith(".mstr")]
     for td in ctx.package.thoughtspot.dashboards:
         if all(td is not p[0] for p in paired):
-            out.append(Finding(check="DB-01", severity="BLOCKER", status="FAIL",
-                               title=f"{td.name} has no Strategy dashboard of the same name",
+            out.append(Finding(check="DB-01", severity="BLOCKER", status="UNVERIFIED" if unread else "FAIL",
+                               title=f"{td.name} has no Strategy dashboard of the same name"
+                                     + (" among the readable files (could not read: " + ", ".join(unread) + ")" if unread else ""),
                                thoughtspot=_ref(td, td.name, "dashboard"),
                                suggested_fix="Migrate it, or map it in mapping.yaml."))
     for td, sd in paired:

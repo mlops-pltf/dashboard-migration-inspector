@@ -77,6 +77,15 @@ import { Tabs, TabItem, Badge, Aside } from '@astrojs/starlight/components';
 	</TabItem>
 </Tabs>
 
+<Aside type="caution" title="PK-01: files that could not be read">
+	Every file the experts cannot read (malformed YAML, a damaged or truncated `.mstr`, an empty `.tml`, a model export
+	with an unexpected shape, an expert agent that does not answer) is one **PK-01 blocker** naming the file. The rest
+	of the package is still validated. A ThoughtSpot dashboard whose Strategy counterpart may be in an unreadable
+	`.mstr` is UNVERIFIED, not "missing". Only when one side has no readable model at all does the run stop at PK-01.
+	macOS litter (`__MACOSX`, `._*`, `.DS_Store`) is ignored. A lead whose data probe could not run says so in its
+	title ("data agent unreachable").
+</Aside>
+
 <Aside type="tip" title="Root causes, not noise">
 	One wrong join can fail twenty KPIs. The report groups those under the **root cause** finding and
 	lists the symptoms beneath it, so the developer fixes one thing.

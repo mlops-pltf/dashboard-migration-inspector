@@ -1,21 +1,10 @@
 # Local stack: the agent team (experts, inspector, data agent), the Redshift stand-in and the docs.
 #   cp .env.example .env                        # choose the models (INSPECTOR_LLM_MODEL_*)
-#   docker compose up -d                        # agents + warehouse
-#   docker compose --profile local-llm up -d    # also start Ollama in a container
+#   docker compose up -d                        # agents + warehouse (portal and docs are not built or started)
+#   docker compose --profile portal up -d       # also the developer portal (http://localhost:8501)
 #   docker compose --profile docs up -d         # docs site + tunnel
-# Agents call the model provider directly (LiteLLM library inside each agent, no proxy).
+# Models: an OpenAI-compatible server (the RunPod vLLM pod) when INSPECTOR_LLM_API_BASE is set, else Bedrock.
 services:
-  # Optional local models. A native Ollama on the Mac is faster (Metal): set
-  # INSPECTOR_LLM_API_BASE=http://host.docker.internal:11434 instead.
-  ollama:
-    image: ollama/ollama:0.34.1
-    profiles: ["local-llm"]
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama-models:/root/.ollama
-    restart: unless-stopped
-
   # Redshift stand-in seeded with the synthetic retail warehouse.
   #   cd synthetic && uv run inspector-synth warehouse     # writes CSVs + init scripts first
   #   docker compose up -d warehouse                      # read-only login: inspector_ro / inspector_ro
@@ -48,17 +37,10 @@ services:
       - "9001:9000"
     environment: &agent-env
       AGENTCORE_RUNTIME_URL: http://thoughtspot-agent:9000/
-      INSPECTOR_LLM_MODEL_STRONG: ${INSPECTOR_LLM_MODEL_STRONG:-ollama_chat/qwen3:14b}
-      INSPECTOR_LLM_MODEL_FAST: ${INSPECTOR_LLM_MODEL_FAST:-ollama_chat/qwen3:8b}
-      INSPECTOR_LLM_API_BASE: ${INSPECTOR_LLM_API_BASE:-http://host.docker.internal:11434}
+      INSPECTOR_LLM_MODEL_STRONG: ${INSPECTOR_LLM_MODEL_STRONG:-}
+      INSPECTOR_LLM_MODEL_FAST: ${INSPECTOR_LLM_MODEL_FAST:-}
+      INSPECTOR_LLM_API_BASE: ${INSPECTOR_LLM_API_BASE:-}
       INSPECTOR_LLM_API_KEY: ${INSPECTOR_LLM_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      # Tracing (OpenTelemetry → Langfuse); unset keys = no export
-      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
-      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
-      LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL:-https://cloud.langfuse.com}
-      INSPECTOR_TRACE_CONTENT: ${INSPECTOR_TRACE_CONTENT:-true}
-      OTEL_INSTRUMENTATION_A2A_SDK_ENABLED: "false"   # a2a-sdk's internal spans are noise here
       PACKAGE_ROOT: /packages:/uploads   # synthetic packages, and what developers upload in the portal
     volumes: &packages
       - ./synthetic/packages:/packages:ro
@@ -124,6 +106,8 @@ services:
   # Developer portal: FastAPI backend (the lasting API) + Streamlit UI on http://localhost:8501.
   #   share: ngrok http 8501 --basic-auth "user:password"   (the URL is public; never expose it without auth)
   portal-api:
+    profiles: ["portal"]
+    image: inspector-portal:local   # built once, shared with portal-ui
     build:
       context: .
       dockerfile: packages/inspector_portal/Dockerfile
@@ -145,9 +129,8 @@ services:
     restart: unless-stopped
 
   portal-ui:
-    build:
-      context: .
-      dockerfile: packages/inspector_portal/Dockerfile
+    profiles: ["portal"]
+    image: inspector-portal:local
     command: ["streamlit", "run", "/app/packages/inspector_portal/inspector_portal/ui.py",
               "--server.port", "8501", "--server.address", "0.0.0.0", "--server.maxUploadSize", "200"]
     environment:
@@ -181,5 +164,4 @@ services:
 volumes:
   portal-data:
   portal-uploads:
-  ollama-models:
   warehouse-data:

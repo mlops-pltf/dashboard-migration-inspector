@@ -30,7 +30,7 @@ class _Ctx:
         self.by_id = {f.source.object_id: f for m in models for f in m.fields if f.source and f.source.object_id}
         self.model_of = {m.source.object_id: m.name for m in models if m.source and m.source.object_id}
         self.derived = {m["id"] for m in r["derived_metrics"]}  # defined in the dashboard, not in the model
-        self.src, self.issues, self.unlinked = src, [], set()
+        self.src, self.issues, self.unlinked = src, [], {}  # id -> name of objects the model export lacks
 
     def warn(self, message: str, path: str = "") -> None:
         self.issues.append(ParseIssue(severity="warning", message=message, source=self.src.model_copy(update={"path": path})))
@@ -43,9 +43,8 @@ class _Ctx:
         h = self.helpers.get(gid) if gid not in self.names else None
         if h and h.get("fn") == "Rank" and h["args"] and "ref" in h["args"][0]:
             return self.field_name(h["args"][0]["ref"])  # Rank helper behind a top-N: the ranked metric is shown
-        if gid and self.by_id and gid not in self.unlinked:
-            self.unlinked.add(gid)
-            self.warn(f"object {self.names.get(gid, alias) or gid} ({gid}) is not in the model export")
+        if gid and self.by_id:
+            self.unlinked.setdefault(gid, self.names.get(gid) or alias or gid)
         return self.names.get(gid) or alias or (gid or "?")
 
     def expr(self, n: dict | None, depth: int = 0) -> Expr:
@@ -108,7 +107,10 @@ class _Ctx:
 
 
 def load(path: Path, models: tuple[SemanticModel, ...] = (), root: Path | None = None) -> tuple[Dashboard, list[ParseIssue]]:
+    path = Path(path)
     r = decode_file(path)
+    if not any((r["dashboard"]["name"], r["visualizations"], r["derived_metrics"], r["filters"])):
+        raise ValueError("no dashboard definition found in the .delta (truncated or damaged file?)")
     rel = str(path.relative_to(root)) if root and path.is_relative_to(root) else str(path)
     ctx = _Ctx(r, models, SourceRef(file=rel, object_id=r["dashboard"]["id"]))
     no_template = [i for i in r["issues"] if i["kind"].startswith("layout item without template")]
@@ -159,6 +161,10 @@ def load(path: Path, models: tuple[SemanticModel, ...] = (), root: Path | None =
             filters.append(DashboardFilter(field=field, op=quals[0].lower(), values=()))
             ctx.warn(f"filter {f['name']!r}: qualification values are not decoded ({', '.join(quals)})")
 
+    if ctx.unlinked:  # one line per dashboard: when the id join fails it fails for every object
+        listed = ", ".join(f"{n} ({g})" for g, n in list(ctx.unlinked.items())[:15])
+        ctx.warn(f"{len(ctx.unlinked)} objects are not in the model export (matched by name only): {listed}"
+                 + (" ..." if len(ctx.unlinked) > 15 else ""))
     dash = Dashboard(id=f"mstr:dashboard:{r['dashboard']['id']}", name=r["dashboard"]["name"] or path.stem,
                      tool="strategy", kind="dashboard",
                      models=tuple(ctx.model_of.get(d["id"], d["name"]) for d in r["datasets"]),

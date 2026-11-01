@@ -18,7 +18,7 @@ class ModelExport(BaseModel):
     tool: str  # thoughtspot | strategy | ...
     location: str  # what was read
     fingerprint: str  # changes when the source files change
-    source_format: str | None = None  # e.g. tml, yaml_export, rest_json, ossie_yaml
+    source_format: str | None = None  # tml | yaml_export
     models: tuple[SemanticModel, ...] = ()
     dashboards: tuple[Dashboard, ...] = ()
     issues: tuple[ParseIssue, ...] = ()

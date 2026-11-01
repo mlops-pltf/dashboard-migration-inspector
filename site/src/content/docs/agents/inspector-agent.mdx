@@ -84,7 +84,7 @@ rule result and are marked *not reviewed by the agent*.
 
 | Request | Answered by |
 |---|---|
-| Structured skill `validate` `{package, mode: agent \| rules \| rules+data, max_turns}` | Code (the agent runs inside) and returns report JSON + Markdown, the trace id and link, and the run folder |
+| Structured skill `validate` `{package, mode: agent \| rules \| rules+data, max_turns}` | Code (the agent runs inside) and returns report JSON + Markdown, and the run folder |
 | Any text message | The Inspector agent, with its tools (ask about a package or a finding) |
 
 Package locations are folders under `PACKAGE_ROOT` locally, or `s3://` prefixes on AgentCore.

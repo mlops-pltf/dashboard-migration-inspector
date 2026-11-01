@@ -6,6 +6,7 @@ python -m strategy_agent.tools.mstr_reader.explore where   FILE.mstr TEXT_OR_GUI
 python -m strategy_agent.tools.mstr_reader.explore object  FILE.mstr GUID [--lines N]
 python -m strategy_agent.tools.mstr_reader.explore dump    FILE.mstr OFFSET [LENGTH]
 python -m strategy_agent.tools.mstr_reader.explore compare A.mstr B.mstr
+python -m strategy_agent.tools.mstr_reader.explore check   FOLDER_OR_FILE [--models FOLDER]
 """
 
 from __future__ import annotations
@@ -13,9 +14,10 @@ from __future__ import annotations
 import argparse
 import io
 from collections import Counter
+from pathlib import Path
 
 from .decode import FX, OBJECT_TYPES, embedded_objects, envelope_objects
-from .mstrfile import Doc, dump, guids, read_mstr, strings
+from .mstrfile import TESTED_VERSIONS, Doc, dump, guids, read_mstr, strings
 
 PROP_NAME_TAG = 0x15  # property names are written 15 08 <len> 08 <~len> name
 
@@ -109,6 +111,43 @@ def cmd_compare(a):
     print("object types only in B:", sorted(ob.keys() - oa.keys()))
 
 
+def cmd_check(a):
+    """First look at real files: per .mstr the writer version, what was read and every warning. A file that
+    cannot be read is reported and the next one is checked. With --models, objects are joined to the model export
+    by id (the warning "objects are not in the model export" means that join failed)."""
+    from ..model_export.export import LOADERS, _detect
+    from . import to_ir
+
+    models = []
+    if a.models:
+        for kind, source in _detect(Path(a.models)):
+            model, _ = LOADERS[kind](source, Path(a.models))
+            models.append(model)
+        print(f"models: {[m.name for m in models] or 'none found'}")
+    root = Path(a.target)
+    files = sorted(root.rglob("*.mstr")) if root.is_dir() else [root]
+    totals = Counter()
+    for f in files:
+        try:
+            header, _delta, _members = read_mstr(f)
+            dash, issues = to_ir.load(f, tuple(models))
+        except Exception as exc:  # report and go on: one bad file says nothing about the others
+            print(f"FAIL {f.name}: {type(exc).__name__}: {exc}")
+            totals["unreadable"] += 1
+            continue
+        version = (header.get("MSTRVer"), header.get("AEVersion"))
+        totals["read"] += 1
+        totals["untested version"] += version not in TESTED_VERSIONS
+        totals["files with unlinked objects"] += any("not in the model export" in i.message for i in issues)
+        totals["Count to confirm"] += sum("Count:" in i.message for i in issues)
+        print(f"ok   {f.name}: {dash.name!r}, MSTRVer {version[0]} AE {version[1]}"
+              f"{'' if version in TESTED_VERSIONS else ' (untested version)'}, {len(dash.visualizations)} visualizations, "
+              f"{len(dash.filters)} filters, {len(dash.fields)} derived metrics, {len(issues)} warnings")
+        for i in issues:
+            print(f"       - {i.message[:400]}")
+    print("totals:", dict(totals))
+
+
 def main():
     ap = argparse.ArgumentParser(prog="mstr-explore")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -121,6 +160,7 @@ def main():
     p = sub.add_parser("dump"); p.add_argument("file"); p.add_argument("offset", type=int); p.add_argument("length", type=int, nargs="?")
     p.set_defaults(fn=cmd_dump)
     p = sub.add_parser("compare"); p.add_argument("a"); p.add_argument("b"); p.set_defaults(fn=cmd_compare)
+    p = sub.add_parser("check"); p.add_argument("target"); p.add_argument("--models"); p.set_defaults(fn=cmd_check)
     a = ap.parse_args()
     a.fn(a)
 

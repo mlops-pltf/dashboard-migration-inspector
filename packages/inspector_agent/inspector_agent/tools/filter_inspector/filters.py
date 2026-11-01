@@ -1,7 +1,7 @@
 """Model-level filters on each side, in canonical form, so the same condition compares equal.
 
 ThoughtSpot: worksheet/model filters. Strategy: model filters plus the WHERE clause of every SQL-backed
-table (Freeform SQL, a filtered fact table, an Ossie custom-SQL dataset). Both apply to every query.
+table (Freeform SQL, a filtered fact table). Both apply to every query.
 """
 
 from __future__ import annotations

@@ -97,15 +97,14 @@ store type. The definitions differ, and the data shows where and by how much.
 | FAIL | impact | stays **FAIL**, with its size |
 
 <Aside type="note" title="Honest about what data cannot do">
-	In S18 (Ossie YAML), Net Revenue has no expression in the export and the customer join has no type while 749
-	orders have no customer. Data cannot settle either, so both stay UNVERIFIED and the report asks for
-	Strategy's report SQL. The ground truth was corrected to say so.
+	When a definition is missing from the input or a join type is unknown and the data shows rows that depend on
+	it, data cannot settle the question: the finding stays UNVERIFIED with the reason.
 </Aside>
 
 ## Results on the synthetic scenarios
 
 `inspector-validate <package> --rules-only --with-data` (or A2A `validate {mode: "rules+data"}`) reproduces the
-ground truth after data on all 18 scenarios: statuses, latent defects and verdicts, for example S04 NEEDS_REVIEW →
+ground truth after data on all 17 scenarios: statuses, latent defects and verdicts, for example S04 NEEDS_REVIEW →
 NOT_READY (fan-out confirmed), S14 NEEDS_REVIEW → READY (Net Revenue proven equal by data), S06 latent.
 
 ## Guardrails

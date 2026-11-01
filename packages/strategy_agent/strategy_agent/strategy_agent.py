@@ -18,14 +18,14 @@ from strands.multiagent.a2a.executor import StrandsA2AExecutor
 
 from inspector_contract.a2a import SkillRouterExecutor, agent_card
 
-from .llm import get_model, warm_up
+from .llm import get_model
 from .tools.model_export.export import export
 from .tools.model_export.tool import summarize_export
 from .tools.sql_analyzer.tool import analyze_sql, analyze_sql_impl
 from .tools.strategy_reader.tool import get_object_impl, get_strategy_object, list_fields_impl, list_strategy_fields
 
 NAME = "strategy_agent"
-DESCRIPTION = "Strategy (Mosaic) expert: reads model exports, metrics, Freeform SQL and dashboards and exports them as IR."
+DESCRIPTION = "Strategy (Mosaic) expert: reads the model YAML export (metrics, Freeform SQL) and .mstr dashboards and exports them as IR."
 SYSTEM_PROMPT = (Path(__file__).parent / "prompts" / "system.md").read_text()
 TOOLS = [summarize_export, list_strategy_fields, get_strategy_object, analyze_sql]
 
@@ -36,7 +36,7 @@ SKILLS = {
     "get_object": lambda a: get_object_impl(a["location"], a["name"]),
 }
 SKILL_DOCS = {
-    "export_model": "Strategy folder -> ModelExport (IR): models, derived joins, fields, Freeform SQL lineage, dashboards, SQL.",
+    "export_model": "Strategy folder -> ModelExport (IR): models, derived joins, fields, Freeform SQL lineage, .mstr dashboards.",
     "analyze_sql": "Lineage, joins and filters of a SELECT.",
     "list_fields": "Attributes and metrics with definitions and source lines.",
     "get_object": "The model, a logical table, an attribute/metric or a dashboard in detail.",
@@ -68,10 +68,6 @@ def app(url: str = "http://localhost:9000/", conversation: bool = True):
 def main() -> None:
     from bedrock_agentcore.runtime import serve_a2a
 
-    from inspector_contract import telemetry
-
-    telemetry.setup(NAME)
-    warm_up()
     serve_a2a(executor(), card(os.environ.get("AGENTCORE_RUNTIME_URL", "http://localhost:9000/")))
 
 

@@ -1,60 +1,57 @@
 ---
 title: Report
-description: Machine-readable JSON for pipelines, HTML/Markdown for people. Blockers first, grouped by root cause.
+description: Plain words for the people who decide on the migration; codes and evidence for developers and tools.
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-Every run writes `report.json` (stable schema) and `report.html` / `report.md`.
+Every run writes `report.md` (for people) and `report.json` (for tools), plus `run.json` (mode, timings, model).
 
-## A finding
+## For people: `report.md`
 
-```json title="report.json (one finding)"
-{
-  "id": "F-0031",
-  "check": "JN-04",
-  "severity": "BLOCKER",
-  "status": "FAIL",
-  "title": "Revenue is double-counted: Freeform SQL joins orders to order_lines",
-  "thoughtspot": {
-    "object": "Sales Worksheet", "field": "Revenue",
-    "location": "sales.worksheet.tml:57", "definition": "sum(FACT_ORDERS::AMOUNT)"
-  },
-  "strategy": {
-    "object": "Sales Model", "field": "Revenue",
-    "location": "model.yaml:tables[2].physicalTable.pipeline", "definition": "Sum(Amount){~+}"
-  },
-  "match_basis": "exact",
-  "decided_by": "rule+data",
-  "evidence": {
-    "grain_ts": ["orders.order_id"], "grain_st": ["order_lines.line_id"],
-    "probe": { "id": "P-0012", "status_counts": { "value_diff": 12 }, "relative_diff": 0.314 }
-  },
-  "root_cause_of": ["F-0032", "F-0033"],
-  "suggested_fix": "Aggregate order_lines before joining, or move AMOUNT into its own orders-grain table."
-}
+**The agent writes the words; the code owns the facts.** The verdict, each item's status and severity, the counts
+and what was confirmed come from the ledger and cannot be talked into a pass. The brief and each item's title,
+"why it matters" and "what to do" are the agent's, written from the findings for the business owners of the
+dashboards and the developers who fix them (another audience can be named in the notes given with the run).
+
+<Steps>
+1. **The verdict**: Ready, Not ready, or Needs review, with counts per section (code).
+2. **In short**: the agent's brief: can the numbers be trusted, what is wrong, how much, what to fix first.
+3. **Must fix before go-live**: issues that change numbers, one per root cause, with everything they affect.
+4. **Could not be confirmed**: what the files and the data could not settle, and what would.
+5. **Worth checking**, then **Cosmetic and for information**.
+6. **What was confirmed** (folded).
+</Steps>
+
+Each item ends with a folded **Details for developers** block: the check id, finding, evidence and lead ids,
+file locations and both definitions.
+
+```markdown title="report.md (one item)"
+### 1. Revenue is overstated: each order is counted once per order line
+**Must fix: changes numbers**
+
+**Affects:** Revenue, Discount, Shipping, Net Revenue
+**Why it matters:** Strategy's Sales Orders table joins order lines to orders, so an order with five lines is
+counted five times. In today's data 19,145 orders repeat, up to five times each.
+**What to do:** Join order lines in their own table, or aggregate them to one row per order before the join.
 ```
 
-## Report-level fields
+The label ("Must fix: changes numbers") is the only fixed wording; everything else in the item is the agent's.
+In rules-only runs there is no agent, so items carry the rules' own titles.
+
+## For tools: `report.json`
+
+Stable fields for pipelines, with the plain wording alongside:
 
 | Field | Content |
 |---|---|
-| `verdict` | `READY` / `NOT_READY` / `NEEDS_REVIEW` |
-| `coverage` | Fields and visualizations matched vs total |
-| `intentional_differences` | Mapping `ignore` entries with reasons |
-| `llm` | Calls, cache hits, model per alias, prompt versions |
+| `verdict`, `verdict_text` | `READY` / `NOT_READY` / `NEEDS_REVIEW`, and its plain name |
+| `counts` | Per section: `blocker_fail`, `blocker_unverified`, `warning`, `low`, `info`, `pass` |
+| `findings[]` | `check`, `severity`, `status` (codes) and `label` (plain words); `title`, `evidence.explanation`, `suggested_fix`; both sides' objects with file location and definition; `symptoms`; `evidence_refs`, `resolves` |
+| `summary` | The agent's brief |
+| `developer_notes`, `intentional_differences`, `parse_issues` | Context given with the run, mapping `ignore` entries, notes from reading the files |
 
-## Page order in the HTML report
-
-<Steps>
-1. **Blockers**, grouped by root cause, with the symptoms beneath
-2. **Unverified** items and why they couldn't be decided
-3. **Warnings**
-4. **What was proven** (collapsed), so reviewers can see what was checked
-5. **Look & feel** (low)
-</Steps>
-
-<Aside type="tip" title="Batch summary">
-	Across many packages, a CSV/JSON summary shows pass rates and the most common failure types. This
-	feeds back into developer guidance during the migration.
+<Aside type="tip" title="Many packages">
+	`report.json` is the input for any batch summary: pass rates and the most common problems across a
+	migration programme.
 </Aside>

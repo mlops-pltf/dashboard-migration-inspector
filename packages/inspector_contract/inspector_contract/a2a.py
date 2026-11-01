@@ -6,14 +6,12 @@ Every agent is an A2A server. Two kinds of request:
   * conversation: any other message (text). Answered by the agent's Strands agent (StrandsA2AExecutor).
 
 Authentication between agents: none locally, SigV4 on AgentCore (``auth="sigv4"``).
-Tracing: the client sends the W3C trace context with every request and the server continues it (telemetry.py).
 """
 
 from __future__ import annotations
 
 import asyncio
 import concurrent.futures
-import os
 import uuid
 from collections.abc import Callable
 from typing import Any
@@ -26,8 +24,6 @@ from a2a.types import (
     AgentCapabilities, AgentCard, AgentSkill, DataPart, Message, Part, Role, Task, TextPart,
 )
 from a2a.utils import new_agent_parts_message, new_agent_text_message
-
-from . import telemetry
 
 SESSION_HEADER = "X-Amzn-Bedrock-AgentCore-Runtime-Session-Id"
 
@@ -53,25 +49,17 @@ class SkillRouterExecutor(AgentExecutor):
         self.conversation = conversation
 
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        headers = (context.call_context.state.get("headers") if context.call_context else None) or {}
-        with telemetry.continued_from(headers):
-            await self._execute(context, event_queue)
-
-    async def _execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        agent = os.environ.get("OTEL_SERVICE_NAME", "agent")
         request = structured_request(context.message)
         if request is not None:
             name, args = request
             handler = self.skills.get(name)
-            with telemetry.span(f"{agent}: {name}", input=args, **{"a2a.skill": name}) as s:
-                if handler is None:
-                    result: dict = {"error": f"unknown skill {name!r}", "skills": sorted(self.skills)}
-                else:
-                    try:
-                        result = await asyncio.to_thread(handler, args)  # copies the trace context
-                    except Exception as exc:  # reported to the caller, not raised into the server
-                        result = {"error": f"{type(exc).__name__}: {exc}"}
-                s.output(result)
+            if handler is None:
+                result: dict = {"error": f"unknown skill {name!r}", "skills": sorted(self.skills)}
+            else:
+                try:
+                    result = await asyncio.to_thread(handler, args)
+                except Exception as exc:  # reported to the caller, not raised into the server
+                    result = {"error": f"{type(exc).__name__}: {exc}"}
             await event_queue.enqueue_event(new_agent_parts_message(
                 [Part(root=DataPart(data=result))], context.context_id, context.task_id))
             return
@@ -79,8 +67,7 @@ class SkillRouterExecutor(AgentExecutor):
             await event_queue.enqueue_event(new_agent_text_message(
                 f"Send a structured request; skills: {sorted(self.skills)}", context.context_id, context.task_id))
             return
-        with telemetry.span(f"{agent}: ask", input=context.get_user_input(), **{"a2a.skill": "ask"}):
-            await self.conversation.execute(context, event_queue)
+        await self.conversation.execute(context, event_queue)
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
         if self.conversation is not None:
@@ -134,6 +121,9 @@ def _run(coro):
         return pool.submit(asyncio.run, coro).result()
 
 
+CARD_RETRY_WAITS = (1, 2, 4, 8, 15, 30)  # seconds: an agent that is starting or restarting gets about 60 s to answer
+
+
 class A2AClient:
     def __init__(self, url: str, auth: str = "none", region: str | None = None, timeout: float = 900,
                  transport: httpx.AsyncBaseTransport | None = None, session_id: str | None = None):
@@ -147,15 +137,25 @@ class A2AClient:
     def name(self) -> str:
         return httpx.URL(self.url).host or self.url
 
-    async def _send(self, message: Message, headers: dict[str, str]) -> Any:
+    async def _send(self, message: Message) -> Any:
         async with httpx.AsyncClient(timeout=self.timeout, auth=self.auth, transport=self.transport,
-                                     headers={SESSION_HEADER: self.session_id, **headers}) as http:
-            card = await A2ACardResolver(httpx_client=http, base_url=self.url).get_agent_card()
+                                     headers={SESSION_HEADER: self.session_id}) as http:
+            card = await self._card_with_retry(http)
             card = card.model_copy(update={"url": self.url})  # we know where we reached it
             client = ClientFactory(ClientConfig(httpx_client=http, streaming=False)).create(card)
             async for event in client.send_message(message):
                 return event[0] if isinstance(event, tuple) else event
         return None
+
+    async def _card_with_retry(self, http: httpx.AsyncClient) -> AgentCard:
+        """The agent card, retried: nothing has been sent yet, so a transient failure is safe to repeat."""
+        for wait in (*CARD_RETRY_WAITS, None):
+            try:
+                return await A2ACardResolver(httpx_client=http, base_url=self.url).get_agent_card()
+            except Exception:
+                if wait is None:
+                    raise
+                await asyncio.sleep(wait)
 
     def card(self) -> AgentCard:
         async def get():
@@ -167,21 +167,16 @@ class A2AClient:
     def call(self, skill: str, args: dict) -> dict:
         msg = Message(role=Role.user, message_id=uuid.uuid4().hex,
                       parts=[Part(root=DataPart(data={"skill": skill, "args": args}))])
-        # the trace context is taken here, in the caller's context (_run may switch threads)
-        with telemetry.span(f"call {self.name}: {skill}", input=args) as s:
-            reply = _run(self._send(msg, telemetry.inject({})))
-            for part in _parts(reply):
-                if isinstance(part.root, DataPart):
-                    s.output(part.root.data)
-                    return part.root.data
-            return {"error": "no structured answer", "text": _text(reply)}
+        reply = _run(self._send(msg))
+        for part in _parts(reply):
+            if isinstance(part.root, DataPart):
+                return part.root.data
+        return {"error": "no structured answer", "text": _text(reply)}
 
     def ask(self, question: str, context_id: str | None = None) -> tuple[str, str | None]:
         msg = Message(role=Role.user, message_id=uuid.uuid4().hex, context_id=context_id,
                       parts=[Part(root=TextPart(text=question))])
-        with telemetry.span(f"ask {self.name}", input=question) as s:
-            reply = _run(self._send(msg, telemetry.inject({})))
-            s.output(_text(reply))
+        reply = _run(self._send(msg))
         return _text(reply), getattr(reply, "context_id", None)
 
 

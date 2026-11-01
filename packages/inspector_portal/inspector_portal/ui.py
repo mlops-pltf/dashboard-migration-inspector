@@ -255,18 +255,16 @@ def report(r: dict) -> None:
             finding(f, expanded)
 
     st.divider()
-    a, b, c3 = st.columns(3)
+    a, b = st.columns(2)
     a.download_button("Report (Markdown)", api("GET", f"/api/runs/{r['id']}/report.md"),
                       file_name=f"{rep.get('package_id', 'report')}-{r['id']}.md")
     b.download_button("Report (JSON)", httpx.get(f"{API}/api/runs/{r['id']}/report.json", timeout=60).content,
                       file_name=f"{rep.get('package_id', 'report')}-{r['id']}.json")
-    if r.get("trace_url"):
-        c3.link_button("Trace (Langfuse)", r["trace_url"], help="How the run reached this result: for maintainers")
 
 
 def finding(f: dict, expanded: bool) -> None:
     icon = STATUS_ICON.get(f["status"], "")
-    head = f"{icon} {f['title']}  ·  {f['check']} · {f['severity']}" + (" · latent" if f.get("latent") else "")
+    head = f"{icon} {f['title']}  ·  {f.get('label') or f['severity']}" + (" · no impact on today's data" if f.get("latent") else "")
     with st.expander(head, expanded=expanded):
         cols = st.columns(2)
         for col, side, label in ((cols[0], "thoughtspot", "ThoughtSpot"), (cols[1], "strategy", "Strategy")):
@@ -293,7 +291,7 @@ def finding(f: dict, expanded: bool) -> None:
             st.markdown("**To settle it:** " + ", ".join(f["needs"]))
         if f.get("suggested_fix"):
             st.success(f"**Fix:** {f['suggested_fix']}")
-        st.caption(f"Decided by {f.get('decided_by')}")
+        st.caption(f"For developers: {f['check']} · decided by {f.get('decided_by')}")
 
 
 def chat(rid: str) -> None:

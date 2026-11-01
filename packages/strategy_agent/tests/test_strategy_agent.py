@@ -59,13 +59,10 @@ def test_formats_and_join_semantics():
         ("fact_orders", "dim_date", "LEFT", "derived", "when_needed")}
     assert next(j for j in joins if j.right == "dim_date").keys == (("order_date", "date_key"),)
     assert "outer" in s01.models[0].settings["join_semantics"]
-    assert export(str(PACKAGES / "S02" / "strategy")).source_format == "rest_json"
+    assert export(str(PACKAGES / "S02" / "strategy")).source_format == "yaml_export"
     s04 = export(str(PACKAGES / "S04" / "strategy")).models[0]
     assert s04.joins == () and s04.tables[0].relation.kind == "sql"  # joins live inside the Freeform SQL lineage
     assert len(s04.tables[0].relation.lineage.joins) == 5
-    s18 = export(str(PACKAGES / "S18" / "strategy"))
-    assert s18.source_format == "ossie_yaml" and {j.type for j in s18.models[0].joins} == {"UNKNOWN"}
-    assert "metric levels" in s18.models[0].lossy
 
 
 @needs_synthetic
@@ -78,7 +75,9 @@ def test_a2a_structured_skills_and_card():
     assert out["outputs"] == {"x": "retail.t.x"}
 
 
-def test_agent_builds():
+def test_agent_builds(monkeypatch):
+    monkeypatch.setenv("INSPECTOR_LLM_MODEL_STRONG", "test-model")  # constructed only, never called
+    monkeypatch.setenv("INSPECTOR_LLM_API_BASE", "http://127.0.0.1:9/v1")
     assert {t.tool_name for t in TOOLS} == set(build_agent().tool_names)
 
 

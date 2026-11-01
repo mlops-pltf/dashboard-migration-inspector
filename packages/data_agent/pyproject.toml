@@ -7,10 +7,12 @@ dependencies = [
     "inspector-contract",
     "sqlglot==30.21.0",
     "psycopg[binary]==3.3.6",
-    "strands-agents[litellm,a2a]==1.59.0",
-    "litellm==1.104.2",
+    "strands-agents==1.59.0",
     "bedrock-agentcore[a2a]==1.24.0",
 ]
+
+[project.optional-dependencies]
+runpod = ["strands-agents[openai]==1.59.0"]  # an OpenAI-compatible model server (INSPECTOR_LLM_API_BASE); Bedrock needs nothing extra
 
 [project.scripts]
 data-agent = "data_agent.data_agent:main"

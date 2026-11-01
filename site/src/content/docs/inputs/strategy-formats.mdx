@@ -1,78 +1,45 @@
 ---
 title: Strategy formats
-description: Mosaic models can be exported three ways. One parser covers the two full-fidelity formats.
+description: The project delivers two Strategy files per migration - the model YAML export and one .mstr per dashboard.
 ---
 
-import { Tabs, TabItem, Badge, Aside } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-<Tabs>
-	<TabItem label="YAML export">
-		<Badge text="Full fidelity" variant="success" /> <Badge text="Preferred" variant="tip" />
+## Model: YAML export
 
-		`POST /api/model/dataModels/{id}/export` with `Accept: application/yaml` (Strategy April 2026+).
-		Returns one file with the whole model:
+`POST /api/model/dataModels/{id}/export` with `Accept: application/yaml` (Strategy April 2026+).
+Returns one file with the whole model:
 
-		- **tables**: physical columns, data types, source `namespace` / `tableName` or custom `sql`
-		- **attributes**: forms, form expressions *with the tables they map to*, lookup tables, key form
-		- **factMetrics**: fact expression, `function`, `dimty` (level)
-		- **metrics**: expression text, e.g. `Sum([Revenue]){~+}`
-		- **hierarchy.relationships**, folders, links, external data models
-		- a **fingerprint** (checksum) for detecting changes
+- **tables**: physical columns, data types, source `namespace` / `tableName` or custom `sql`
+- **attributes**: forms, form expressions *with the tables they map to*, lookup tables, key form
+- **factMetrics**: fact expression, `function`, `dimty` (level)
+- **metrics**: expression text, e.g. `Sum([Revenue]){~+}`
+- **hierarchy.relationships**, folders, links, external data models
+- a **fingerprint** (checksum) for detecting changes
 
-		```yaml title="excerpt"
-		factMetrics:
-		  - information: { subType: fact_metric, name: Year Duration }
-		    fact:
-		      expressions:
-		        - expression: { text: year_duration }
-		          tables: [{ subType: logical_table, name: lu_year }]
-		    function: sum
-		    dimty:
-		      dimtyUnits:
-		        - { dimtyUnitType: report_base_level, aggregation: normal, filtering: apply, groupBy: true }
-		metrics:
-		  - information: { subType: metric, name: New Metric }
-		    expression:
-		      text: "Sum<UseLookupForAttributes=False>([Year Duration]){~+}"
-		```
-	</TabItem>
-	<TabItem label="REST JSON">
-		<Badge text="Full fidelity" variant="success" />
+```yaml title="excerpt"
+factMetrics:
+  - information: { subType: fact_metric, name: Year Duration }
+    fact:
+      expressions:
+        - expression: { text: year_duration }
+          tables: [{ subType: logical_table, name: lu_year }]
+    function: sum
+    dimty:
+      dimtyUnits:
+        - { dimtyUnitType: report_base_level, aggregation: normal, filtering: apply, groupBy: true }
+metrics:
+  - information: { subType: metric, name: New Metric }
+    expression:
+      text: "Sum<UseLookupForAttributes=False>([Year Duration]){~+}"
+```
 
-		`GET /api/model/dataModels/{id}/tables | attributes | factMetrics | metrics | hierarchy`.
-		**Same object shapes** as the YAML export, delivered as separate documents. Metric expressions
-		can be returned as text, as a tree, or as tokens (`showExpressionAs`).
+## Dashboards: `.mstr`
 
-		Inspector's Strategy parser reads a YAML export, a folder of JSON documents, or a single JSON
-		bundle the same way.
-	</TabItem>
-	<TabItem label="Apache Ossie YAML">
-		<Badge text="Lossy" variant="danger" /> <Badge text="Fallback only" variant="caution" />
+One binary `.mstr` per dashboard, decoded by the Strategy expert's `mstr_reader` (format, evidence and known gaps
+in its README). Objects in the `.mstr` join the model export by object id.
 
-		The open interchange format (formerly OSI), built into Strategy since July 2026. Converting a
-		model to it **drops exactly what we need to validate**:
-
-		- metric levels (`{~+}`, `{Year+}`), hierarchies
-		- metric filters, conditional metrics, thresholds, subtotals
-		- previous-period and to-date functions (metrics are exported without an expression)
-		- composite-key joins: only the first join column is kept
-		- multi-datasource models: one ANSI pattern for all metrics
-
-		Accepted, but every check that depends on dropped information returns **UNVERIFIED** with the
-		reason, and data validation is forced.
-	</TabItem>
-</Tabs>
-
-## SQL from Strategy
-
-| Endpoint | Since | Gives |
-|---|---|---|
-| `GET /api/v2/cubes/{dataModelId}/sqlView` | December 2025 | SQL the model sends to the warehouse |
-| `…/dossiers/{id}/instances/{iid}/datasets/sqlView` | 2021 Update 2 | SQL per dashboard dataset |
-| `…/instances/{iid}/queryDetails` | 2021 Update 2 | Per-visualization query steps |
-
-<Aside type="caution" title="In-memory models">
-	For `dataServeMode: in_memory` models, the SQL view is the **cube load** query. The aggregation
-	each visualization does happens in Strategy's analytical engine. See
-	[how the data agent handles this](/agents/data-agent/#sql-sources).
+<Aside type="caution" title="No other Strategy input">
+	No REST calls and no SQL from Strategy: everything the Inspector knows about the Strategy side comes from
+	these two files. What they cannot express is reported as UNVERIFIED, never assumed.
 </Aside>

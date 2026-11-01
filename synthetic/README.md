@@ -49,7 +49,7 @@ ThoughtSpot models: **Sales Orders** (Worksheet TML), **Order Lines** (Model TML
 | # | Scenario | Strategy build | Expected |
 |---|---|---|---|
 | S01 | Clean Worksheet lift-and-shift | lookup tables | READY |
-| S02 | Clean Model lift-and-shift, renames via mapping, REST JSON input | lookup tables | READY |
+| S02 | Clean Model lift-and-shift, renames via mapping | lookup tables | READY |
 | S03 | Benign restructure into one Freeform SQL | Freeform SQL | READY |
 | S04 | Freeform SQL joins order lines → fan-out | Freeform SQL | JN-04 UNVERIFIED → FAIL with data (uniqueness of `fact_order_lines.order_id` is not in the package's metadata) |
 | S05 | LEFT → INNER customer join, orphans exist | Freeform SQL | JN-01 |
@@ -65,17 +65,15 @@ ThoughtSpot models: **Sales Orders** (Worksheet TML), **Order Lines** (Model TML
 | S15 | Dashboard drift: filter, top-N, week start | lookup tables | LN-01, DB-02, DB-05 |
 | S16 | Cosmetic only | lookup tables | READY + LOW (LF-02; chart types are not decoded from `.mstr`) |
 | S17 | Missing KPI used by content, extra KPI | lookup tables | CV-01, DB-01, CV-02 |
-| S18 | S08 delivered as Apache Ossie YAML | lookup tables | AG-02, FX-01, JN-01 UNVERIFIED → data |
 
 ## Shapes and assumptions
 
 Strategy shapes follow the official REST API samples (`github.com/MicroStrategy/rest-api-docs`):
-the model YAML export, per-object REST JSON, and Freeform SQL tables as
+the model YAML export and Freeform SQL tables as
 `physicalTable.type: "sql"` + `sqlStatement`. These parts are **assumed** until a real export confirms them:
 
 - **A2**: lookup-style join semantics are declared with the model property
   `[Joins].[Preserve all final pass result elements]` = outer join, matching ThoughtSpot LEFT joins.
-- **A5**: the top-level layout of Apache Ossie YAML (`semantic_model[].datasets / relationships / metrics`).
 
 Dashboards are written as binary `.mstr` files (`inspector_synth/mstr.py`) with exactly the encoding
 `strategy_agent/tools/mstr_reader` decodes, using the model export's object ids. Chart types are not written.

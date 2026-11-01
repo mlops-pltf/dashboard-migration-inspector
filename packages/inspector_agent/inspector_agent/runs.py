@@ -3,41 +3,18 @@
   <INSPECTOR_RUNS_DIR>/<yyyymmdd-hhmmss>-<package>-<run id>/
     report.md     the report
     report.json   the same, structured
-    run.json      mode, timings, trace id and the Langfuse link to see how the run got there
+    run.json      mode, timings, the agent's model, tool calls and token use
 
 Unset INSPECTOR_RUNS_DIR: nothing is written.
 """
 
 from __future__ import annotations
 
-import functools
 import json
 import os
-import urllib.request
 from pathlib import Path
 
-from inspector_contract import telemetry
-
 from .tools.findings_ledger import Report, markdown
-
-
-@functools.lru_cache(maxsize=1)
-def _langfuse_project() -> str | None:
-    auth = telemetry.langfuse_auth()
-    if not auth:
-        return None
-    req = urllib.request.Request(f"{telemetry.langfuse_base_url()}/api/public/projects",
-                                 headers={"Authorization": auth, "User-Agent": "inspector-agent"})
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.load(resp)["data"][0]["id"]
-    except Exception:  # the link is a convenience; the run never fails for it
-        return None
-
-
-def trace_url(trace_id: str) -> str | None:
-    project = _langfuse_project()
-    return f"{telemetry.langfuse_base_url()}/project/{project}/traces/{trace_id}" if project else None
 
 
 def save(report: Report, meta: dict) -> Path | None:

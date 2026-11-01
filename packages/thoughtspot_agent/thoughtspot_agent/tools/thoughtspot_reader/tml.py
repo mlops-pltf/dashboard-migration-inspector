@@ -62,12 +62,18 @@ def load(files: list[Path], root: Path | None = None) -> TmlBundle:
         except Exception as exc:  # malformed YAML must not stop the package
             bundle.issues.append(ParseIssue(severity="error", message=f"invalid YAML: {exc}", source=loc.ref("")))
             continue
-        kind = next((k for k in KINDS if isinstance(doc, dict) and k in doc), None)
+        if not isinstance(doc, dict):  # empty or truncated export: something was meant to be here
+            bundle.issues.append(ParseIssue(severity="error", message="empty or not a TML document", source=loc.ref("")))
+            continue
+        kind = next((k for k in KINDS if k in doc), None)
         if kind is None:
             bundle.issues.append(ParseIssue(severity="warning", message="not a supported TML object",
                                             source=loc.ref("")))
             continue
         body = doc[kind]
+        if not isinstance(body, dict):
+            bundle.issues.append(ParseIssue(severity="error", message=f"{kind} section is empty", source=loc.ref("")))
+            continue
         bundle.objects.append(TmlObject(kind, str(body.get("name", path.stem)), body, doc.get("guid"), loc))
     return bundle
 

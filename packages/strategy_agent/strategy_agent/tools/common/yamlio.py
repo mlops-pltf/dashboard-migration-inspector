@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import threading
 from pathlib import Path
 from typing import Any
@@ -26,10 +25,6 @@ def _parser() -> YAML:
 def load_yaml(path: Path) -> Any:
     with open(path) as fh:
         return _parser().load(fh)
-
-
-def load_json(path: Path) -> Any:
-    return json.loads(Path(path).read_text())
 
 
 def line_of(node: Any, key: str | int | None = None) -> int | None:

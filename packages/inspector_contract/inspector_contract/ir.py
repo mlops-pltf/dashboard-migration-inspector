@@ -225,7 +225,7 @@ class Field(_Base):
     name: str
     kind: Literal["ATTRIBUTE", "MEASURE"]
     expr: Expr
-    object_type: str  # ts:column | ts:formula | mstr:attribute | mstr:fact_metric | mstr:metric | ossie:...
+    object_type: str  # ts:column | ts:formula | mstr:attribute | mstr:fact_metric | mstr:metric | mstr:derived_metric
     data_type: str | None = None
     description: str = ""
     synonyms: tuple[str, ...] = ()
@@ -251,7 +251,7 @@ class SemanticModel(_Base):
     id: str
     name: str
     tool: Literal["thoughtspot", "strategy"]
-    kind: str  # worksheet | model | sql_view | mosaic | ossie
+    kind: str  # worksheet | model | sql_view | mosaic
     tables: tuple[LogicalTable, ...] = ()
     joins: tuple[Join, ...] = ()
     fields: tuple[Field, ...] = ()

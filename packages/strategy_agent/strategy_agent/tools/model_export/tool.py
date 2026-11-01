@@ -25,7 +25,7 @@ def summarize_export_impl(location: str) -> dict:
 
 @tool
 def summarize_export(location: str) -> dict:
-    """Read a Strategy export folder (model YAML export, REST JSON or Ossie YAML, plus dashboards/*.mstr) and summarise it: models with
+    """Read a Strategy export folder (model YAML export plus dashboards/*.mstr) and summarise it: models with
     their tables, joins (type and whether applied only when needed), field counts, filters, settings,
     dashboards and parse problems.
 

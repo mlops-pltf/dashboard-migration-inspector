@@ -13,7 +13,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 
 from inspector_contract import (
-    IgnoreEntry, Mapping, MappingEntry, MigrationPackage, ModelExport, ParseIssue, Side,
+    IgnoreEntry, Mapping, MappingEntry, MigrationPackage, ModelExport, ParseIssue, Side, SourceRef,
 )
 
 from ..expert_client.client import SIDES, expert
@@ -30,40 +30,65 @@ def location_of(package: str) -> str:
     return str(path)
 
 
-def _read_yaml(location: str, name: str) -> dict:
+def _read_yaml(location: str, name: str, issues: list[ParseIssue]) -> dict:
+    """An optional package file as a mapping; a malformed one is reported and treated as absent."""
     path, _ = materialize(location)
     f = Path(path) / name
+    if not f.exists():
+        return {}
     if not hasattr(_local, "yaml"):
         _local.yaml = YAML(typ="safe")
-    return (_local.yaml.load(f.read_text()) or {}) if f.exists() else {}
+    try:
+        doc = _local.yaml.load(f.read_text(encoding="utf-8-sig")) or {}
+    except Exception as exc:
+        doc = exc
+    if isinstance(doc, dict):
+        return doc
+    issues.append(ParseIssue(severity="error", source=SourceRef(file=name),
+                             message=f"{name} is not a YAML mapping ({doc if isinstance(doc, Exception) else type(doc).__name__}); ignored"))
+    return {}
 
 
-def _mapping(doc: dict) -> Mapping | None:
+def _mapping(doc: dict, name: str, issues: list[ParseIssue]) -> Mapping | None:
     if not doc:
         return None
 
+    def items(key):
+        value = doc.get(key) or []
+        good = [e for e in value if isinstance(e, dict) and e.get("thoughtspot")] if isinstance(value, list) else []
+        if len(good) != (len(value) if isinstance(value, list) else 1):
+            issues.append(ParseIssue(severity="error", source=SourceRef(file=name, path=key),
+                                     message=f"{name}: {key} entries need thoughtspot and strategy keys; malformed entries ignored"))
+        return good
+
     def entries(key):
-        return tuple(MappingEntry(thoughtspot=str(e["thoughtspot"]), strategy=str(e["strategy"])) for e in doc.get(key) or [])
+        return tuple(MappingEntry(thoughtspot=str(e["thoughtspot"]), strategy=str(e.get("strategy") or ""))
+                     for e in items(key))
 
     return Mapping(models=entries("models"), fields=entries("fields"), visualizations=entries("visualizations"),
                    ignore=tuple(IgnoreEntry(thoughtspot=str(e["thoughtspot"]), reason=str(e.get("reason", "")))
-                                for e in doc.get("ignore") or []))
+                                for e in items("ignore")))
 
 
 def _assemble(location: str) -> tuple[MigrationPackage, str]:
-    manifest = _read_yaml(location, "manifest.yaml")
-    exports: dict[str, ModelExport | None] = {}
     issues: list[ParseIssue] = []
+    manifest = _read_yaml(location, "manifest.yaml", issues)
+    exports: dict[str, ModelExport | None] = {}
     for side in SIDES:
-        folder = str((manifest.get(side) or {}).get("folder", side)).strip("/")
-        reply = expert(side).call("export_model", {"location": join(location, folder)})
+        entry = manifest.get(side)
+        folder = str((entry if isinstance(entry, dict) else {}).get("folder") or side).strip("/")
+        try:
+            reply = expert(side).call("export_model", {"location": join(location, folder)})
+        except Exception as exc:  # the expert is down: the package cannot be read, report it instead of failing the run
+            reply = {"error": f"unreachable: {type(exc).__name__}: {exc}"}
         if "error" in reply:
             issues.append(ParseIssue(severity="error", message=f"{side} expert: {reply['error']}"))
             exports[side] = None
             continue
         exp = ModelExport.model_validate(reply)
         exports[side] = exp
-        issues.extend(i.model_copy(update={"message": f"{side}: {i.message}"}) for i in exp.issues)
+        issues.extend(i.model_copy(update={"message": f"{side}: " + (f"{i.source}: " if i.source else "") + i.message})
+                      for i in exp.issues)
 
     def side(name: str) -> Side:
         exp = exports.get(name)
@@ -73,7 +98,7 @@ def _assemble(location: str) -> tuple[MigrationPackage, str]:
     pkg = MigrationPackage(
         id=str(manifest.get("package_id") or location.rstrip("/").rpartition("/")[2]), root=location,
         thoughtspot=side("thoughtspot"), strategy=side("strategy"),
-        mapping=_mapping(_read_yaml(location, str(mapping_name))),
+        mapping=_mapping(_read_yaml(location, str(mapping_name), issues), str(mapping_name), issues),
         strategy_format=exports["strategy"].source_format if exports.get("strategy") else None,
         issues=tuple(issues))
     key = location + "|" + "|".join(e.fingerprint for e in exports.values() if e)

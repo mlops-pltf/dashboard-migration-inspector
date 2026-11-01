@@ -30,8 +30,8 @@ def _files(root: Path) -> dict[str, bytes]:
     return {str(p.relative_to(root)): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
 
 
-def test_eighteen_scenarios():
-    assert sorted(SCENARIOS) == [f"S{i:02d}" for i in range(1, 19)]
+def test_seventeen_scenarios():
+    assert sorted(SCENARIOS) == [f"S{i:02d}" for i in range(1, 18)]
 
 
 def test_generation_is_deterministic(generated, tmp_path):

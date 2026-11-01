@@ -1,4 +1,4 @@
-"""Scenarios S01-S18: a ThoughtSpot model + content, the Strategy version a developer built, and ground truth.
+"""Scenarios S01-S17: a ThoughtSpot model + content, the Strategy version a developer built, and ground truth.
 
 Ground truth per scenario:
   * expected findings (check id, severity, status, objects, root cause and symptoms, acceptable alternatives)
@@ -59,7 +59,7 @@ class Scenario:
     ts_model: SemanticModel
     ts_content: tuple[Liveboard, ...]
     strategy: StrategySpec
-    strategy_format: str  # yaml_export | rest_json | ossie_yaml
+    strategy_format: str  # yaml_export (the only model format the project delivers)
     expected_verdict: str
     expected: tuple[Expected, ...] = ()
     must_pass: tuple[str, ...] = ()
@@ -123,9 +123,9 @@ def build() -> list[Scenario]:
                "Category": "Product Category"}
     out.append(Scenario(
         "S02", "Clean lift-and-shift of a Model with deliberate renames",
-        "Order Lines rebuilt faithfully; four objects renamed and declared in mapping.yaml. Delivered as REST JSON.",
+        "Order Lines rebuilt faithfully; four objects renamed and declared in mapping.yaml.",
         d.LINES, d.CONTENT["Order Lines"],
-        _lookup(d.LINES, name="Product Lines", renames=renames), "rest_json", "READY",
+        _lookup(d.LINES, name="Product Lines", renames=renames), "yaml_export", "READY",
         must_pass=tuple(f"Order Lines::{m}" for m in
                         ("Units", "Line Revenue", "Line Cost", "Gross Margin", "Margin %", "Avg Selling Price")),
         witnesses=(Witness("W1", "Margin by Category", "equal",
@@ -396,32 +396,6 @@ def build() -> list[Scenario]:
             Expected("E3", "CV-02", "INFO", "FAIL", None, "Sales Orders::Revenue per Item", "extra metric"),
         ),
         must_pass=_sales_must_pass("Shipping"),
-    ))
-
-    # S18 ------------------------------------------------------------------------------------
-    out.append(Scenario(
-        "S18", "Ossie YAML input for the S08 model",
-        "Same defect as S08, delivered as Apache Ossie YAML, which drops metric levels and Apply* expressions.",
-        S, d.CONTENT["Sales Orders"], _lookup(s08), "ossie_yaml", "NEEDS_REVIEW",
-        expected=(
-            Expected("E1", "AG-02", "BLOCKER", "UNVERIFIED", "Sales Orders::Region Revenue",
-                     "Sales Orders::Region Revenue", "level information not present in Ossie YAML",
-                     status_after_data="FAIL", decided_by="data"),
-            Expected("E2", "FX-01", "BLOCKER", "UNVERIFIED", "Sales Orders::Net Revenue",
-                     "Sales Orders::Net Revenue", "ApplySimple metric exported without an expression; with no "
-                     "definition there is nothing to run, so data cannot settle it (needs Strategy's report SQL)",
-                     status_after_data="UNVERIFIED", decided_by="data"),
-            Expected("E3", "JN-01", "BLOCKER", "UNVERIFIED", "Sales Orders::FACT_ORDERS_to_DIM_CUSTOMER",
-                     "Sales Orders::fact_orders_to_dim_customer", "Ossie relationships carry no join type; 749 "
-                     "orders have no customer, so the result depends on the type and data cannot settle it",
-                     status_after_data="UNVERIFIED", decided_by="data"),
-        ),
-        must_pass=_sales_must_pass("Region Revenue", "Net Revenue"),
-        witnesses=(
-            Witness("W1", "Region Revenue at Store Region x Store Type", "differ", REGION_REVENUE_Q),
-            Witness("W2", "Net Revenue by Customer Segment", "equal", _q(("Customer Segment",), ("Net Revenue",))),
-        ),
-        expected_verdict_after_data="NOT_READY",
     ))
     return out
 

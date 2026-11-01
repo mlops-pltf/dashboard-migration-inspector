@@ -7,10 +7,12 @@ dependencies = [
     "inspector-contract",
     "ruamel.yaml>=0.19.1,<0.20",
     "sqlglot==30.21.0",
-    "strands-agents[litellm,a2a]==1.59.0",
-    "litellm==1.104.2",
+    "strands-agents==1.59.0",
     "bedrock-agentcore[a2a]==1.24.0",
 ]
+
+[project.optional-dependencies]
+runpod = ["strands-agents[openai]==1.59.0"]  # an OpenAI-compatible model server (INSPECTOR_LLM_API_BASE); Bedrock needs nothing extra
 
 [project.scripts]
 thoughtspot-agent = "thoughtspot_agent.thoughtspot_agent:main"

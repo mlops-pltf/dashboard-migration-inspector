@@ -15,11 +15,13 @@ from .context import build
 @functools.lru_cache(maxsize=32)
 def _sweep(location: str, key: str) -> tuple[Finding, ...]:
     pkg = load_cached(location)
-    if pkg.errors:
-        return tuple(finalize([Finding(check="PK-01", severity="BLOCKER", status="FAIL",
-                                       title="The migration package could not be read completely",
-                                       evidence={"errors": "; ".join(i.message for i in pkg.errors)})]))
-    found = finalize(checks.run_all(build(pkg)))
+    unread = [Finding(check="PK-01", severity="BLOCKER", status="FAIL", title=f"Could not be read: {i.message}",
+                      evidence={"error": i.message}, suggested_fix="Fix or re-export the file; the rest was validated.")
+              for i in pkg.errors]
+    if not (pkg.thoughtspot.models and pkg.strategy.models):  # nothing to compare: the other checks would only add noise
+        return tuple(finalize(unread or [Finding(check="PK-01", severity="BLOCKER", status="FAIL",
+                                                 title="No model could be read on one side of the package")]))
+    found = finalize(unread + checks.run_all(build(pkg)))
     for i, f in enumerate(found, 1):
         f.id = f"L{i:02d}"
     return tuple(found)

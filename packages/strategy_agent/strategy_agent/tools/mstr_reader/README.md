@@ -131,9 +131,9 @@ one. The decoder reports them as issues.
 | datasets | `Dashboard.models` (model name when the dataset id is a model's object id) |
 
 Field names come from the **model export** first: a unit's object id is matched to `Field.source.object_id`.
-Only when that fails does the .mstr's own name (or alias) appear, with a warning
-"object X (id) is not in the model export". Those warnings are the first thing to check in the project: they test
-the `.mstr` <-> model export id join.
+Only when that fails does the .mstr's own name (or alias) appear, with one warning per dashboard
+"N objects are not in the model export (matched by name only): X (id), ...". That warning is the first thing to check
+in the project: it tests the `.mstr` <-> model export id join.
 
 ## 6. How well it works (evidence)
 
@@ -174,9 +174,25 @@ Strategy version (MSTRVer 110300, AEVersion 13). Dashboards sit on cubes and Exc
 - Not seen in the demo files: prompts, custom groups, consolidations, derived elements, security filters,
   **Mosaic-model datasets**. Expect new object types / node types there.
 - **Mosaic link untested**: the plan is to join `.mstr` dataset object ids to `information.objectId` in the
-  model export. Verify that first (section 8, step 6).
+  model export. Verify that first (section 8).
 
-## 8. Discovery playbook (how every rule above was found)
+## 8. First check on real files
+
+Run before anything else, on the project's `.mstr` files and their model export:
+
+    python -m strategy_agent.tools.mstr_reader.explore check DASHBOARDS_FOLDER --models MODEL_EXPORT_FOLDER
+
+Per file it prints the writer version, what was read and every warning; a file it cannot read is reported and the
+next one is checked. Read the totals:
+
+- `unreadable` > 0: send the error line back; `explore info FILE` on that file is the starting point.
+- `untested version` > 0: the writer version differs from the one this decoder was checked on. Run
+  `explore compare` against a file of the tested version (step 1 below) and check a few dashboards by eye.
+- `files with unlinked objects` > 0: the `.mstr` <-> model export id join failed for those objects (wrong export,
+  or objects outside the model). Every finding about them is matched by name only.
+- `Count to confirm`: Count vs Count Distinct cannot be told apart in `.mstr` (section 7); confirm each in Strategy.
+
+## 9. Discovery playbook (how every rule above was found)
 
 Work from something you *know* to the bytes, never the other way round. Each step uses `explore.py`.
 

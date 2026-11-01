@@ -15,7 +15,9 @@ from inspector_contract.a2a import A2AClient
 pytestmark = needs_synthetic
 
 
-def test_agent_builds_with_all_tools_and_a_neutral_prompt():
+def test_agent_builds_with_all_tools_and_a_neutral_prompt(monkeypatch):
+    monkeypatch.setenv("INSPECTOR_LLM_MODEL_STRONG", "test-model")  # constructed only, never called
+    monkeypatch.setenv("INSPECTOR_LLM_API_BASE", "http://127.0.0.1:9/v1")
     agent = ia.build_agent()
     assert set(agent.tool_names) == {t.tool_name for t in ia.TOOLS}
     assert "No pass without proof" in ia.SYSTEM_PROMPT and "ask_expert" in ia.SYSTEM_PROMPT
@@ -51,3 +53,18 @@ def test_a2a_validate_skill_and_path_guard(monkeypatch, tmp_path):
     out = client.call("validate", {"package": "S07", "mode": "rules"})
     assert out["verdict"] == "NOT_READY" and "AG-01" in out["markdown"]
     assert "error" in client.call("validate", {"package": "../../etc", "mode": "rules"})
+
+
+def test_agent_cards_carry_every_skill_the_inspector_calls():
+    """The agent cards are what AWS Agent Registry stores: names and skill ids are the Inspector's contract."""
+    from data_agent.data_agent import NAME as DATA, card as data_card
+    from strategy_agent.strategy_agent import NAME as ST, card as st_card
+    from thoughtspot_agent.thoughtspot_agent import NAME as TS, card as ts_card
+
+    needs = {TS: {"export_model", "analyze_sql"}, ST: {"export_model", "analyze_sql"},
+             DATA: {"compare_queries", "key_profile", "orphan_profile"}}
+    for make in (ts_card, st_card, data_card):
+        c = make("https://runtime.example/invocations/")
+        assert c.url == "https://runtime.example/invocations/" and c.protocol_version
+        assert needs[c.name] <= {s.id for s in c.skills}, c.name
+    assert {TS, ST, DATA} == {"thoughtspot_agent", "strategy_agent", "data_agent"}

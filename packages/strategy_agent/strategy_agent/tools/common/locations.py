@@ -9,9 +9,28 @@ from __future__ import annotations
 
 import hashlib
 import os
+import shutil
 import tempfile
 import zipfile
 from pathlib import Path
+
+
+def is_junk(path: Path, root: Path) -> bool:
+    """Operating-system litter, not package content: macOS resource forks (._x, __MACOSX), .DS_Store, hidden files."""
+    return any(part.startswith(".") or part == "__MACOSX" for part in path.relative_to(root).parts)
+
+
+def package_files(root: Path, pattern: str) -> list[Path]:
+    """Files under root matching pattern (recursive), without operating-system litter."""
+    return sorted(p for p in root.rglob(pattern) if p.is_file() and not is_junk(p, root))
+
+
+def _publish(tmp: Path, target: Path) -> None:
+    """Move a fully written folder into place, so an interrupted extract or download is never reused."""
+    try:
+        tmp.rename(target)
+    except OSError:  # another worker got there first
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def _roots() -> list[Path]:
@@ -36,22 +55,26 @@ def _local(location: str) -> Path:
 def _fingerprint_dir(path: Path) -> str:
     h = hashlib.sha256()
     for p in sorted(path.rglob("*")):
-        if p.is_file():
+        if p.is_file() and not is_junk(p, path):
             st = p.stat()
             h.update(f"{p.relative_to(path)}:{st.st_size}:{st.st_mtime_ns}".encode())
     return h.hexdigest()[:16]
 
 
-def _unzip(path: Path) -> Path:
-    target = Path(tempfile.gettempdir()) / f"pkg-{hashlib.sha256(str(path).encode()).hexdigest()[:12]}"
+def _unzip(path: Path, digest: str) -> Path:
+    """Extracted once per zip content (a re-uploaded zip with the same name gets a fresh folder). A zip that
+    wraps everything in one top folder is entered."""
+    target = Path(tempfile.gettempdir()) / f"pkg-{digest}"
     if not target.exists():
         with zipfile.ZipFile(path) as zf:
             for member in zf.namelist():
                 if Path(member).is_absolute() or ".." in Path(member).parts:
                     raise ValueError(f"unsafe path in zip: {member}")
-            zf.extractall(target)
-    inner = [p for p in target.iterdir() if p.is_dir()]
-    return inner[0] if len(inner) == 1 and not any(target.glob("*.*")) else target
+            tmp = Path(tempfile.mkdtemp(prefix="pkg-partial-"))
+            zf.extractall(tmp)
+        _publish(tmp, target)
+    inner = [p for p in target.iterdir() if not is_junk(p, target)]
+    return inner[0] if len(inner) == 1 and inner[0].is_dir() else target
 
 
 def _s3(location: str) -> tuple[Path, str]:
@@ -67,13 +90,15 @@ def _s3(location: str) -> tuple[Path, str]:
     fp = hashlib.sha256("".join(f"{o['Key']}:{o['ETag']}" for o in objects).encode()).hexdigest()[:16]
     target = Path(tempfile.gettempdir()) / f"s3-{fp}"
     if not target.exists():
+        tmp = Path(tempfile.mkdtemp(prefix="s3-partial-"))
         for o in objects:
             rel = o["Key"][len(prefix):].lstrip("/")
-            if not rel or ".." in Path(rel).parts:
+            if not rel or rel.endswith("/") or ".." in Path(rel).parts:
                 continue
-            dest = target / rel
+            dest = tmp / rel
             dest.parent.mkdir(parents=True, exist_ok=True)
             s3.download_file(bucket, o["Key"], str(dest))
+        _publish(tmp, target)
     return target, fp
 
 
@@ -82,7 +107,8 @@ def materialize(location: str) -> tuple[Path, str]:
         return _s3(location)
     path = _local(location)
     if path.suffix.lower() == ".zip":
-        return _unzip(path), hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+        return _unzip(path, digest), digest
     return path, _fingerprint_dir(path)
 
 

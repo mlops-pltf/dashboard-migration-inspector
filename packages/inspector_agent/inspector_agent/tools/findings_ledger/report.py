@@ -5,7 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field as PField
+from pydantic import BaseModel, Field as PField, computed_field
+
+from . import plain
 
 Severity = Literal["BLOCKER", "WARNING", "LOW", "INFO"]
 Status = Literal["FAIL", "PASS", "UNVERIFIED"]
@@ -47,6 +49,11 @@ class Finding(BaseModel):
     def blocking(self) -> bool:
         return self.severity == "BLOCKER" and self.status in ("FAIL", "UNVERIFIED")
 
+    @computed_field  # the neutral label shown to people; `severity` and `status` stay for tools
+    @property
+    def label(self) -> str:
+        return plain.label(self.severity, self.status)
+
 
 class Report(BaseModel):
     run_id: str
@@ -63,6 +70,11 @@ class Report(BaseModel):
     summary: str = ""  # the agent's executive summary
     developer_notes: str = ""  # instructions the developer gave the run: context, never proof
     agent: dict[str, Any] = {}  # model, tool calls, evidence count
+
+    @computed_field
+    @property
+    def verdict_text(self) -> str:
+        return plain.VERDICT.get(self.verdict, self.verdict)
 
 
 def verdict_of(findings: list[Finding]) -> Verdict:

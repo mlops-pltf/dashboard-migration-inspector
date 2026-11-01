@@ -1,8 +1,7 @@
 """Strategy Mosaic model -> IR.
 
-One code path for the model YAML export (``POST /api/model/dataModels/{id}/export``) and the
-per-object REST JSON (``GET /api/model/dataModels/{id}/tables|attributes|factMetrics|metrics|hierarchy``):
-both use the same object shapes. Strategy joins are *derived* (shared attribute forms), so this parser
+Reads the model YAML export (``POST /api/model/dataModels/{id}/export``), the only model format the project
+delivers. Strategy joins are *derived* (shared attribute forms), so this parser
 records attribute placements and leaves ``joins`` to the resolver.
 """
 
@@ -18,14 +17,14 @@ from inspector_contract import (
 from inspector_contract.ir import Opaque
 from ..sql_analyzer.lineage import analyze
 from . import expression as mstr_expr
-from ..common.yamlio import Locator, load_json, load_yaml, plain
+from ..common.yamlio import Locator, load_yaml, plain
 
 FUNCTIONS = {"sum": "SUM", "count": "COUNT", "avg": "AVG", "average": "AVG", "min": "MIN", "max": "MAX",
              "stdev": "STDDEV", "var": "VARIANCE", "median": "MEDIAN"}
 
 
 class _Ctx:
-    """Locators per section: one file for the YAML export, one file per object type for REST JSON."""
+    """Locators per section of the export (all in the one YAML file)."""
 
     def __init__(self, locators: dict[str, Locator], base_paths: dict[str, str]):
         self.locators = locators
@@ -181,30 +180,3 @@ def load_yaml_export(path: Path, root: Path | None = None) -> tuple[SemanticMode
                                                         ("tables", "attributes", "factMetrics", "metrics")}})
     sm, issues = build(model, ctx)
     return sm.model_copy(update={"settings": sm.settings | {"fingerprint": str(doc.get("fingerprint", ""))}}), issues
-
-
-def load_rest_json(directory: Path, root: Path | None = None) -> tuple[SemanticModel, list[ParseIssue]]:
-    files = {"model": "dataModel.json", "tables": "tables.json", "attributes": "attributes.json",
-             "factMetrics": "factMetrics.json", "metrics": "metrics.json", "hierarchy": "hierarchy.json"}
-    model: dict = {}
-    locators: dict[str, Locator] = {}
-    issues: list[ParseIssue] = []
-    for section, fname in files.items():
-        path = directory / fname
-        if not path.exists():
-            if section in ("model", "tables"):
-                issues.append(ParseIssue(severity="error", message=f"missing {fname}",
-                                         source=SourceRef(file=str(path))))
-            continue
-        doc = load_json(path)
-        locators[section] = Locator(path, root)
-        if section == "model":
-            model.update(doc)
-        elif section == "hierarchy":
-            model["hierarchy"] = doc
-        else:
-            model[section] = doc.get(section, [])
-    locators.setdefault("model", Locator(directory / files["model"], root))
-    ctx = _Ctx(locators, {s: s for s in files})
-    sm, more = build(model, ctx)
-    return sm, issues + more

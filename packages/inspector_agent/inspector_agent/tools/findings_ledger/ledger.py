@@ -195,7 +195,7 @@ class Ledger:
         return {"accepted": True, "verdict": self.report.verdict, "counts": self.report.counts}
 
 
-_VERDICTS = re.compile(r"\b(NOT[_ ]READY|NEEDS[_ ]REVIEW|READY)\b")
+_VERDICTS = re.compile(r"\b(NOT[_ ]READY|NEEDS[_ ]REVIEW|READY)\b", re.IGNORECASE)
 
 
 def without_verdict_claims(summary: str, verdict: str) -> tuple[str, int]:
@@ -203,7 +203,7 @@ def without_verdict_claims(summary: str, verdict: str) -> tuple[str, int]:
     other than the computed verdict. Returns the cleaned summary and how many lines were dropped."""
     kept, removed = [], 0
     for line in summary.splitlines():
-        named = {m.replace(" ", "_") for m in _VERDICTS.findall(line)}
+        named = {m.upper().replace(" ", "_") for m in _VERDICTS.findall(line)}
         if re.search(r"\bverdict\b", line, re.IGNORECASE) or named - {verdict}:
             removed += 1
             continue

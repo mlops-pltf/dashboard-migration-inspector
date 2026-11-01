@@ -28,17 +28,7 @@ def test_every_package_inventories_and_resolves(sid):
     assert inv["thoughtspot"]["models"] and inv["strategy"]["models"]
     for side in ("thoughtspot", "strategy"):
         for name, r in resolved(pkg(sid), side).items():
-            if (sid, side, name) == ("S18", "strategy", "Net Revenue"):  # Ossie drops Apply* expressions
-                assert r.status == "partial"
-                continue
             assert r.status == "exact" and r.columns, (sid, side, name, r.issues)
-
-
-def test_inventory_shows_format_losses_and_joins():
-    inv = inspect_package_impl(pkg("S18"))
-    assert inv["strategy_format"] == "ossie_yaml"
-    assert "metric levels" in inv["strategy"]["models"][0]["input_format_loses"]
-    assert any("UNKNOWN" in j for j in inv["strategy"]["models"][0]["joins"])
 
 
 def test_model_browser():
@@ -111,6 +101,3 @@ def test_request_data_probe_runs_lead_and_kpi_probes():
     r = request_data_probe_impl(pkg("S14"), "kpi_equivalence", thoughtspot_field="Net Revenue",
                                 strategy_field="Net Revenue")
     assert r["match"] is True and r["subject"]["thoughtspot"] == "Net Revenue"
-    r = request_data_probe_impl(pkg("S18"), "kpi_equivalence", thoughtspot_field="Net Revenue",
-                                strategy_field="Net Revenue")
-    assert r["match"] is None  # no definition in the Ossie export: data cannot decide

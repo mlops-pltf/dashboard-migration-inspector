@@ -3,7 +3,7 @@ description: Migration of ThoughtSpot model 'Order Lines' and its content to Str
 thoughtspot:
   tml_dir: thoughtspot/
 strategy:
-  model: strategy/model/
-  model_format: rest_json
+  model: strategy/model.yaml
+  model_format: yaml_export
   dashboards_dir: strategy/dashboards/
 mapping: mapping.yaml

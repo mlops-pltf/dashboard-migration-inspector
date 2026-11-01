@@ -33,7 +33,7 @@ def _run(run_id: str) -> None:
         return
     store.save_result(run_id, result)
     store.update_run(run_id, status="done", finished=time.time(), verdict=result.get("verdict"),
-                     counts=result.get("counts"), trace_url=result.get("trace_url"),
+                     counts=result.get("counts"),
                      report_run_id=result.get("run_id"))
 
 

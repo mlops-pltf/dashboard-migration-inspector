@@ -1,4 +1,4 @@
-# Build from the repo root:  docker build -f packages/inspector_portal/Dockerfile .
+# Build from the repo root (wheels are cached between builds):  docker build -f packages/inspector_portal/Dockerfile .
 # One image, two services: the API (default command) and the UI (streamlit run ...; see docker-compose.yml).
 FROM python:3.12.13-slim
 
@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY packages/inspector_contract /app/packages/inspector_contract
 COPY packages/inspector_portal /app/packages/inspector_portal
-RUN pip install --no-cache-dir /app/packages/inspector_contract /app/packages/inspector_portal \
+RUN --mount=type=cache,target=/root/.cache/pip pip install --retries 10 --timeout 60 /app/packages/inspector_contract /app/packages/inspector_portal \
     && useradd --create-home --uid 10001 portal \
     && mkdir -p /data /uploads && chown portal /data /uploads
 

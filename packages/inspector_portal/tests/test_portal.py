@@ -108,7 +108,7 @@ class FakeInspector:
         findings = [{"check": "JN-04", "status": "FAIL", "severity": "BLOCKER", "title": "fan-out",
                      "thoughtspot": {"name": "Revenue"}, "strategy": {"name": "SQL"}}] if verdict == "NOT_READY" else []
         return {"run_id": f"R-{len(self.calls)}", "verdict": verdict, "counts": {"blocker_fail": len(findings)},
-                "summary": "s", "markdown": "# report", "trace_url": None,
+                "summary": "s", "markdown": "# report",
                 "report": {"verdict": verdict, "findings": findings, "developer_notes": args["instructions"]}}
 
     def ask(self, question, context_id=None):

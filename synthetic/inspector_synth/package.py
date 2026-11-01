@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import shutil
 from dataclasses import asdict
 from pathlib import Path
@@ -39,10 +38,6 @@ def _write_bytes(path: Path, data: bytes) -> None:
     path.write_bytes(data)
 
 
-def _json(obj) -> str:
-    return json.dumps(obj, indent=2) + "\n"
-
-
 def _query_sql(sem, q: Query) -> str:
     return sqlgen.build(sem, q.dims, q.measures, q.filters, q.sort, q.top_n) + "\n"
 
@@ -67,16 +62,10 @@ def write_package(sc: Scenario, root: Path) -> Path:
         else:
             _write(ts_dir / f"{lb.name}.liveboard.tml", dump_yaml(thoughtspot.liveboard_tml(model, lb)))
 
-    # Strategy: model in the scenario's format + one .mstr per dashboard (all the project delivers)
+    # Strategy: the model YAML export + one .mstr per dashboard (all the project delivers)
     spec = sc.strategy
     model_doc, builder = strategy.build_model(spec)
-    if sc.strategy_format == "yaml_export":
-        _write(st_dir / "model.yaml", strategy.yaml_export(model_doc, dump_yaml))
-    elif sc.strategy_format == "rest_json":
-        for name, doc in strategy.rest_json(model_doc).items():
-            _write(st_dir / "model" / name, _json(doc))
-    else:
-        _write(st_dir / "model.ossie.yaml", dump_yaml(strategy.ossie_yaml(spec)))
+    _write(st_dir / "model.yaml", strategy.yaml_export(model_doc, dump_yaml))
     for lb in spec.content:
         _write_bytes(st_dir / "dashboards" / f"{lb.name}.mstr", strategy.dashboard_mstr(spec, builder, lb))
 
@@ -86,8 +75,7 @@ def write_package(sc: Scenario, root: Path) -> Path:
                        f"model '{spec.name}'.",
         "thoughtspot": {"tml_dir": "thoughtspot/"},
         "strategy": {
-            "model": {"yaml_export": "strategy/model.yaml", "rest_json": "strategy/model/",
-                      "ossie_yaml": "strategy/model.ossie.yaml"}[sc.strategy_format],
+            "model": "strategy/model.yaml",
             "model_format": sc.strategy_format,
             "dashboards_dir": "strategy/dashboards/",
         },

@@ -46,7 +46,7 @@ numeric difference**:
       - manifest.yaml
       - thoughtspot/ Table, Worksheet/Model, Liveboard, Answer TML
       - strategy/
-        - model.yaml or model/\*.json or model.ossie.yaml
+        - model.yaml (model YAML export)
         - dashboards/\*.mstr (binary, the format the reader decodes)
   - ground_truth/ **eval only, never read by Inspector**
     - S04/
@@ -77,7 +77,7 @@ queries then come from the same source, so they can't disagree.
 | # | Scenario | Strategy build | Expected |
 |---|---|---|---|
 | S01 | Clean lift-and-shift (Worksheet) | lookup | <Badge text="READY" variant="success" /> |
-| S02 | Clean lift-and-shift (Model TML), renames via mapping, REST JSON input | lookup | <Badge text="READY" variant="success" /> |
+| S02 | Clean lift-and-shift (Model TML), renames via mapping | lookup | <Badge text="READY" variant="success" /> |
 | S03 | **Benign restructure:** worksheet → equivalent Freeform SQL | Freeform SQL | <Badge text="READY" variant="success" /> no false positives |
 | S04 | Freeform SQL joins orders → order lines (fan-out) | Freeform SQL | <Badge text="JN-04" variant="danger" /> COUNT DISTINCT must still pass |
 | S05 | LEFT → INNER with orphan customers | Freeform SQL | <Badge text="JN-01" variant="danger" /> |
@@ -93,7 +93,6 @@ queries then come from the same source, so they can't disagree.
 | S15 | Dashboard drift: default filter, top-N, week start | lookup | <Badge text="LN-01 DB-02 DB-05" variant="danger" /> |
 | S16 | Cosmetic only (chart types, a title) | lookup | <Badge text="READY + LOW" variant="note" /> |
 | S17 | KPI used by a dashboard is missing; extra KPI added | lookup | <Badge text="CV-01 DB-01" variant="danger" /> <Badge text="CV-02" variant="default" /> |
-| S18 | S08 delivered as Apache Ossie YAML | lookup | <Badge text="UNVERIFIED → data" variant="caution" /> |
 
 ## Running it
 
@@ -102,13 +101,12 @@ cd synthetic && uv sync
 uv run inspector-synth warehouse      # CSVs + Postgres init scripts
 docker compose up -d warehouse        # from the repo root; seeded on first start (:5439)
 uv run inspector-synth generate       # packages/ + ground_truth/
-uv run inspector-synth verify         # 25/25 witnesses behave as expected
+uv run inspector-synth verify         # 23/23 witnesses behave as expected
 uv run pytest                         # determinism, parsing, no leakage, traps, witnesses
 ```
 
 <Aside type="caution" title="Synthetic assumptions">
-	How lookup-style join semantics are declared (A2) and the Ossie YAML
-	layout (A5) are modelled on our best information. They will be adjusted when a real sanitised
+	How lookup-style join semantics are declared (A2) is modelled on our best information. They will be adjusted when a real sanitised
 	export arrives. See [Assumptions & risks](/plan/risks/).
 </Aside>
 

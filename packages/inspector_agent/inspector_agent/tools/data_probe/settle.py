@@ -31,6 +31,8 @@ def settle(package: str, leads: list[Finding]) -> list[Finding]:
         f.evidence["data_probes"] = results
         decided = _decide(results)
         if decided is None:
+            if any(str(r["summary"]).startswith("data agent unreachable") for r in results):
+                f.title += " (data check could not run: data agent unreachable)"
             continue
         f.decided_by = "rule+data"
         if f.status == "UNVERIFIED":

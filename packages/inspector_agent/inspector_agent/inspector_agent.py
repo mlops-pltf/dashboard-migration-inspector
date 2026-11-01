@@ -20,12 +20,11 @@ from strands import Agent
 from strands.hooks import AfterToolCallEvent, HookProvider, HookRegistry
 from strands.multiagent.a2a.executor import StrandsA2AExecutor
 
-from inspector_contract import telemetry
 from inspector_contract.a2a import SkillRouterExecutor, agent_card
 
 from . import runs
 
-from .llm import get_model, warm_up
+from .llm import get_model
 from .tools.counterpart_finder.tool import find_counterparts, match_fields
 from .tools.data_probe.settle import settle
 from .tools.data_probe.tool import request_data_probe
@@ -83,17 +82,9 @@ def _payload(result: dict):
     return None
 
 
-def build_agent(model=None, trace_attributes: dict | None = None) -> Agent:
+def build_agent(model=None) -> Agent:
     return Agent(model=model or get_model("strong"), tools=TOOLS, system_prompt=SYSTEM_PROMPT,
-                 hooks=[EvidenceHook()], callback_handler=None, name=NAME, trace_attributes=trace_attributes)
-
-
-def _lead_counts(leads) -> dict:
-    out: dict[str, int] = {}
-    for f in leads:
-        key = f"{f.status}{' (data)' if f.decided_by == 'rule+data' else ''}"
-        out[key] = out.get(key, 0) + 1
-    return out
+                 hooks=[EvidenceHook()], callback_handler=None, name=NAME)
 
 
 def run_validation(package: str, model=None, max_turns: int = 60, instructions: str = "") -> Report:
@@ -102,10 +93,8 @@ def run_validation(package: str, model=None, max_turns: int = 60, instructions: 
     ledger = Ledger(package=location, run_id=f"R-{uuid.uuid4().hex[:8]}")
     # Deciding to run a probe the rules already defined is not judgment: code settles what data can settle first,
     # so the agent starts from facts and spends its turns on what is still open.
-    with telemetry.span("rules + data (code)", input={"package": location}) as s:
-        sweep_eid = ledger.preload(settle(location, sweep(location)))
-        s.output({"leads": _lead_counts(ledger.leads.values()), "agent_sees": ledger.evidence[sweep_eid].output})
-    agent = build_agent(model, trace_attributes={"langfuse.session.id": ledger.run_id})
+    sweep_eid = ledger.preload(settle(location, sweep(location)))
+    agent = build_agent(model)
     prompt = (f"Validate the migration package at: {location}\n"
               "Use this exact location as the `package` argument of every tool.\n"
               f"The rule sweep and its data probes have already run (evidence {sweep_eid}); `run_rule_sweep` returns "
@@ -124,10 +113,9 @@ def run_validation(package: str, model=None, max_turns: int = 60, instructions: 
     except Exception as exc:  # budget exhausted or model failure: keep what was established
         info["stopped"] = f"{type(exc).__name__}: {exc}"
     if ledger.report is None:
-        with telemetry.span("ledger: forced finalize", input={"open_leads": ledger.open_leads()}) as s:
-            ledger.finalize(summary=text or "The agent did not finish; open leads are reported as the rules left them.",
-                            force=True, agent_info=info)
-            s.output({"verdict": ledger.report.verdict, "counts": ledger.report.counts})
+        why = f" It stopped with: {info['stopped']}." if "stopped" in info else ""
+        ledger.finalize(summary=text or f"The agent did not finish.{why} Open items are reported as the rules and data "
+                                        "checks left them.", force=True, agent_info=info)
     else:
         ledger.report.agent.update(info)
     ledger.report.developer_notes = instructions.strip()
@@ -139,13 +127,9 @@ def run_rules_only(package: str, with_data: bool = False, instructions: str = ""
     ``with_data``: the leads' data probes run through the data agent and settle what they can."""
     location = location_of(package)
     load_cached(location, refresh=True)
-    with telemetry.span("rule sweep (code)", input={"package": location}) as s:
-        leads = sweep(location)
-        s.output(_lead_counts(leads))
+    leads = sweep(location)
     if with_data:
-        with telemetry.span("data probes (code)") as s:
-            leads = settle(location, leads)
-            s.output(_lead_counts(leads))
+        leads = settle(location, leads)
     for f in leads:
         f.resolves = [f.id]
     findings = finalize(leads)
@@ -161,22 +145,15 @@ def _validate_skill(args: dict) -> dict:
     package = str(args.get("package") or args.get("location") or "")
     mode = args.get("mode", "agent")
     started = time.time()
-    with telemetry.span(f"validate {package.rstrip('/').rpartition('/')[2]} ({mode})", input=args,
-                        **{"langfuse.trace.name": f"validate {package.rstrip('/').rpartition('/')[2]}",
-                           "langfuse.trace.tags": [mode]}) as s:
-        instructions = str(args.get("instructions") or "")[:4000]
-        report = run_rules_only(package, with_data=mode == "rules+data", instructions=instructions) \
-            if mode in ("rules", "rules+data") else \
-            run_validation(package, max_turns=int(args.get("max_turns", 60)), instructions=instructions)
-        s.output({"verdict": report.verdict, "counts": report.counts})
-        trace_id = s.trace_id
-    telemetry.flush()
+    instructions = str(args.get("instructions") or "")[:4000]
+    report = run_rules_only(package, with_data=mode == "rules+data", instructions=instructions) \
+        if mode in ("rules", "rules+data") else \
+        run_validation(package, max_turns=int(args.get("max_turns", 60)), instructions=instructions)
     meta = {"run_id": report.run_id, "package": package, "mode": mode, "verdict": report.verdict,
-            "seconds": round(time.time() - started), "trace_id": trace_id, "trace_url": runs.trace_url(trace_id),
-            "agent": report.agent}
+            "seconds": round(time.time() - started), "agent": report.agent}
     folder = runs.save(report, meta)
     return {"run_id": report.run_id, "verdict": report.verdict, "counts": report.counts, "summary": report.summary,
-            "trace_id": trace_id, "trace_url": meta["trace_url"], "run_folder": str(folder) if folder else None,
+            "run_folder": str(folder) if folder else None,
             "report": report.model_dump(mode="json"), "markdown": markdown(report)}
 
 
@@ -204,10 +181,6 @@ def app(url: str = "http://localhost:9000/", conversation: bool = True):
 def main() -> None:
     from bedrock_agentcore.runtime import serve_a2a
 
-    from inspector_contract import telemetry
-
-    telemetry.setup(NAME)
-    warm_up()
     serve_a2a(executor(), card(os.environ.get("AGENTCORE_RUNTIME_URL", "http://localhost:9000/")))
 
 

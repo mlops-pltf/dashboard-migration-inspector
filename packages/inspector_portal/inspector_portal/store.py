@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS packages (
 CREATE TABLE IF NOT EXISTS runs (
     id TEXT PRIMARY KEY, package_id TEXT NOT NULL REFERENCES packages(id), mode TEXT NOT NULL,
     instructions TEXT NOT NULL, status TEXT NOT NULL, created REAL NOT NULL, started REAL, finished REAL,
-    verdict TEXT, counts_json TEXT, error TEXT, trace_url TEXT, report_run_id TEXT, context_id TEXT);
+    verdict TEXT, counts_json TEXT, error TEXT, report_run_id TEXT, context_id TEXT);
 """
 
 

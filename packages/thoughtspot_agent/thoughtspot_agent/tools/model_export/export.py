@@ -7,7 +7,7 @@ from pathlib import Path
 
 from inspector_contract import Col, Field, ModelExport, ParseIssue, SemanticModel
 
-from ..common.locations import materialize
+from ..common.locations import materialize, package_files
 from ..thoughtspot_reader import tml
 
 
@@ -23,16 +23,26 @@ def _sql_view_model(obj: tml.TmlObject) -> SemanticModel:
 @functools.lru_cache(maxsize=32)
 def _build(path: str, fingerprint: str, location: str) -> ModelExport:
     root = Path(path)
-    bundle = tml.load(sorted(root.rglob("*.tml")), root)
+    bundle = tml.load(package_files(root, "*.tml"), root)
     issues = list(bundle.issues)
-    models = []
+    models, dashboards = [], []
+
+    def guarded(obj, parse):  # one unreadable object must not hide the rest of the package
+        try:
+            return parse(obj)
+        except Exception as exc:
+            issues.append(ParseIssue(severity="error", source=obj.loc.ref(""),
+                                     message=f"could not read {obj.kind} {obj.name!r}: {type(exc).__name__}: {exc}"))
+            return None
+
     for obj in bundle.of("worksheet") + bundle.of("model"):
-        model, more = tml.parse_model(obj, bundle)
-        models.append(model)
-        issues.extend(more)
-    models.extend(_sql_view_model(obj) for obj in bundle.of("sql_view"))
+        if (got := guarded(obj, lambda o: tml.parse_model(o, bundle))) is not None:
+            models.append(got[0])
+            issues.extend(got[1])
+    models.extend(m for o in bundle.of("sql_view") if (m := guarded(o, _sql_view_model)) is not None)
     by_name = {m.name: m for m in models}
-    dashboards = [tml.parse_content(o, by_name) for o in bundle.of("liveboard") + bundle.of("answer")]
+    dashboards = [d for o in bundle.of("liveboard") + bundle.of("answer")
+                  if (d := guarded(o, lambda o: tml.parse_content(o, by_name))) is not None]
     if not models:
         issues.append(ParseIssue(severity="error", message="no ThoughtSpot worksheet, model or SQL view found"))
     return ModelExport(tool="thoughtspot", location=location, fingerprint=fingerprint, source_format="tml",

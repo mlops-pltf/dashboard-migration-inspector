@@ -88,7 +88,9 @@ def test_a2a_structured_skills_and_card():
     assert "error" in client.call("no_such_skill", {})
 
 
-def test_agent_builds():
+def test_agent_builds(monkeypatch):
+    monkeypatch.setenv("INSPECTOR_LLM_MODEL_STRONG", "test-model")  # constructed only, never called
+    monkeypatch.setenv("INSPECTOR_LLM_API_BASE", "http://127.0.0.1:9/v1")
     assert {t.tool_name for t in TOOLS} == set(build_agent().tool_names)
 
 

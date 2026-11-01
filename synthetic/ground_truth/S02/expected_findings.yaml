@@ -1,10 +1,10 @@
 scenario: S02
 title: Clean lift-and-shift of a Model with deliberate renames
-description: Order Lines rebuilt faithfully; four objects renamed and declared in mapping.yaml. Delivered as REST JSON.
+description: Order Lines rebuilt faithfully; four objects renamed and declared in mapping.yaml.
 thoughtspot_model: Order Lines (model)
 strategy_model: Product Lines
 strategy_style: lookup
-strategy_format: rest_json
+strategy_format: yaml_export
 expected_verdict: READY
 findings: []
 must_pass:

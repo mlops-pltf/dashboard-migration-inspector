@@ -2,13 +2,11 @@
 
 Shapes follow the official REST API samples (github.com/MicroStrategy/rest-api-docs):
   * model YAML export   POST /api/model/dataModels/{id}/export
-  * REST JSON           GET  /api/model/dataModels/{id}[/tables|/attributes|/factMetrics|/metrics|/hierarchy]
   * Freeform SQL table  physicalTable.type = "sql" + sqlStatement (modeling "create a freeform SQL table")
   * dashboards          binary .mstr (mstr.py), decoded by strategy_agent/tools/mstr_reader
 
 Synthetic assumptions (to replace once a real export is available; see synthetic/README.md):
   A2  lookup-style join semantics declared via advancedProperties "[Joins].[Preserve all final pass result elements]"
-  A5  Apache Ossie YAML top-level layout
 """
 
 from __future__ import annotations
@@ -373,63 +371,6 @@ def yaml_export(model: dict, dump) -> str:
 def _stamp(info: dict) -> dict:
     return {"dateCreated": CREATED, "dateModified": CREATED,
             "versionId": strategy_id("version", info["objectId"]), "acg": 255} | info
-
-
-def rest_json(model: dict) -> dict[str, dict]:
-    """The per-object REST responses for the same model."""
-    def stamped(objs):
-        return [o | {"information": _stamp(o["information"])} for o in objs]
-
-    settings = {k: v for k, v in model.items() if k not in
-                ("tables", "attributes", "factMetrics", "metrics", "hierarchy", "securityFilters", "folders")}
-    settings["information"] = _stamp(settings["information"])
-    settings["readOnly"] = False
-
-    def page(key, objs):
-        return {"offset": 0, "limit": -1, "total": len(objs), key: stamped(objs)}
-
-    return {
-        "dataModel.json": settings,
-        "tables.json": page("tables", model["tables"]),
-        "attributes.json": page("attributes", model["attributes"]),
-        "factMetrics.json": page("factMetrics", model["factMetrics"]),
-        "metrics.json": page("metrics", model["metrics"]),
-        "hierarchy.json": model["hierarchy"],
-    }
-
-
-def ossie_yaml(spec: StrategySpec) -> dict:
-    """Apache Ossie export: ANSI SQL only. Levels, hierarchies, VLDB and Apply* functions are lost."""
-    m = spec.model
-
-    def ansi(text: str) -> str:
-        return _PLACEHOLDER.sub(lambda mm: f"{TABLE_INFO[ALIAS_TO_TABLE[mm.group(1)]][0]}.{mm.group(2)}", text)
-
-    datasets = []
-    for t in m.tables:
-        physical = TABLE_INFO[t][0]
-        fields = [{"name": spec.sname(f.name),
-                   "expression": {"dialects": [{"dialect": "ANSI_SQL", "expression": f.column}]}}
-                  for f in m.fields if f.kind == "ATTRIBUTE" and f.table == t]
-        datasets.append({"name": physical, "source": filtered_table_sql(m, t) or fq(physical),
-                         "primary_key": list(TABLES[physical].key),
-                         "fields": fields})
-    relationships = [{"name": f"{TABLE_INFO[j.source][0]}_to_{TABLE_INFO[j.destination][0]}",
-                      "from": TABLE_INFO[j.source][0], "to": TABLE_INFO[j.destination][0],
-                      "from_columns": [j.keys[0][0]], "to_columns": [j.keys[0][1]]} for j in m.joins]
-    metrics = []
-    for f in m.fields:
-        if f.kind != "MEASURE":
-            continue
-        entry = {"name": spec.sname(f.name)}
-        if "ApplySimple" not in f.st.expr:
-            entry["expression"] = {"dialects": [{"dialect": "ANSI_SQL", "expression": ansi(f.sql)}]}
-        if f.description:
-            entry["description"] = f.description
-        metrics.append(entry)
-    return {"version": "1.0", "semantic_model": [{
-        "name": spec.name, "description": spec.description or m.description,
-        "datasets": datasets, "relationships": relationships, "metrics": metrics}]}
 
 
 def dashboard_mstr(spec: StrategySpec, builder: _Builder, lb: Liveboard) -> bytes:
